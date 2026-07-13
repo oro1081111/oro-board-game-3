@@ -1,25 +1,20 @@
-﻿# 規則查核表
+# 規則查核與實作狀態
 
-本資料夾第一階段的規則說明書分成兩種來源：
+| 遊戲 | 主要來源 | 3.0 狀態 | 已採用的關鍵判定 |
+|---|---|---|---|
+| 花園棋 Mijnlieff | 2.0 `gameLogic.ts`、`MijnlieffGame.tsx`、使用者修正 | 完成 | 輪到玩家時手上無棋立即結束；有棋但無落點才跳過並清除限制。 |
+| 蒐靈祭 Soulaween | 2.0 `soulaweenLogic.ts`、`SoulaweenGame.tsx`、使用者修正 | 完成 | 棋子為橘／綠雙面同一種棋；勝率使用 MCTS。 |
+| 聖托里尼 Santorini | 2.0 `SantoriniGame.tsx`、Roxley 基礎規則 | 完成 | 無神力版；完整 action 包含移動與建築；MCTS rollout 使用局面啟發式。 |
+| 殭屍棋 JUMP | 2.0 `ZombieJumpGame.tsx`、使用者修正 | 完成 | 總等級 3 堆疊指單枚 1 與單枚 2 的堆疊；支援復活、堆疊、連跳、停止與跳出。 |
+| 四色棋 | 1.0 `FCG.html`、使用者修正 | 完成 | 經典盤面與初始棋子依程式碼；黑方先選焦點，落點格色決定對手焦點。 |
+| 四步棋 | 1.0 `FMG.html` | 完成 | 數字決定步數；沿正交方向跳到下一可停留格；離開格封閉。 |
+| 跳躍森靈 Torii | 1.0 `Torii.html` | 完成 | 行動板塊、路徑、信徒替換、四連線建鳥居、9 信徒／4 鳥居勝。 |
 
-1. 目前程式碼實作規則：可作為 3.0 重寫時的直接規格。
-2. 公開/官方規則：若查得到，需與程式碼比對；不一致時要決定以哪個為準。
+## 資訊來源註記
 
-## 已整理遊戲
+- 花園棋設計者 Andy Hopwood；英中版 Garden／花園棋由 Taiwan Boardgame Design 推出。
+- 聖托里尼設計者 Gordon（Gord）Hamilton；本專案標示 Roxley Games 版本。
+- 四色棋、四步棋與 Torii 的介紹資訊沿用 1.0 頁面記載。
+- 殭屍棋參考程式未載設計者與出版社，因此介面明確標示「來源未載」。
 
-| 遊戲 | 文件 | 目前來源 | 查核狀態 | 待確認 |
-|---|---|---|---|---|
-| 花園棋 Mijnlieff | `games/mijnlieff/rules.html` | `棋類遊戲2.0/src/gameLogic.ts`、`MijnlieffGame.tsx` | 未查到可靠公開規則頁；目前以程式碼為準 | A/B/C 變體是否為自訂；內圈/外圈命名是否與實體規則一致 |
-| 蒐靈祭 Soulaween | `games/soulaween/rules.html` | `棋類遊戲2.0/src/soulaweenLogic.ts`、`SoulaweenGame.tsx` | 未查到可靠公開規則頁；目前以程式碼為準 | 滿盤移除「本回合放置顏色」是否為正式規則 |
-| 聖托里尼 Santorini | `games/santorini/rules.html` | `棋類遊戲2.0/src/SantoriniGame.tsx`；公開基礎規則可交叉確認 | 基礎流程與公開規則一致：5x5、移動後建築、上升最多 1 層、登上第 3 層勝、對手無法移動勝 | 是否要加入神力規則；目前文件是無神力版本 |
-| 殭屍棋 JUMP | `games/zombie-jump/rules.html` | `棋類遊戲2.0/src/ZombieJumpGame.tsx` | 未查到可靠公開規則頁；目前以程式碼為準 | 復活是否消耗整回合；跳出棋盤回陰間是否為正式規則；堆疊特例是否完整 |
-| 四色棋 Four Color Chess | `games/four-color-chess/rules.html` | `棋類遊戲/oro-games-review/FCG.html` | 看起來是自製遊戲；目前以程式碼為準 | 是否有紙本/正式版規則與目前網頁版不同 |
-| 四步棋 Four Moves Chess | `games/four-moves-chess/rules.html` | `棋類遊戲/oro-games-review/FMG.html` | 未查到可靠公開規則頁；目前以程式碼為準 | 是否有原始 IG 影片以外的正式規則；S 格與跳過空格描述需確認 |
-| Torii 跳躍森靈 | `games/torii/rules.html` | `棋類遊戲/oro-games-review/Torii.html` | 未查到可靠公開規則頁；目前以程式碼為準 | 舊版程式標示為「沒有森靈能力的基礎版本」，需確認是否只做基礎版 |
-
-## 下一步原則
-
-- 有公開規則的遊戲：先比對公開規則與目前程式碼。
-- 查不到公開規則的遊戲：不補猜測，列出問題請使用者確認。
-- 確認後才進入 3.0 程式重寫。
-
+仍未有可靠來源的資訊不得補猜測；新增資料前需附來源或由使用者確認。
