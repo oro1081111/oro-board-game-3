@@ -389,6 +389,7 @@ function newGame() {
     `先手：${state.first}，後手：${state.second}。`,
     `AI 迭代數：${state.iterations}。`
   ];
+  setWinRateDisplay(50, 50);
   render();
   scheduleTurnWork();
 }
@@ -742,10 +743,19 @@ function render() {
 }
 
 function renderWinRate() {
-  const stats = state.aiStats || { first: 50, second: 50, draw: 0 };
+  if (state.gameOver && state.winner) {
+    setWinRateDisplay(state.winner === PLAYER.FIRST ? 100 : 0, state.winner === PLAYER.SECOND ? 100 : 0);
+    return;
+  }
+  if (!state.aiStats) return;
+  const stats = state.aiStats;
   const decisive = Math.max(1, stats.first + stats.second);
   const first = stats.first / decisive * 100;
   const second = 100 - first;
+  setWinRateDisplay(first, second);
+}
+
+function setWinRateDisplay(first, second) {
   $('redWinText').textContent = `先手勝率${first.toFixed(1)}%`;
   $('blueWinText').textContent = `後手勝率${second.toFixed(1)}%`;
   const bars = $('winbar').children;
