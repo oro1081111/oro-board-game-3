@@ -273,6 +273,8 @@ const ITERATION_PRESETS = [
   { label: '困難', value: 2500 },
   { label: '專家', value: 5000 }
 ];
+const WINRATE_MIN_ITERATIONS = 200;
+const WINRATE_MAX_ITERATIONS = 600;
 
 const state = {
   board: createEmptyBoard(),
@@ -593,7 +595,7 @@ function mctsSearch(board, scores, turn, iterations) {
   for (let i = 0; i < loops; i++) {
     let node = root;
     while (node.untried.length === 0 && node.children.length > 0) {
-      node = node.children.reduce((best, child) => uct(child) > uct(best) ? child : best);
+      node = node.children.reduce((best, child) => uct(child, rootPlayer) > uct(best, rootPlayer) ? child : best);
     }
     if (node.untried.length > 0 && terminalResult(node.board, node.scores) === undefined) {
       const moveIndex = Math.floor(Math.random() * node.untried.length);
@@ -610,32 +612,30 @@ function mctsSearch(board, scores, turn, iterations) {
     while (node) {
       node.visits++;
       if (winner === rootPlayer) node.wins++;
+      else if (winner === null) node.wins += 0.5;
       node = node.parent;
     }
   }
 
   const best = root.children.length
-    ? root.children.reduce((a, b) => scoreChild(b) > scoreChild(a) ? b : a)
+    ? root.children.reduce((a, b) => b.visits > a.visits ? b : a)
     : null;
   const total = Math.max(1, firstWins + secondWins + draws);
   return {
     move: best?.move || randomMove(board),
     stats: {
-      first: firstWins / total * 100,
-      second: secondWins / total * 100,
+      first: (firstWins + draws * 0.5) / total * 100,
+      second: (secondWins + draws * 0.5) / total * 100,
       draw: draws / total * 100
     }
   };
 }
 
-function uct(node) {
+function uct(node, rootPlayer) {
   if (node.visits === 0) return Infinity;
-  return (node.wins / node.visits) + 1.41 * Math.sqrt(Math.log(Math.max(1, node.parent.visits)) / node.visits);
-}
-
-function scoreChild(node) {
-  if (node.visits === 0) return -1;
-  return node.wins / node.visits + Math.log(node.visits + 1) / 1000;
+  const rootValue = node.wins / node.visits;
+  const exploit = node.parent.turn === rootPlayer ? rootValue : 1 - rootValue;
+  return exploit + Math.SQRT2 * Math.sqrt(Math.log(Math.max(1, node.parent.visits)) / node.visits);
 }
 
 function rollout(board, scores, turn) {
@@ -681,19 +681,20 @@ function scheduleTurnWork() {
   if (!isHumanTurn()) {
     aiTimer = setTimeout(doAI, 520);
   } else {
-    state.aiStats = heuristicStats();
-    renderWinRate();
+    if (state.aiStats) {
+      renderWinRate();
+      return;
+    }
+    evalTimer = setTimeout(() => {
+      if (state.gameOver || state.phase !== 'move' || !isHumanTurn()) return;
+      const iterations = Math.max(
+        WINRATE_MIN_ITERATIONS,
+        Math.min(WINRATE_MAX_ITERATIONS, Math.floor(state.iterations / 2))
+      );
+      state.aiStats = mctsSearch(state.board, state.scores, state.turn, iterations).stats;
+      renderWinRate();
+    }, 0);
   }
-}
-
-function heuristicStats() {
-  const scoreDelta = state.scores.first - state.scores.second;
-  const firstPieces = state.board.flat().filter((cell) => cell === COLOR.GREEN).length;
-  const secondPieces = state.board.flat().filter((cell) => cell === COLOR.ORANGE).length;
-  const pieceDelta = (firstPieces - secondPieces) * 1.5;
-  const turnBias = state.turn === PLAYER.FIRST ? 2 : -2;
-  const first = Math.max(5, Math.min(95, 50 + scoreDelta * 18 + pieceDelta + turnBias));
-  return { first, second: 100 - first, draw: 0 };
 }
 
 function undoMove() {
@@ -894,6 +895,7 @@ $('openSettings').addEventListener('click', () => setOpen('settingsLayer', true)
 $('settingsGear').addEventListener('click', () => setOpen('settingsLayer', false));
 $('closeSettings').addEventListener('click', () => {
   state.iterations = Math.max(100, Number($('aiIterations').value || 5000));
+  state.aiStats = null;
   addLog(`更新設定：先手 ${state.first}，後手 ${state.second}，AI 迭代 ${state.iterations}。`);
   setOpen('settingsLayer', false);
   render();
