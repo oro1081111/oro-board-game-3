@@ -1,0 +1,17 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>蒐靈祭 Soulaween 規則</title><link rel="stylesheet" href="../../assets/manual.css"></head>
+<body><main class="page">
+<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回目錄</a></div>
+<h1>蒐靈祭 Soulaween</h1>
+<p class="lead">依 `棋類遊戲2.0` 目前程式碼整理。玩家輪流在 4x4 棋盤放置綠色或橘色靈魂，放置後翻轉上下左右相鄰靈魂；形成 4 連線即可收取並得分。</p>
+<div class="meta"><span class="pill">2 人</span><span class="pill">4x4 棋盤</span><span class="pill">翻轉</span><span class="pill">先得 3 分勝</span></div>
+<section class="section"><h2>配件</h2><ul><li>4x4 棋盤 1 面。</li><li>雙面靈魂棋子若干，每枚棋子一面為橘色、一面為綠色。</li><li>雙方共用同一種棋子，顏色只是棋子的正反面狀態，玩家不是固定控制某一顏色。</li></ul><div class="icon-row"><span class="icon green circle">綠</span><span class="icon orange circle">橘</span></div></section>
+<section class="section"><h2>設置</h2><ol><li>棋盤初始為空。</li><li>P1 先手，P2 後手。</li><li>雙方分數皆為 0。</li><li>目前程式預設可由玩家在行動時切換要放置綠色或橘色。</li></ol><div class="board cols-4"><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div></div></section>
+<section class="section"><h2>回合流程</h2><ol><li>目前玩家選擇一個空格。</li><li>選擇要以綠色面或橘色面朝上放置。</li><li>將雙面靈魂棋以該面朝上放到選定空格。</li><li>翻轉該格上下左右相鄰且已有靈魂的格子；綠變橘，橘變綠。斜角不翻。</li><li>檢查是否出現 4 格同色連線。</li></ol></section>
+<section class="section"><h2>連線與收取</h2><ul><li>連線包含橫列、直行、兩條主對角線。</li><li>若形成一條或多條 4 格同色連線，進入收取階段。</li><li>玩家點選其中一條連線後，該 4 格清空，該玩家得 1 分。</li><li>AI 在收取階段會自動收取程式找到的第一條連線。</li></ul></section>
+<section class="section"><h2>滿盤處理</h2><p>若回合結束時棋盤全滿，程式會移除所有與本回合剛放置顏色相同的靈魂，留下另一色靈魂。</p></section>
+<section class="section"><h2>勝利條件</h2><p>任一玩家分數達到 3 分，立即獲勝。</p></section>
+<footer>規則來源：`src/soulaweenLogic.ts` 與 `src/SoulaweenGame.tsx`。</footer>
+</main></body></html>
+

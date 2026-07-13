@@ -1,0 +1,40 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>棋類遊戲 3.0 規則說明書</title>
+  <link rel="stylesheet" href="assets/manual.css">
+</head>
+<body>
+  <main class="page">
+    <div class="topbar"><div class="brand">Board Games 3.0</div></div>
+    <h1>棋類遊戲 3.0</h1>
+    <p class="lead">第一階段先建立純靜態說明書。這裡的規則以「棋類遊戲」與「棋類遊戲2.0」目前程式碼實作為準，後續重寫遊戲程式時再以這些文件作為規則來源。</p>
+    <section class="section">
+      <h2>目錄策略</h2>
+      <p>採用「每款遊戲一個資料夾」。理由是未來每款遊戲會有自己的規則、圖示、狀態型別、AI 評估、測試與素材，分開放最不容易互相污染。</p>
+    </section>
+    <section class="section">
+      <h2>規則查核狀態</h2>
+      <p>每份規則頁目前先依既有程式碼整理；公開查不到可靠來源的遊戲會在 <code>RULE_AUDIT.md</code> 列出待確認問題，避免把推測當成定稿。</p>
+    </section>
+    <section class="section"><h2>遊戲畫面原型</h2><p>已改成可操作的假遊戲畫面，不含實際規則運算。<a href="interface.html">開啟遊戲畫面原型</a></p></section>
+    <section class="grid">
+      <article class="card"><h2>花園棋 Mijnlieff</h2><p>限制對手落點的花園抽象連線計分遊戲。</p><a href="games/mijnlieff/rules.html">閱讀規則</a></article>
+      <article class="card"><h2>蒐靈祭 Soulaween</h2><p>放置與翻轉靈魂，形成 4 連線後收取。</p><a href="games/soulaween/rules.html">閱讀規則</a></article>
+      <article class="card"><h2>聖托里尼 Santorini</h2><p>移動工人、建築樓層，率先登上第 3 層。</p><a href="games/santorini/rules.html">閱讀規則</a></article>
+      <article class="card"><h2>殭屍棋 JUMP</h2><p>復活、移動、跳躍吃子，得 8 分獲勝。</p><a href="games/zombie-jump/rules.html">閱讀規則</a></article>
+      <article class="card"><h2>四色棋 Four Color Chess</h2><p>焦點棋指定對手必須移動的棋子。</p><a href="games/four-color-chess/rules.html">閱讀規則</a></article>
+      <article class="card"><h2>四步棋 Four Moves Chess</h2><p>依所在格數字跳躍移動，封鎖對手。</p><a href="games/four-moves-chess/rules.html">閱讀規則</a></article>
+      <article class="card"><h2>Torii 跳躍森靈</h2><p>森靈移動、散播信徒、建立鳥居。</p><a href="games/torii/rules.html">閱讀規則</a></article>
+    </section>
+    <footer>Generated as the first static-manual step for the rewrite.</footer>
+  </main>
+</body>
+</html>
+
+
+
+
+

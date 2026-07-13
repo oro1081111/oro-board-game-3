@@ -1,0 +1,16 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>四步棋 Four Moves Chess 規則</title><link rel="stylesheet" href="../../assets/manual.css"></head>
+<body><main class="page">
+<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回目錄</a></div>
+<h1>四步棋 Four Moves Chess</h1>
+<p class="lead">依 `棋類遊戲` 舊版 `FMG.html` 目前程式碼整理。玩家依所在格的數字決定必須走幾步；移動時會跳過空格與棋子，起點會變成空格。讓對手無合法落點者獲勝。</p>
+<div class="meta"><span class="pill">2 人</span><span class="pill">4x4 棋盤</span><span class="pill">數字步數</span><span class="pill">封鎖勝利</span></div>
+<section class="section"><h2>配件</h2><ul><li>4x4 棋盤 1 面。</li><li>數字格：1、2、3、4。</li><li>S 格 2 格，分別作為紅方與藍方初始位置。</li><li>紅色棋子 1 枚、藍色棋子 1 枚。</li></ul><div class="icon-row"><span class="icon red circle">R</span><span class="icon blue circle">B</span><span class="icon">1</span><span class="icon">2</span><span class="icon">3</span><span class="icon">4</span><span class="icon">S</span></div></section>
+<section class="section"><h2>標準初始設置</h2><p>程式中的標準盤面如下，SR 是紅方起點，SB 是藍方起點。畫面上通常顯示為 S。</p><div class="board cols-4"><div class="cell">1</div><div class="cell">2</div><div class="cell">3</div><div class="cell">4</div><div class="cell">2</div><div class="cell">3</div><div class="cell blue">SB</div><div class="cell">1</div><div class="cell">3</div><div class="cell red">SR</div><div class="cell">1</div><div class="cell">2</div><div class="cell">4</div><div class="cell">1</div><div class="cell">2</div><div class="cell">3</div></div><ul><li>紅色玩家先手。</li><li>棋盤設置可選標準、隨機、相同。</li></ul></section>
+<section class="section"><h2>回合流程</h2><ol><li>目前玩家查看自己棋子所在格。</li><li>若所在格為數字 n，必須移動 n 步。</li><li>若所在格為 S，可選擇移動 1 到 4 步。</li><li>每一步都往上下左右其中一方向跳到下一個可停留格。</li><li>完成指定步數後，起始格變成空格 X。</li><li>換對手回合。</li></ol></section>
+<section class="section"><h2>移動規則</h2><ul><li>只能上下左右移動，不能斜走。</li><li>移動時會跳過空格與棋子，找到該方向下一個可停留格。</li><li>不可停在該回合已經經過的格子。</li><li>不可停在空格 X。</li><li>不可停在任一玩家棋子所在格。</li><li>若無法剛好完成指定步數到合法落點，該目的地不合法。</li></ul></section>
+<section class="section"><h2>勝利條件</h2><p>若輪到對手時，對手沒有任何合法落點，則目前玩家獲勝。</p></section>
+<section class="section"><h2>模式與 AI</h2><ul><li>紅方與藍方可分別設為玩家、隨機、AI。</li><li>AI 使用 MCTS 搜尋並顯示勝率估計。</li></ul></section>
+<footer>規則來源：舊版 `FMG.html`。</footer>
+</main></body></html>

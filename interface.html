@@ -1,0 +1,919 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>棋類遊戲 3.0｜遊戲畫面原型</title>
+  <style>
+    :root {
+      --paper: #f4f1e8;
+      --panel: #fffef8;
+      --line: #d8d4c3;
+      --ink: #080808;
+      --muted: #8b8b86;
+      --dark: #2e2a2f;
+      --olive: #a3a18d;
+      --board: #70705d;
+      --red: #fb6a70;
+      --blue: #7188f4;
+      --green: #12bd86;
+      --orange: #ffa50f;
+      --shadow: 0 12px 24px rgba(0,0,0,.22);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      background: #d7d7d2;
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .desktop-shell { min-height: 100vh; display: grid; place-items: start center; padding: 0; background: linear-gradient(90deg, #d4d4ce, #f1efe6 25%, #f1efe6 75%, #d4d4ce); }
+    .game-layout { width: min(100%, 1320px); display: grid; grid-template-columns: minmax(360px, 520px) minmax(300px, 1fr); gap: 24px; align-items: start; padding: 0 24px 28px; }
+    .phone-app { width: min(100%, 520px); min-height: 100vh; background: var(--paper); box-shadow: 0 0 34px rgba(0,0,0,.22); }
+    .topbar { height: 82px; display: grid; grid-template-columns: 64px 1fr 64px; align-items: center; background: white; box-shadow: 0 7px 13px rgba(0,0,0,.22); position: sticky; top: 0; z-index: 6; }
+    .icon-btn { border: 0; background: transparent; display: grid; place-items: center; min-height: 56px; color: #9b9b9b; }
+    .back-icon { width: 30px; height: 30px; border-left: 7px solid currentColor; border-bottom: 7px solid currentColor; transform: rotate(45deg); border-radius: 5px; }
+    .gear-icon { width: 42px; height: 42px; color: #9b9b9b; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-btn:hover .gear-icon, .icon-btn:focus-visible .gear-icon { color: #6f6f6f; }
+    .title-block { text-align: center; min-width: 0; }
+    .title-block h1 { margin: 0; font-size: clamp(25px, 5.4vw, 34px); line-height: 1.05; font-weight: 950; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .title-block p { margin: 6px 0 0; color: #999; font-size: clamp(14px, 2.7vw, 19px); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .play-area { padding: 18px clamp(18px, 6vw, 34px) 30px; }
+    .win-labels { display: flex; justify-content: space-between; margin: 0 10px 4px; font-size: clamp(17px, 3.6vw, 23px); line-height: 1.1; }
+    .win-labels .red { color: var(--red); }
+    .win-labels .blue { color: var(--blue); }
+    .winbar { height: 22px; border-radius: 999px; overflow: hidden; display: grid; grid-template-columns: var(--p1, 60fr) var(--p2, 40fr); margin-bottom: 14px; }
+    .winbar span:first-child { background: var(--red); }
+    .winbar span:last-child { background: var(--blue); }
+    .score-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(14px, 4.5vw, 24px); margin-bottom: 14px; }
+    .score-card { height: clamp(64px, 14.5vw, 78px); display: grid; place-items: center; background: white; border: 3px solid currentColor; border-radius: 9px; box-shadow: 0 4px 8px rgba(0,0,0,.18); font-size: clamp(38px, 8.2vw, 58px); font-weight: 950; line-height: 1; }
+    .score-card.red { color: var(--red); }
+    .score-card.blue { color: var(--blue); }
+    .score-card span { color: #000; }
+    .board-wrap { background: #eee; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.18); margin-bottom: 12px; }
+    .board { aspect-ratio: 1; display: grid; gap: 6px; padding: 12px; background: #d8d7c9; border: 6px solid var(--board); border-radius: 18px; box-shadow: inset 0 0 0 3px rgba(255,255,255,.55), 0 0 0 2px rgba(73,73,55,.4); }
+    .board.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .board.cols-5 { grid-template-columns: repeat(5, 1fr); }
+    .board.cols-6 { grid-template-columns: repeat(6, 1fr); }
+    .cell { position: relative; min-width: 0; display: grid; place-items: center; background: #fffef9; border-radius: 10px; box-shadow: inset 0 2px 7px rgba(0,0,0,.12), 0 1px 2px rgba(255,255,255,.9); color: #dedbd0; font-weight: 900; }
+    .cell::after { content: "○"; opacity: .42; font-size: clamp(10px, 2vw, 16px); }
+    .piece { width: 74%; aspect-ratio: 1; border-radius: 50%; position: absolute; display: grid; place-items: center; color: white; font-weight: 950; font-size: clamp(13px, 2.6vw, 21px); box-shadow: inset 0 -8px 0 rgba(0,0,0,.08), inset 0 0 0 8px rgba(0,0,0,.08), 0 5px 8px rgba(0,0,0,.14); }
+    .piece.green { background: var(--green); }
+    .piece.orange { background: var(--orange); }
+    .piece.red { background: var(--red); }
+    .piece.blue { background: var(--blue); }
+    .piece.black { background: #2c292e; }
+    .piece.white { background: #f8f8f8; color: #222; border: 3px solid #bbb; }
+    .piece.square { border-radius: 14px; }
+    .piece.small-text { font-size: clamp(12px, 2.6vw, 19px); }
+    .below-board { display: grid; grid-template-columns: 1fr 1.3fr; gap: clamp(10px, 3.8vw, 20px); align-items: stretch; margin-bottom: 18px; }
+    .turn-card { min-height: 88px; display: grid; place-items: center; text-align: center; padding: 10px; color: white; background: var(--red); border-radius: 8px; box-shadow: var(--shadow); font-size: clamp(20px, 4.2vw, 30px); line-height: 1.35; }
+    .choice-tray { min-height: 88px; display: flex; align-items: center; justify-content: center; gap: 18px; background: white; border-radius: 8px; box-shadow: var(--shadow); padding: 10px; }
+    .tray-piece { width: clamp(64px, 15.5vw, 88px); aspect-ratio: 1; border: 0; border-radius: 8px; background: #fffef9; display: grid; place-items: center; box-shadow: inset 0 2px 7px rgba(0,0,0,.08); }
+    .tray-piece .piece { position: static; width: 82%; }
+    .action-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: clamp(8px, 3vw, 18px); }
+    .game-btn { min-height: 52px; border-radius: 14px; padding: 8px 10px; font-size: clamp(18px, 3.5vw, 25px); font-weight: 650; border: 2px solid #111; background: white; color: #777; box-shadow: none; }
+    .game-btn.primary { background: var(--dark); color: white; border-color: var(--dark); }
+    .game-btn.secondary { background: var(--olive); color: white; }
+    .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
+    .desktop-card { background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; padding: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }
+    .desktop-card h2 { margin: 0 0 10px; font-size: 22px; }
+    .game-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .list-btn { border: 2px solid var(--line); border-radius: 12px; background: white; padding: 10px; font-weight: 900; text-align: left; min-height: 48px; }
+    .list-btn.active { border-color: var(--dark); background: #f4f1e8; }
+    .status-lines { color: #666; font-size: 17px; line-height: 1.7; }
+    .modal-layer, .home-layer { position: fixed; inset: 0; z-index: 20; display: none; place-items: center; padding: 28px clamp(14px, 5vw, 28px); background: rgba(30,30,30,.62); backdrop-filter: blur(8px); }
+    .modal-layer.open, .home-layer.open { display: grid; }
+    .modal { width: min(89vw, 460px); max-height: min(88vh, 840px); display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; background: var(--paper); border-radius: 30px; box-shadow: 0 20px 42px rgba(0,0,0,.35); }
+    .modal-head { position: relative; display: grid; place-items: center; min-height: 70px; padding: 14px 72px; background: white; border-bottom: 2px solid #aaa; }
+    .modal-head h2 { margin: 0; font-size: clamp(26px, 5.2vw, 36px); letter-spacing: .08em; }
+    .modal-head .icon-btn { position: absolute; right: 14px; top: 6px; }
+    .modal-body { overflow: auto; padding: 24px 22px; }
+    .settings-section { margin-bottom: 28px; }
+    .settings-label { color: #777; font-size: clamp(21px, 4.4vw, 28px); margin-bottom: 12px; }
+    .mode-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: end; }
+    .mode-card { border: 0; background: transparent; color: #777; font-weight: 900; display: grid; gap: 8px; justify-items: center; font-size: clamp(18px, 4vw, 28px); padding: 0; }
+    .mode-card.selected { color: #000; }
+    .mode-frame { width: 106px; max-width: 100%; aspect-ratio: 1; border: 4px solid transparent; border-radius: 26px; display: grid; place-items: center; }
+    .mode-card.selected .mode-frame { background: white; border-color: #777; box-shadow: 0 7px 13px rgba(0,0,0,.25); }
+    .mini-board { width: 76px; aspect-ratio: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; padding: 3px; background: #d8d7c9; border: 3px solid var(--board); border-radius: 5px; }
+    .mini-board i { background: #fffef9; border-radius: 3px; box-shadow: inset 0 1px 3px rgba(0,0,0,.1); position: relative; }
+    .mini-board i.red::after, .mini-board i.blue::after, .mini-board i.green::after, .mini-board i.orange::after, .mini-board i.dot::after { content: ""; position: absolute; inset: 23%; border-radius: 50%; box-shadow: inset 0 -3px 0 rgba(0,0,0,.1); }
+    .mini-board i.red::after { background: var(--red); }
+    .mini-board i.blue::after { background: var(--blue); }
+    .mini-board i.green::after { background: var(--green); }
+    .mini-board i.orange::after { background: var(--orange); }
+    .mini-board i.dot::after { inset: 35%; background: #8d8a7a; box-shadow: none; opacity: .55; }
+    .player-icon { width: 48px; height: 48px; display: grid; place-items: center; color: currentColor; }
+    .player-icon svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .player-icon .line { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .player-icon .fill { fill: currentColor; stroke: none; opacity: .92; }
+    .player-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .player-choice { border: 3px solid transparent; border-radius: 24px; background: transparent; min-height: 92px; color: #777; font-weight: 900; display: grid; place-items: center; gap: 6px; padding: 8px; }
+    .player-choice.selected { background: white; border-color: #777; color: #000; box-shadow: 0 7px 13px rgba(0,0,0,.22); }
+    .ai-input { width: 100%; min-height: 52px; border: 4px solid var(--line); border-radius: 28px; padding: 0 28px; font-size: clamp(30px, 6vw, 42px); font-weight: 950; background: white; }
+    .confirm-btn { margin: 12px auto 20px; width: calc(100% - 58px); min-height: 58px; border: 0; border-radius: 999px; background: var(--dark); color: white; font-size: clamp(22px, 4.5vw, 32px); font-weight: 950; }
+    .info-modal { width: min(89vw, 470px); }
+    .info-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px 22px; background: white; border-bottom: 2px solid #aaa; }
+    .tab-btn { min-height: 50px; border: 3px solid var(--line); border-radius: 999px; background: var(--panel); font-size: clamp(18px, 4vw, 27px); font-weight: 950; }
+    .tab-btn.active { background: #d9d6c4; }
+    .info-content { background: var(--paper); padding: 20px; max-height: min(72vh, 670px); overflow: auto; }
+    .info-panel { display: none; }
+    .info-panel.active { display: grid; gap: 18px; }
+    .info-box { min-height: 150px; background: white; border-radius: 16px; padding: 22px; font-size: 18px; line-height: 1.65; }
+    .info-box h3 { text-align: center; margin: 0 0 10px; font-size: clamp(24px, 5vw, 34px); }
+    .home-card { width: min(92vw, 620px); max-height: 86vh; overflow: auto; background: var(--paper); border-radius: 26px; box-shadow: 0 20px 42px rgba(0,0,0,.35); padding: 22px; }
+    .home-card h2 { margin: 0 0 14px; text-align: center; font-size: 38px; }
+    .home-games { display: grid; gap: 10px; }
+    .home-game { border: 3px solid var(--line); border-radius: 16px; background: white; padding: 14px; text-align: left; }
+    .home-game strong { display: block; font-size: 23px; }
+    .home-game span { color: #777; font-size: 16px; }
+
+    .cell.legal { cursor: pointer; outline: 3px solid rgba(18,189,134,.22); outline-offset: -6px; }
+    .cell.legal:hover { background: #f3fff9; transform: scale(1.015); }
+    .cell.collectable { cursor: pointer; outline: 5px solid rgba(255,165,15,.72); outline-offset: -7px; z-index: 2; }
+    .cell.blocked { cursor: default; opacity: .72; }
+    .tray-piece { border: 3px solid transparent; }
+    .tray-piece.selected { border-color: #2e2a2f; transform: translateY(-2px); box-shadow: 0 9px 16px rgba(0,0,0,.2), inset 0 2px 7px rgba(0,0,0,.08); }
+    .tray-piece:disabled, .game-btn:disabled { cursor: not-allowed; opacity: .45; }
+    .score-card.current { box-shadow: 0 0 0 4px rgba(46,42,47,.18), 0 4px 8px rgba(0,0,0,.18); }
+    .difficulty-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+    .difficulty-btn { min-height: 42px; border: 3px solid var(--line); border-radius: 14px; background: white; font-weight: 900; color: #777; }
+    .difficulty-btn.selected { border-color: #777; color: #000; box-shadow: 0 5px 10px rgba(0,0,0,.18); }
+    .info-box ol, .info-box ul { margin: 8px 0 0; padding-left: 1.4em; }
+    .info-box li { margin: 6px 0; }
+    .log-list { margin: 0; padding-left: 1.2em; }
+    .log-list li { margin: 7px 0; }
+    .desktop-card small { color: #777; display: block; line-height: 1.5; }
+
+    @media (max-width: 900px) {
+      .desktop-shell { display: block; padding: 0; background: var(--paper); }
+      .game-layout { display: block; width: 100%; padding: 0; }
+      .phone-app { width: 100%; box-shadow: none; }
+      .desktop-panel { display: none; }
+    }
+    @media (min-width: 901px) {
+      .phone-app { min-height: auto; margin-top: 24px; border-radius: 0 0 24px 24px; overflow: hidden; }
+      .topbar { position: relative; }
+      .play-area { padding-bottom: 28px; }
+    }
+    @media (max-width: 420px) {
+      .topbar { height: 76px; grid-template-columns: 56px 1fr 56px; }
+      .play-area { padding-left: 12px; padding-right: 12px; }
+      .board { gap: 5px; padding: 10px; border-width: 6px; }
+      .below-board { grid-template-columns: 1fr; }
+      .action-row { grid-template-columns: 1fr; }
+      .mode-options, .player-grid, .game-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="desktop-shell">
+    <div class="game-layout">
+      <main class="phone-app" aria-live="polite">
+        <header class="topbar">
+          <button class="icon-btn" id="openHome" aria-label="返回首頁"><span class="back-icon"></span></button>
+          <div class="title-block">
+            <h1 id="gameTitle">蒐靈祭 Soulaween</h1>
+            <p id="gameCredit">設計者：陳曦， 出版社：玩聚設計</p>
+          </div>
+          <button class="icon-btn" id="openSettings" aria-label="遊戲設定"><svg class="gear-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.35 1.05V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.05-.35H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .35-1.05V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.37.37.7.69.93.29.21.65.32 1.01.32H21a2 2 0 1 1 0 4h-.09c-.36 0-.72.11-1.01.32-.32.23-.55.56-.69.93Z"></path></svg></button>
+        </header>
+
+        <section class="play-area">
+          <div class="win-labels"><span class="red" id="redWinText">先手勝率60.0%</span><span class="blue" id="blueWinText">後手勝率40.0%</span></div>
+          <div class="winbar" id="winbar"><span></span><span></span></div>
+          <div class="score-row"><div class="score-card red"><span id="redScore">2 / 3</span></div><div class="score-card blue"><span id="blueScore">0 / 3</span></div></div>
+          <div class="board-wrap"><div class="board cols-4" id="board"></div></div>
+          <div class="below-board">
+            <div class="turn-card" id="turnCard">現在是<br>紅色玩家的回合</div>
+            <div class="choice-tray" id="choiceTray"></div>
+          </div>
+          <div class="action-row">
+            <button class="game-btn primary" id="newGame">開始新對局</button>
+            <button class="game-btn secondary" id="openInfo">遊戲說明</button>
+            <button class="game-btn" id="undoMove">返回上一步</button>
+          </div>
+        </section>
+      </main>
+
+      <aside class="desktop-panel">
+        <section class="desktop-card">
+          <h2>遊戲切換</h2>
+          <div class="game-list" id="desktopGameList"></div>
+        </section>
+        <section class="desktop-card status-lines">
+          <h2>目前狀態</h2>
+          <div id="desktopStatus"></div>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <div class="home-layer" id="homeLayer">
+    <section class="home-card">
+      <h2>選擇遊戲</h2>
+      <div class="home-games" id="homeGames"></div>
+      <button class="confirm-btn" id="closeHome">回到對局</button>
+    </section>
+  </div>
+
+  <div class="modal-layer" id="settingsLayer">
+    <section class="modal" role="dialog" aria-modal="true" aria-label="遊戲設定">
+      <header class="modal-head"><h2>遊戲設定</h2><button class="icon-btn" id="settingsGear" aria-label="關閉設定"><svg class="gear-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.35 1.05V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.05-.35H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .35-1.05V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.37.37.7.69.93.29.21.65.32 1.01.32H21a2 2 0 1 1 0 4h-.09c-.36 0-.72.11-1.01.32-.32.23-.55.56-.69.93Z"></path></svg></button></header>
+      <div class="modal-body">
+        <section class="settings-section" id="setupSection">
+          <div class="settings-label">棋盤設置</div>
+          <div class="mode-options" id="modeOptions"></div>
+        </section>
+        <section class="settings-section">
+          <div class="settings-label">先手設置</div>
+          <div class="player-grid" data-player="first"></div>
+        </section>
+        <section class="settings-section">
+          <div class="settings-label">後手設置</div>
+          <div class="player-grid" data-player="second"></div>
+        </section>
+        <section class="settings-section">
+          <div class="settings-label">AI 迭帶次數</div>
+          <input class="ai-input" id="aiIterations" type="number" min="100" step="100" value="5000">
+        </section>
+      </div>
+      <button class="confirm-btn" id="closeSettings">確認並關閉</button>
+    </section>
+  </div>
+
+  <div class="modal-layer" id="infoLayer">
+    <section class="modal info-modal" role="dialog" aria-modal="true" aria-label="遊戲資訊">
+      <div class="info-tabs">
+        <button class="tab-btn active" data-tab="log">行動日誌</button>
+        <button class="tab-btn" data-tab="rules">規則說明</button>
+        <button class="tab-btn" data-tab="intro">遊戲介紹</button>
+      </div>
+      <div class="info-content">
+        <div class="info-panel active" id="tab-log"></div>
+        <div class="info-panel" id="tab-rules"></div>
+        <div class="info-panel" id="tab-intro"></div>
+      </div>
+      <button class="confirm-btn" id="closeInfo">確認並關閉</button>
+    </section>
+  </div>
+
+  <script>
+const PLAYER = { FIRST: 'first', SECOND: 'second' };
+const COLOR = { GREEN: 'green', ORANGE: 'orange' };
+const TARGET_SCORE = 3;
+const PLAYER_NAMES = { first: '先手', second: '後手' };
+const PLAYER_TYPES = { '人類玩家': 'human', '隨機猴子': 'random', '電腦AI': 'mcts' };
+const ITERATION_PRESETS = [
+  { label: '簡單', value: 400 },
+  { label: '中級', value: 1200 },
+  { label: '困難', value: 2500 },
+  { label: '專家', value: 5000 }
+];
+
+const state = {
+  board: createEmptyBoard(),
+  scores: { first: 0, second: 0 },
+  turn: PLAYER.FIRST,
+  selectedColor: COLOR.GREEN,
+  phase: 'move',
+  possibleLines: [],
+  lastPlacedColor: null,
+  winner: null,
+  gameOver: false,
+  first: '人類玩家',
+  second: '電腦AI',
+  iterations: 1200,
+  history: [],
+  logs: [],
+  aiStats: null,
+  thinking: false
+};
+
+let aiTimer = null;
+let evalTimer = null;
+const $ = (id) => document.getElementById(id);
+
+function createEmptyBoard() {
+  return Array.from({ length: 4 }, () => Array(4).fill(null));
+}
+
+function cloneBoard(board) {
+  return board.map((row) => row.slice());
+}
+
+function otherPlayer(player) {
+  return player === PLAYER.FIRST ? PLAYER.SECOND : PLAYER.FIRST;
+}
+
+function currentPlayerType() {
+  return PLAYER_TYPES[state[state.turn]];
+}
+
+function isHumanTurn() {
+  return currentPlayerType() === 'human';
+}
+
+function addLog(text) {
+  state.logs.push(text);
+  if (state.logs.length > 80) state.logs.shift();
+}
+
+function snapshot() {
+  return {
+    board: cloneBoard(state.board),
+    scores: { ...state.scores },
+    turn: state.turn,
+    selectedColor: state.selectedColor,
+    phase: state.phase,
+    possibleLines: JSON.parse(JSON.stringify(state.possibleLines)),
+    lastPlacedColor: state.lastPlacedColor,
+    winner: state.winner,
+    gameOver: state.gameOver,
+    logs: state.logs.slice(),
+    aiStats: state.aiStats,
+    thinking: false
+  };
+}
+
+function restoreSnapshot(snap) {
+  Object.assign(state, {
+    board: cloneBoard(snap.board),
+    scores: { ...snap.scores },
+    turn: snap.turn,
+    selectedColor: snap.selectedColor,
+    phase: snap.phase,
+    possibleLines: JSON.parse(JSON.stringify(snap.possibleLines)),
+    lastPlacedColor: snap.lastPlacedColor,
+    winner: snap.winner,
+    gameOver: snap.gameOver,
+    logs: snap.logs.slice(),
+    aiStats: snap.aiStats,
+    thinking: false
+  });
+}
+
+function pushHistory() {
+  state.history.push(snapshot());
+  if (state.history.length > 120) state.history.shift();
+}
+
+function clearTimers() {
+  clearTimeout(aiTimer);
+  clearTimeout(evalTimer);
+  aiTimer = null;
+  evalTimer = null;
+}
+
+function newGame() {
+  clearTimers();
+  state.board = createEmptyBoard();
+  state.scores = { first: 0, second: 0 };
+  state.turn = PLAYER.FIRST;
+  state.selectedColor = COLOR.GREEN;
+  state.phase = 'move';
+  state.possibleLines = [];
+  state.lastPlacedColor = null;
+  state.winner = null;
+  state.gameOver = false;
+  state.history = [];
+  state.aiStats = null;
+  state.thinking = false;
+  state.logs = [
+    '建立 Soulaween 新對局。',
+    `先手：${state.first}，後手：${state.second}。`,
+    `AI 迭代數：${state.iterations}。`
+  ];
+  render();
+  scheduleTurnWork();
+}
+
+function getLegalCells(board = state.board) {
+  const moves = [];
+  for (let r = 0; r < 4; r++) {
+    for (let c = 0; c < 4; c++) {
+      if (board[r][c] === null) moves.push({ r, c });
+    }
+  }
+  return moves;
+}
+
+function allMoves(board = state.board) {
+  return getLegalCells(board).flatMap((move) => [
+    { ...move, color: COLOR.GREEN },
+    { ...move, color: COLOR.ORANGE }
+  ]);
+}
+
+function flip(color) {
+  return color === COLOR.GREEN ? COLOR.ORANGE : COLOR.GREEN;
+}
+
+function flipAdjacent(board, r, c) {
+  const next = cloneBoard(board);
+  for (const [dr, dc] of [[0,1], [0,-1], [1,0], [-1,0]]) {
+    const nr = r + dr;
+    const nc = c + dc;
+    if (nr >= 0 && nr < 4 && nc >= 0 && nc < 4 && next[nr][nc]) {
+      next[nr][nc] = flip(next[nr][nc]);
+    }
+  }
+  return next;
+}
+
+function checkLines(board) {
+  const lines = [];
+  for (let r = 0; r < 4; r++) {
+    const color = board[r][0];
+    if (color && board[r].every((cell) => cell === color)) {
+      lines.push({ color, positions: [0,1,2,3].map((c) => ({ r, c })) });
+    }
+  }
+  for (let c = 0; c < 4; c++) {
+    const color = board[0][c];
+    if (color && [0,1,2,3].every((r) => board[r][c] === color)) {
+      lines.push({ color, positions: [0,1,2,3].map((r) => ({ r, c })) });
+    }
+  }
+  const main = board[0][0];
+  if (main && [0,1,2,3].every((i) => board[i][i] === main)) {
+    lines.push({ color: main, positions: [0,1,2,3].map((i) => ({ r: i, c: i })) });
+  }
+  const anti = board[0][3];
+  if (anti && [0,1,2,3].every((i) => board[i][3 - i] === anti)) {
+    lines.push({ color: anti, positions: [0,1,2,3].map((i) => ({ r: i, c: 3 - i })) });
+  }
+  return lines;
+}
+
+function removePlacedColorOnFullBoard(board, placedColor) {
+  if (!board.every((row) => row.every(Boolean))) return { board, removed: 0 };
+  let removed = 0;
+  const next = board.map((row) => row.map((cell) => {
+    if (cell === placedColor) {
+      removed++;
+      return null;
+    }
+    return cell;
+  }));
+  return { board: next, removed };
+}
+
+function placeAt(r, c) {
+  if (state.gameOver || state.phase !== 'move' || !isHumanTurn() || state.board[r][c] !== null || state.thinking) return;
+  pushHistory();
+  performPlacement({ r, c, color: state.selectedColor }, false);
+}
+
+function performPlacement(move, automatic) {
+  let next = cloneBoard(state.board);
+  next[move.r][move.c] = move.color;
+  next = flipAdjacent(next, move.r, move.c);
+  state.board = next;
+  state.lastPlacedColor = move.color;
+  state.possibleLines = checkLines(next);
+  state.aiStats = null;
+  state.thinking = false;
+  addLog(`${PLAYER_NAMES[state.turn]}${automatic ? 'AI' : '玩家'}在 ${coord(move.r, move.c)} 放置${colorName(move.color)}面，翻轉上下左右相鄰棋子。`);
+
+  if (state.possibleLines.length > 0) {
+    state.phase = 'collect';
+    addLog(`形成 ${state.possibleLines.length} 條 4 連線，進入收取階段。`);
+    render();
+    if (!isHumanTurn()) aiTimer = setTimeout(() => collectLine(0, true), 420);
+    return;
+  }
+  finalizeTurn(next, move.color);
+}
+
+function collectLine(index, automatic = false) {
+  if (state.gameOver || state.phase !== 'collect') return;
+  const line = state.possibleLines[index];
+  if (!line) return;
+  if (!automatic) pushHistory();
+
+  const next = cloneBoard(state.board);
+  for (const pos of line.positions) next[pos.r][pos.c] = null;
+  state.board = next;
+  state.scores[state.turn] += 1;
+  addLog(`${PLAYER_NAMES[state.turn]}收取${colorName(line.color)}連線：${line.positions.map((p) => coord(p.r, p.c)).join('、')}，得到 1 分。`);
+
+  if (state.scores[state.turn] >= TARGET_SCORE) {
+    state.winner = state.turn;
+    state.gameOver = true;
+    state.phase = 'gameover';
+    state.possibleLines = [];
+    addLog(`${PLAYER_NAMES[state.turn]}達到 ${TARGET_SCORE} 分，遊戲結束。`);
+    render();
+    return;
+  }
+  finalizeTurn(next, state.lastPlacedColor);
+}
+
+function finalizeTurn(board, placedColor) {
+  let finalBoard = cloneBoard(board);
+  const fullResult = removePlacedColorOnFullBoard(finalBoard, placedColor);
+  finalBoard = fullResult.board;
+  if (fullResult.removed > 0) {
+    addLog(`棋盤全滿，移除所有${colorName(placedColor)}面靈魂，共 ${fullResult.removed} 枚。`);
+  }
+  state.board = finalBoard;
+  state.turn = otherPlayer(state.turn);
+  state.phase = 'move';
+  state.possibleLines = [];
+  state.lastPlacedColor = null;
+  state.aiStats = null;
+  state.thinking = false;
+  addLog(`輪到${PLAYER_NAMES[state.turn]}行動。`);
+  render();
+  scheduleTurnWork();
+}
+
+function coord(r, c) {
+  return `${r + 1}-${c + 1}`;
+}
+
+function colorName(color) {
+  return color === COLOR.GREEN ? '綠色' : '橘色';
+}
+
+function terminalResult(board, scores) {
+  if (scores.first >= TARGET_SCORE) return PLAYER.FIRST;
+  if (scores.second >= TARGET_SCORE) return PLAYER.SECOND;
+  if (getLegalCells(board).length === 0) return null;
+  return undefined;
+}
+
+function applyMoveForAI(board, scores, turn, move) {
+  let nextBoard = cloneBoard(board);
+  nextBoard[move.r][move.c] = move.color;
+  nextBoard = flipAdjacent(nextBoard, move.r, move.c);
+  const nextScores = { ...scores };
+  const lines = checkLines(nextBoard);
+  if (lines.length > 0) {
+    for (const pos of lines[0].positions) nextBoard[pos.r][pos.c] = null;
+    nextScores[turn] += 1;
+  }
+  if (nextScores[turn] < TARGET_SCORE) {
+    nextBoard = removePlacedColorOnFullBoard(nextBoard, move.color).board;
+  }
+  return { board: nextBoard, scores: nextScores, turn: otherPlayer(turn) };
+}
+
+function randomMove(board = state.board) {
+  const moves = allMoves(board);
+  return moves.length ? moves[Math.floor(Math.random() * moves.length)] : null;
+}
+
+class MctsNode {
+  constructor(board, scores, turn, parent = null, move = null) {
+    this.board = cloneBoard(board);
+    this.scores = { ...scores };
+    this.turn = turn;
+    this.parent = parent;
+    this.move = move;
+    this.children = [];
+    this.untried = allMoves(board);
+    this.visits = 0;
+    this.wins = 0;
+  }
+}
+
+function mctsSearch(board, scores, turn, iterations) {
+  const root = new MctsNode(board, scores, turn);
+  const rootPlayer = turn;
+  const loops = Math.max(1, Math.floor(Number(iterations) || 1));
+  let firstWins = 0;
+  let secondWins = 0;
+  let draws = 0;
+
+  for (let i = 0; i < loops; i++) {
+    let node = root;
+    while (node.untried.length === 0 && node.children.length > 0) {
+      node = node.children.reduce((best, child) => uct(child) > uct(best) ? child : best);
+    }
+    if (node.untried.length > 0 && terminalResult(node.board, node.scores) === undefined) {
+      const moveIndex = Math.floor(Math.random() * node.untried.length);
+      const move = node.untried.splice(moveIndex, 1)[0];
+      const next = applyMoveForAI(node.board, node.scores, node.turn, move);
+      const child = new MctsNode(next.board, next.scores, next.turn, node, move);
+      node.children.push(child);
+      node = child;
+    }
+    const winner = rollout(node.board, node.scores, node.turn);
+    if (winner === PLAYER.FIRST) firstWins++;
+    else if (winner === PLAYER.SECOND) secondWins++;
+    else draws++;
+    while (node) {
+      node.visits++;
+      if (winner === rootPlayer) node.wins++;
+      node = node.parent;
+    }
+  }
+
+  const best = root.children.length
+    ? root.children.reduce((a, b) => scoreChild(b) > scoreChild(a) ? b : a)
+    : null;
+  const total = Math.max(1, firstWins + secondWins + draws);
+  return {
+    move: best?.move || randomMove(board),
+    stats: {
+      first: firstWins / total * 100,
+      second: secondWins / total * 100,
+      draw: draws / total * 100
+    }
+  };
+}
+
+function uct(node) {
+  if (node.visits === 0) return Infinity;
+  return (node.wins / node.visits) + 1.41 * Math.sqrt(Math.log(Math.max(1, node.parent.visits)) / node.visits);
+}
+
+function scoreChild(node) {
+  if (node.visits === 0) return -1;
+  return node.wins / node.visits + Math.log(node.visits + 1) / 1000;
+}
+
+function rollout(board, scores, turn) {
+  let b = cloneBoard(board);
+  let s = { ...scores };
+  let t = turn;
+  for (let depth = 0; depth < 70; depth++) {
+    const result = terminalResult(b, s);
+    if (result !== undefined) return result;
+    const move = randomMove(b);
+    if (!move) return null;
+    const next = applyMoveForAI(b, s, t, move);
+    b = next.board;
+    s = next.scores;
+    t = next.turn;
+  }
+  if (s.first > s.second) return PLAYER.FIRST;
+  if (s.second > s.first) return PLAYER.SECOND;
+  return null;
+}
+
+function doAI() {
+  if (state.gameOver || state.phase !== 'move' || isHumanTurn()) return;
+  state.thinking = true;
+  render();
+  setTimeout(() => {
+    const type = currentPlayerType();
+    let result = { move: randomMove(), stats: null };
+    if (type === 'mcts') {
+      result = mctsSearch(state.board, state.scores, state.turn, state.iterations);
+      state.aiStats = result.stats;
+    }
+    if (result.move) {
+      pushHistory();
+      performPlacement(result.move, true);
+    }
+  }, 60);
+}
+
+function scheduleTurnWork() {
+  clearTimers();
+  if (state.gameOver || state.phase !== 'move') return;
+  if (!isHumanTurn()) {
+    aiTimer = setTimeout(doAI, 520);
+  } else {
+    state.aiStats = heuristicStats();
+    renderWinRate();
+  }
+}
+
+function heuristicStats() {
+  const scoreDelta = state.scores.first - state.scores.second;
+  const firstPieces = state.board.flat().filter((cell) => cell === COLOR.GREEN).length;
+  const secondPieces = state.board.flat().filter((cell) => cell === COLOR.ORANGE).length;
+  const pieceDelta = (firstPieces - secondPieces) * 1.5;
+  const turnBias = state.turn === PLAYER.FIRST ? 2 : -2;
+  const first = Math.max(5, Math.min(95, 50 + scoreDelta * 18 + pieceDelta + turnBias));
+  return { first, second: 100 - first, draw: 0 };
+}
+
+function undoMove() {
+  clearTimers();
+  const snap = state.history.pop();
+  if (!snap) {
+    addLog('目前沒有可返回的上一步。');
+    render();
+    return;
+  }
+  restoreSnapshot(snap);
+  while (!state.gameOver && !isHumanTurn() && state.history.length > 0) {
+    restoreSnapshot(state.history.pop());
+  }
+  addLog('返回上一個可操作狀態。');
+  render();
+  scheduleTurnWork();
+}
+
+function render() {
+  $('gameTitle').textContent = '蒐靈祭 Soulaween';
+  $('gameCredit').textContent = '設計者：陳曦， 出版社：玩聚設計';
+  $('redScore').textContent = `${state.scores.first} / ${TARGET_SCORE}`;
+  $('blueScore').textContent = `${state.scores.second} / ${TARGET_SCORE}`;
+  $('redScore').parentElement.classList.toggle('current', state.turn === PLAYER.FIRST && !state.gameOver);
+  $('blueScore').parentElement.classList.toggle('current', state.turn === PLAYER.SECOND && !state.gameOver);
+  renderWinRate();
+  renderTurn();
+  renderBoard();
+  renderChoices();
+  renderInfo();
+  renderSettings();
+  renderHome();
+  $('desktopStatus').innerHTML = [
+    '遊戲：蒐靈祭 Soulaween',
+    `階段：${phaseLabel()}`,
+    `目前回合：${state.gameOver ? '遊戲結束' : PLAYER_NAMES[state.turn]}`,
+    `先手：${state.first}`,
+    `後手：${state.second}`,
+    `AI 迭代：${state.iterations}`,
+    `可返回步數：${state.history.length}`,
+    '<small>規則依 2.0 程式碼：放置、翻轉相鄰、4 連線收取、先 3 分勝。</small>'
+  ].join('<br>');
+  $('undoMove').disabled = state.history.length === 0;
+}
+
+function renderWinRate() {
+  const stats = state.aiStats || { first: 50, second: 50, draw: 0 };
+  const decisive = Math.max(1, stats.first + stats.second);
+  const firstBar = stats.first / decisive * 100;
+  const secondBar = 100 - firstBar;
+  $('redWinText').textContent = `先手勝率${stats.first.toFixed(1)}%`;
+  $('blueWinText').textContent = `後手勝率${stats.second.toFixed(1)}%`;
+  $('winbar').style.setProperty('--p1', `${Math.max(1, firstBar)}fr`);
+  $('winbar').style.setProperty('--p2', `${Math.max(1, secondBar)}fr`);
+}
+
+function renderTurn() {
+  if (state.gameOver) {
+    $('turnCard').innerHTML = `${PLAYER_NAMES[state.winner]}獲勝<br>請開始新對局`;
+    $('turnCard').style.background = 'var(--dark)';
+  } else if (state.phase === 'collect') {
+    $('turnCard').innerHTML = '形成連線<br>請選擇收取線';
+    $('turnCard').style.background = 'var(--orange)';
+  } else if (state.thinking) {
+    $('turnCard').innerHTML = `${PLAYER_NAMES[state.turn]}電腦<br>思考中`;
+    $('turnCard').style.background = state.turn === PLAYER.FIRST ? 'var(--red)' : 'var(--blue)';
+  } else {
+    $('turnCard').innerHTML = `${PLAYER_NAMES[state.turn]}玩家<br>${isHumanTurn() ? '選擇格子' : '等待AI'}`;
+    $('turnCard').style.background = state.turn === PLAYER.FIRST ? 'var(--red)' : 'var(--blue)';
+  }
+}
+
+function renderBoard() {
+  const board = $('board');
+  board.className = 'board cols-4';
+  const humanMove = state.phase === 'move' && isHumanTurn() && !state.gameOver && !state.thinking;
+  board.innerHTML = state.board.flatMap((row, r) => row.map((cell, c) => {
+    const collectIndex = state.possibleLines.findIndex((line) => line.positions.some((pos) => pos.r === r && pos.c === c));
+    const classes = ['cell'];
+    if (humanMove && cell === null) classes.push('legal');
+    if (state.phase === 'collect' && collectIndex >= 0 && isHumanTurn()) classes.push('collectable');
+    if (!humanMove && collectIndex < 0) classes.push('blocked');
+    const piece = cell ? `<span class="piece ${cell}"></span>` : '';
+    return `<div class="${classes.join(' ')}" data-r="${r}" data-c="${c}" data-line="${collectIndex}">${piece}</div>`;
+  })).join('');
+  board.querySelectorAll('.cell').forEach((cell) => {
+    cell.addEventListener('click', () => {
+      const r = Number(cell.dataset.r);
+      const c = Number(cell.dataset.c);
+      if (state.phase === 'collect' && isHumanTurn()) collectLine(Number(cell.dataset.line), false);
+      else placeAt(r, c);
+    });
+  });
+}
+
+function renderChoices() {
+  const disabled = state.gameOver || state.phase !== 'move' || !isHumanTurn() || state.thinking;
+  $('choiceTray').innerHTML = [COLOR.ORANGE, COLOR.GREEN].map((color) => `
+    <button class="tray-piece ${state.selectedColor === color ? 'selected' : ''}" data-color="${color}" ${disabled ? 'disabled' : ''} aria-label="選擇${colorName(color)}面">
+      <span class="piece ${color}"></span>
+    </button>
+  `).join('');
+  document.querySelectorAll('[data-color]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (disabled) return;
+      state.selectedColor = button.dataset.color;
+      addLog(`選擇${colorName(state.selectedColor)}面。`);
+      render();
+    });
+  });
+}
+
+function renderInfo() {
+  $('tab-log').innerHTML = `<div class="info-box"><h3>行動日誌</h3><ol class="log-list">${state.logs.map((log) => `<li>${log}</li>`).join('')}</ol></div>`;
+  $('tab-rules').innerHTML = [
+    infoBox('初始設置', '<ul><li>4x4 棋盤，初始全空。</li><li>雙方分數皆為 0。</li><li>先手先行，目標為先取得 3 分。</li><li>棋子只有一種，為橘/綠雙面棋。</li></ul>'),
+    infoBox('回合流程', '<ol><li>目前玩家選擇橘色面或綠色面。</li><li>在任一空格放置一枚靈魂棋。</li><li>放置後，翻轉上下左右相鄰且已有棋子的靈魂，斜角不翻。</li><li>若出現 4 格同色橫列、直行或對角線，進入收取階段。</li></ol>'),
+    infoBox('收取與滿盤', '<ul><li>形成一條或多條連線時，玩家選擇其中一條收取。</li><li>被收取的 4 格清空，目前玩家得 1 分。</li><li>若回合結束時棋盤全滿，移除所有與本回合放置顏色相同的棋子。</li></ul>'),
+    infoBox('勝利條件', '<p>任一玩家達到 3 分立即獲勝。</p>')
+  ].join('');
+  $('tab-intro').innerHTML = [
+    infoBox('基本介紹', '<p>蒐靈祭 Soulaween 是以放置、翻面、製造同色 4 連線與收取為核心的 4x4 抽象棋。</p>'),
+    infoBox('設計師介紹', '<p>設計者：陳曦。</p>'),
+    infoBox('出版社介紹', '<p>出版社：玩聚設計。</p>'),
+    infoBox('此版本完成內容', '<ul><li>真實落子、翻轉、連線、收取與勝負判定。</li><li>人類、隨機 AI、MCTS AI。</li><li>返回上一步、行動日誌、設定與勝率條。</li></ul>')
+  ].join('');
+}
+
+function infoBox(title, body) {
+  return `<div class="info-box"><h3>${title}</h3>${body}</div>`;
+}
+
+function phaseLabel() {
+  if (state.gameOver) return '遊戲結束';
+  if (state.phase === 'collect') return '收取連線';
+  return '放置靈魂';
+}
+
+function playerIconMarkup(name) {
+  const icons = {
+    '人類玩家': '<span class="player-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="line" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle class="line" cx="12" cy="7" r="4"/></svg></span>',
+    '隨機猴子': '<span class="player-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect class="line" x="6" y="6" width="12" height="12" rx="2"/><path class="line" d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></span>',
+    '電腦AI': '<span class="player-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="line" d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>'
+  };
+  return icons[name] || icons['人類玩家'];
+}
+
+function renderSettings() {
+  $('setupSection').style.display = 'none';
+  document.querySelectorAll('[data-player]').forEach((wrap) => {
+    const key = wrap.dataset.player;
+    wrap.innerHTML = ['人類玩家','隨機猴子','電腦AI'].map((name) => `
+      <button class="player-choice ${state[key] === name ? 'selected' : ''}" data-${key}="${name}">
+        ${playerIconMarkup(name)}<span>${name}</span>
+      </button>
+    `).join('');
+  });
+  document.querySelectorAll('[data-first]').forEach((button) => button.addEventListener('click', () => { state.first = button.dataset.first; renderSettings(); }));
+  document.querySelectorAll('[data-second]').forEach((button) => button.addEventListener('click', () => { state.second = button.dataset.second; renderSettings(); }));
+  $('aiIterations').value = state.iterations;
+
+  let row = document.querySelector('.difficulty-row');
+  if (!row) {
+    row = document.createElement('div');
+    row.className = 'difficulty-row';
+    $('aiIterations').insertAdjacentElement('afterend', row);
+  }
+  row.innerHTML = ITERATION_PRESETS.map((preset) => `<button class="difficulty-btn ${Number(state.iterations) === preset.value ? 'selected' : ''}" data-iterations="${preset.value}" type="button">${preset.label}</button>`).join('');
+  row.querySelectorAll('[data-iterations]').forEach((button) => button.addEventListener('click', () => {
+    state.iterations = Number(button.dataset.iterations);
+    $('aiIterations').value = state.iterations;
+    renderSettings();
+  }));
+}
+
+function renderHome() {
+  $('homeGames').innerHTML = '<button class="home-game active" data-game="soulaween"><strong>蒐靈祭 Soulaween</strong><span>目前已完成正式可玩版本</span></button>';
+  $('desktopGameList').innerHTML = '<button class="list-btn active" data-game="soulaween">蒐靈祭 Soulaween</button>';
+  document.querySelectorAll('[data-game]').forEach((button) => button.addEventListener('click', () => setOpen('homeLayer', false)));
+}
+
+function setOpen(id, open) {
+  $(id).classList.toggle('open', open);
+}
+
+document.querySelectorAll('.tab-btn').forEach((button) => button.addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.info-panel').forEach((p) => p.classList.remove('active'));
+  button.classList.add('active');
+  $(`tab-${button.dataset.tab}`).classList.add('active');
+}));
+
+$('openHome').addEventListener('click', () => setOpen('homeLayer', true));
+$('closeHome').addEventListener('click', () => setOpen('homeLayer', false));
+$('openSettings').addEventListener('click', () => setOpen('settingsLayer', true));
+$('settingsGear').addEventListener('click', () => setOpen('settingsLayer', false));
+$('closeSettings').addEventListener('click', () => {
+  state.iterations = Math.max(100, Number($('aiIterations').value || 5000));
+  addLog(`更新設定：先手 ${state.first}，後手 ${state.second}，AI 迭代 ${state.iterations}。`);
+  setOpen('settingsLayer', false);
+  render();
+  scheduleTurnWork();
+});
+$('openInfo').addEventListener('click', () => setOpen('infoLayer', true));
+$('closeInfo').addEventListener('click', () => setOpen('infoLayer', false));
+$('newGame').addEventListener('click', newGame);
+$('undoMove').addEventListener('click', undoMove);
+document.querySelectorAll('.modal-layer, .home-layer').forEach((layer) => layer.addEventListener('click', (event) => {
+  if (event.target === layer) layer.classList.remove('open');
+}));
+
+newGame();
+
+  </script>
+</body>
+</html>
+
+
+
+
+

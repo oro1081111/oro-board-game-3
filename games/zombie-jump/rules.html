@@ -1,0 +1,19 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>殭屍棋 JUMP 規則</title><link rel="stylesheet" href="../../assets/manual.css"></head>
+<body><main class="page">
+<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回目錄</a></div>
+<h1>殭屍棋 JUMP</h1>
+<p class="lead">依 `棋類遊戲2.0` 目前程式碼整理。這是一款 5x5 棋盤上的跳躍吃子遊戲，棋子有階級與堆疊；玩家透過復活、移動、跳躍吃子得分，先達 8 分者勝。</p>
+<div class="meta"><span class="pill">2 人</span><span class="pill">5x5 棋盤</span><span class="pill">復活 / 移動 / 跳躍</span><span class="pill">先得 8 分勝</span></div>
+<section class="section"><h2>配件</h2><ul><li>5x5 棋盤 1 面。</li><li>紅方殭屍棋：等級 1、2、3 若干，依初始設置放置。</li><li>藍方殭屍棋：等級 1、2、3 若干，依初始設置放置。</li><li>雙方各有「陰間 / 待命區」，放置被吃、跳出棋盤或待復活的棋子。</li></ul><div class="icon-row"><span class="icon red">1</span><span class="icon red">2</span><span class="icon red">3</span><span class="icon blue">1</span><span class="icon blue">2</span><span class="icon blue">3</span></div></section>
+<section class="section"><h2>初始設置</h2><p>紅方在上方，藍方在下方。空格以 □ 表示。</p><div class="board cols-5"><div class="cell red">R2</div><div class="cell">□</div><div class="cell red">R3</div><div class="cell">□</div><div class="cell red">R2</div><div class="cell red">R1</div><div class="cell red">R1</div><div class="cell red">R1</div><div class="cell red">R1</div><div class="cell red">R1</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell blue">B1</div><div class="cell blue">B1</div><div class="cell blue">B1</div><div class="cell blue">B1</div><div class="cell blue">B1</div><div class="cell blue">B2</div><div class="cell">□</div><div class="cell blue">B3</div><div class="cell">□</div><div class="cell blue">B2</div></div><ul><li>紅方陰間初始有 2 枚紅方等級 2 棋。</li><li>藍方陰間初始有 2 枚藍方等級 2 棋。</li><li>紅方先手。</li></ul></section>
+<section class="section"><h2>可執行行動</h2><ol><li><strong>復活：</strong>若自己的陰間有棋，可選一枚放到任一空格。</li><li><strong>移動：</strong>選擇自己的棋，往上下左右相鄰 1 格移動。</li><li><strong>跳躍：</strong>選擇自己的棋，沿上下左右直線跳過連續棋子，落在合法位置或跳出棋盤。</li></ol></section>
+<section class="section"><h2>一般移動與堆疊</h2><ul><li>棋子可移到上下左右相鄰空格。</li><li>也可移到相鄰的己方棋上，但必須符合堆疊規則。</li><li>堆疊後，目標格成為同一疊，總等級為堆疊中所有棋子等級總和，控制權屬於移動方。</li></ul><h3>堆疊規則</h3><table><tr><th>移動棋</th><th>可疊上的目標</th></tr><tr><td>等級 1 單棋</td><td>己方等級 2 或等級 3 單棋。</td></tr><tr><td>等級 2 單棋</td><td>己方等級 3 單棋。</td></tr><tr><td>總等級 3 的堆疊（等級 1 單棋堆疊到等級 2 單棋形成）</td><td>己方等級 3 單棋。</td></tr><tr><td>等級 1 單棋</td><td>己方總等級 5 的堆疊。</td></tr></table></section>
+<section class="section"><h2>跳躍</h2><ul><li>跳躍必須從相鄰方向開始，且第一格必須有棋可跳過。</li><li>只能沿上下左右直線。</li><li>可跳過一串連續棋子；被跳過棋子的總等級必須小於或等於跳躍棋的總等級。</li><li>落點可以是連續棋子後的空格。</li><li>若連續棋子後是棋盤外，可跳出棋盤。</li><li>若落在己方棋上，仍需符合堆疊規則。</li><li>同一次連跳不可回到已走過的路徑位置，避免無限循環。</li></ul></section>
+<section class="section"><h2>吃子、陰間與得分</h2><ul><li>跳躍時，被跳過的對手棋會被送入對手陰間。</li><li>若被跳過的是一疊棋，該疊會拆成單枚棋送回對手陰間。</li><li>跳過對手棋時，依被跳過對手棋的等級累加得分。</li><li>跳出棋盤時，自己的跳躍棋會拆成單枚棋回到自己的陰間。</li></ul></section>
+<section class="section"><h2>連跳與停止</h2><ul><li>跳躍後若仍有合法跳躍，玩家可以繼續連跳。</li><li>連跳中也可以選擇停止，結束本回合。</li></ul></section>
+<section class="section"><h2>勝利條件</h2><p>任一玩家分數達到 8 分，立即獲勝。</p></section>
+<footer>規則來源：`src/ZombieJumpGame.tsx`。</footer>
+</main></body></html>
+
