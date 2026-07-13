@@ -1,25 +1,24 @@
-﻿# 棋類遊戲3.0 規劃
+# 棋類遊戲3.0
 
-第一階段只做純靜態說明書，不寫遊戲互動程式。
+棋類遊戲3.0採用「一次完整完成一款遊戲」的方式重寫。蒐靈祭 Soulaween 是第一款正式基準遊戲，後續遊戲依同一套UI、規則、AI、undo、日誌與驗證標準實作。
 
-## 目錄原則
+## 開發入口
 
-每款遊戲一個資料夾：
+- `GAME_IMPLEMENTATION_SOP.md`：新增遊戲的完整流程與完成標準。
+- `index.html`：正式遊戲大廳。
+- `interface.html`：目前可玩的共用介面與Soulaween基準實作。
+- `SOULAWEEN_IMPLEMENTATION.md`：Soulaween狀態、規則函式與AI紀錄。
+- `games/<game-id>/rules.html`：每款遊戲的詳細規則。
 
-- `games/<game-id>/rules.html`：該遊戲的配件、設置、流程、勝利條件。
-- 未來可在同資料夾加入 `logic.ts`、`ai.ts`、`tests`、素材圖示。
+## 重寫順序
 
-## 重寫順序建議
-
-1. 規則文件定稿。
-2. 抽出每款遊戲的 State / Action / Rules。
-3. 建立共用搜尋介面，先支援 MCTS，再加 minimax/alpha-beta。
-4. 做返回上一步：以 history stack 儲存狀態，不做反向操作。
-5. 最後做連線：只同步 Action，由雙方各自套用同一套 rules。
+1. 依SOP完成規則audit。
+2. 完成規則、UI、遊戲流程、AI、undo與日誌。
+3. 完成手機、桌面及瀏覽器操作驗證。
+4. 更新文件並推送GitHub Pages。
+5. 前一款達到完成定義後，才開始下一款。
 
 ## 規則來源
 
-本批文件依目前兩個既有專案的程式碼整理：
-
 - `棋類遊戲`：四色棋、四步棋、Torii。
-- `棋類遊戲2.0`：Mijnlieff、Soulaween、Santorini、Zombie Jump。
+- `棋類遊戲2.0`：花園棋、Soulaween、Santorini、Zombie Jump。

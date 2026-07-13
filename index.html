@@ -1,40 +1,144 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>棋類遊戲 3.0 規則說明書</title>
-  <link rel="stylesheet" href="assets/manual.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3f2ec">
+  <title>棋類遊戲 Board Game Lobby</title>
+  <link rel="stylesheet" href="assets/lobby.css">
 </head>
 <body>
-  <main class="page">
-    <div class="topbar"><div class="brand">Board Games 3.0</div></div>
-    <h1>棋類遊戲 3.0</h1>
-    <p class="lead">第一階段先建立純靜態說明書。這裡的規則以「棋類遊戲」與「棋類遊戲2.0」目前程式碼實作為準，後續重寫遊戲程式時再以這些文件作為規則來源。</p>
-    <section class="section">
-      <h2>目錄策略</h2>
-      <p>採用「每款遊戲一個資料夾」。理由是未來每款遊戲會有自己的規則、圖示、狀態型別、AI 評估、測試與素材，分開放最不容易互相污染。</p>
+  <header class="site-head">
+    <div class="head-inner">
+      <p class="brand">ORO BOARD GAMES</p>
+      <h1>棋類遊戲</h1>
+      <p class="subtitle">選擇遊戲，開始對局</p>
+    </div>
+  </header>
+
+  <main class="lobby">
+    <section class="section-head" aria-labelledby="available-title">
+      <div>
+        <p class="eyebrow">PLAY NOW</p>
+        <h2 id="available-title">目前可遊玩</h2>
+      </div>
+      <span class="count">1 款遊戲</span>
     </section>
-    <section class="section">
-      <h2>規則查核狀態</h2>
-      <p>每份規則頁目前先依既有程式碼整理；公開查不到可靠來源的遊戲會在 <code>RULE_AUDIT.md</code> 列出待確認問題，避免把推測當成定稿。</p>
+
+    <article class="game-card featured">
+      <a class="preview-link" href="interface.html" aria-label="開始蒐靈祭 Soulaween">
+        <div class="game-preview" data-preview="soulaween" data-cols="4"></div>
+      </a>
+      <div class="game-body">
+        <div class="game-title-row">
+          <div>
+            <p class="status playable">可遊玩</p>
+            <h3>蒐靈祭 <span>Soulaween</span></h3>
+          </div>
+          <span class="arrow" aria-hidden="true">›</span>
+        </div>
+        <p class="description">玩家輪流放置雙面靈魂並翻轉相鄰棋子。形成四枚同色連線即可收取並得分，率先取得三分者獲勝。</p>
+        <div class="meta"><span>2 人</span><span>4×4 棋盤</span><span>翻轉與連線</span><span>MCTS AI</span></div>
+        <div class="actions"><a class="button primary" href="interface.html">開始遊戲</a><a class="button" href="games/soulaween/rules.html">查看規則</a></div>
+      </div>
+    </article>
+
+    <section class="section-head catalog-head" aria-labelledby="catalog-title">
+      <div>
+        <p class="eyebrow">GAME CATALOG</p>
+        <h2 id="catalog-title">遊戲收藏</h2>
+      </div>
+      <span class="count">開發中</span>
     </section>
-    <section class="section"><h2>遊戲畫面原型</h2><p>已改成可操作的假遊戲畫面，不含實際規則運算。<a href="interface.html">開啟遊戲畫面原型</a></p></section>
-    <section class="grid">
-      <article class="card"><h2>花園棋 Mijnlieff</h2><p>限制對手落點的花園抽象連線計分遊戲。</p><a href="games/mijnlieff/rules.html">閱讀規則</a></article>
-      <article class="card"><h2>蒐靈祭 Soulaween</h2><p>放置與翻轉靈魂，形成 4 連線後收取。</p><a href="games/soulaween/rules.html">閱讀規則</a></article>
-      <article class="card"><h2>聖托里尼 Santorini</h2><p>移動工人、建築樓層，率先登上第 3 層。</p><a href="games/santorini/rules.html">閱讀規則</a></article>
-      <article class="card"><h2>殭屍棋 JUMP</h2><p>復活、移動、跳躍吃子，得 8 分獲勝。</p><a href="games/zombie-jump/rules.html">閱讀規則</a></article>
-      <article class="card"><h2>四色棋 Four Color Chess</h2><p>焦點棋指定對手必須移動的棋子。</p><a href="games/four-color-chess/rules.html">閱讀規則</a></article>
-      <article class="card"><h2>四步棋 Four Moves Chess</h2><p>依所在格數字跳躍移動，封鎖對手。</p><a href="games/four-moves-chess/rules.html">閱讀規則</a></article>
-      <article class="card"><h2>Torii 跳躍森靈</h2><p>森靈移動、散播信徒、建立鳥居。</p><a href="games/torii/rules.html">閱讀規則</a></article>
+
+    <section class="game-grid">
+      <article class="game-card">
+        <div class="game-preview" data-preview="mijnlieff" data-cols="4"></div>
+        <div class="game-body">
+          <p class="status pending">開發中</p>
+          <h3>花園棋 <span>Mijnlieff</span></h3>
+          <p class="description">四種棋子會限制對手下一步的落點，對局結束後依橫、直、斜線的連續棋子計分。</p>
+          <div class="meta"><span>2 人</span><span>抽象策略</span><span>連線計分</span></div>
+          <div class="actions"><a class="button" href="games/mijnlieff/rules.html">查看規則</a></div>
+        </div>
+      </article>
+
+      <article class="game-card">
+        <div class="game-preview" data-preview="santorini" data-cols="5"></div>
+        <div class="game-body">
+          <p class="status pending">開發中</p>
+          <h3>聖托里尼 <span>Santorini</span></h3>
+          <p class="description">移動工人後建造一層建築。率先移動到第三層，或讓對手沒有合法移動即可獲勝。</p>
+          <div class="meta"><span>2 人</span><span>5×5 棋盤</span><span>移動與建築</span></div>
+          <div class="actions"><a class="button" href="games/santorini/rules.html">查看規則</a></div>
+        </div>
+      </article>
+
+      <article class="game-card">
+        <div class="game-preview" data-preview="zombie" data-cols="5"></div>
+        <div class="game-body">
+          <p class="status pending">開發中</p>
+          <h3>殭屍棋 <span>JUMP</span></h3>
+          <p class="description">復活、移動、堆疊與連續跳躍。跳過對手棋子取得分數，率先達到八分者獲勝。</p>
+          <div class="meta"><span>2 人</span><span>5×5 棋盤</span><span>堆疊與跳躍</span></div>
+          <div class="actions"><a class="button" href="games/zombie-jump/rules.html">查看規則</a></div>
+        </div>
+      </article>
+
+      <article class="game-card">
+        <div class="game-preview" data-preview="four-color" data-cols="4"></div>
+        <div class="game-body">
+          <p class="status pending">開發中</p>
+          <h3>四色棋 <span>Four Color Chess</span></h3>
+          <p class="description">移動焦點指定的棋子，落點格色決定對手下一枚必須移動的棋。封鎖指定棋即可獲勝。</p>
+          <div class="meta"><span>2 人</span><span>4×4 棋盤</span><span>焦點與封鎖</span></div>
+          <div class="actions"><a class="button" href="games/four-color-chess/rules.html">查看規則</a></div>
+        </div>
+      </article>
+
+      <article class="game-card">
+        <div class="game-preview" data-preview="four-moves" data-cols="4"></div>
+        <div class="game-body">
+          <p class="status pending">開發中</p>
+          <h3>四步棋 <span>Four Moves Chess</span></h3>
+          <p class="description">依所在格數字移動指定步數，走過的起點會成為空格。讓對手沒有合法落點即可獲勝。</p>
+          <div class="meta"><span>2 人</span><span>4×4 棋盤</span><span>數字步數</span></div>
+          <div class="actions"><a class="button" href="games/four-moves-chess/rules.html">查看規則</a></div>
+        </div>
+      </article>
+
+      <article class="game-card">
+        <div class="game-preview" data-preview="torii" data-cols="4"></div>
+        <div class="game-body">
+          <p class="status pending">開發中</p>
+          <h3>跳躍森靈 <span>Torii</span></h3>
+          <p class="description">選擇行動板塊移動森靈，沿途散播信徒並建立鳥居。完成信徒或鳥居目標即可獲勝。</p>
+          <div class="meta"><span>2 人</span><span>4×4 棋盤</span><span>信徒與鳥居</span></div>
+          <div class="actions"><a class="button" href="games/torii/rules.html">查看規則</a></div>
+        </div>
+      </article>
     </section>
-    <footer>Generated as the first static-manual step for the rewrite.</footer>
   </main>
+
+  <footer class="site-footer">棋類遊戲3.0 · 所有遊戲規則與實作持續整理中</footer>
+
+  <script>
+    const previews = {
+      soulaween: ['', 'g', 'g', 'o', '', 'g', 'o', 'g', '', '', 'g', '', '', '', 'o', ''],
+      mijnlieff: ['＋', '×', '●', '○', '○', '＋', '×', '●', '●', '○', '＋', '×', '×', '●', '○', '＋'],
+      santorini: ['', '', 'h1', '', '', '', 'h2', 'worker-blue', 'h1', '', '', 'h1', 'h3', 'dome', '', '', '', 'worker-orange', 'h2', '', '', '', '', '', ''],
+      zombie: ['r2', '', 'r3', '', 'r2', 'r1', 'r1', 'r1', 'r1', 'r1', '', '', '', '', '', 'b1', 'b1', 'b1', 'b1', 'b1', 'b2', '', 'b3', '', 'b2'],
+      'four-color': ['cr', 'cb', 'cy', 'cg', 'cb', 'cr', 'cg', 'cy', 'cy', 'cg', 'cr', 'cb', 'cg', 'cy', 'cb', 'cr'],
+      'four-moves': ['1', '2', '3', '4', '2', '3', 'blue-piece', '1', '3', 'red-piece', '1', '2', '4', '1', '2', '3'],
+      torii: ['', '', '', '', '', 'red-spirit', 'red-follower', '', '', 'red-follower', 'blue-spirit', '', '', '', 'blue-follower', 'blue-torii']
+    };
+
+    document.querySelectorAll('[data-preview]').forEach((board) => {
+      const cells = previews[board.dataset.preview] || [];
+      board.style.setProperty('--cols', board.dataset.cols || 4);
+      board.innerHTML = cells.map((value) => `<i class="v-${value || 'empty'}" aria-hidden="true">${/^[1-4＋×●○]$/.test(value) ? value : ''}</i>`).join('');
+    });
+  </script>
 </body>
 </html>
-
-
-
-
 

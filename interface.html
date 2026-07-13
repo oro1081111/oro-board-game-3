@@ -899,7 +899,7 @@ document.querySelectorAll('.tab-btn').forEach((button) => button.addEventListene
   $(`tab-${button.dataset.tab}`).classList.add('active');
 }));
 
-$('openHome').addEventListener('click', () => setOpen('homeLayer', true));
+$('openHome').addEventListener('click', () => { window.location.href = 'index.html'; });
 $('closeHome').addEventListener('click', () => setOpen('homeLayer', false));
 $('openSettings').addEventListener('click', () => setOpen('settingsLayer', true));
 $('settingsGear').addEventListener('click', () => setOpen('settingsLayer', false));
