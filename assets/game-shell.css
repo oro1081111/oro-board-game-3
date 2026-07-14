@@ -149,9 +149,10 @@ button { cursor: pointer; }
 .mijn-piece .mark-diagonal::before { transform: translate(-50%, -50%) rotate(45deg); }
 .mijn-piece .mark-diagonal::after { transform: translate(-50%, -50%) rotate(-45deg); }
 .mijn-piece .mark-push, .mijn-piece .mark-pull { inset: 15%; border-radius: 50%; }
-.mijn-piece .mark-push::before, .mijn-piece .mark-pull::before { inset: 0; width: 100%; height: 100%; transform: none; }
 .mijn-piece .mark-push::after, .mijn-piece .mark-pull::after { content: none; }
-.mijn-piece .mark-pull::before { background: transparent; border: clamp(4px, 1.2vw, 8px) solid currentColor; }
+.mijn-piece .mark-push { background: currentColor; }
+.mijn-piece .mark-pull { border: clamp(4px, 1.2vw, 8px) solid currentColor; }
+.mijn-piece .mark-push::before, .mijn-piece .mark-pull::before { content: none; }
 .piece.worker { width: 58%; border-radius: 45% 45% 38% 38%; }
 .piece.spirit { width: 56%; clip-path: polygon(50% 0, 92% 34%, 76% 100%, 24% 100%, 8% 34%); border-radius: 0; }
 .piece.tiny { width: 40%; font-size: 11px; }
@@ -206,7 +207,9 @@ button { cursor: pointer; }
 .mijn-hand.second { background: #fefcf0; }
 .mijn-hand.second .mijn-token { background: #fefcf0; color: #2d2a2e; border-color: #d6d3c1; }
 .mijn-token .piece-mark { font-size: 30px; line-height: 1; }
-.mijn-token .mark-push, .mijn-token .mark-pull { font-size: 30px; }
+.mijn-token .mark-push, .mijn-token .mark-pull { width: 30px; height: 30px; border-radius: 50%; font-size: 0; }
+.mijn-token .mark-push { background: currentColor; }
+.mijn-token .mark-pull { border: 3px solid currentColor; }
 .mijn-token small { position: absolute; right: 2px; bottom: 0; font-size: 9px; }
 .tray-note { flex-basis: 100%; text-align: center; }
 

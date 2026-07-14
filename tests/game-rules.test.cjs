@@ -105,6 +105,12 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal((soulaweenSource.match(/state\.aiStats = null/g) || []).length, 1, 'Soulaween only resets win rate for a new game');
   assert.match(soulaweenSource, /if \(!isHumanTurn\(\)\) aiTimer = setTimeout\(doAI, 520\)/, 'Soulaween evaluates every player type before scheduling computer play');
   const shellCss = fs.readFileSync(path.join(root, 'assets', 'game-shell.css'), 'utf8');
+  const lobbyHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.match(lobbyHtml, /assets\/lobby-boards\//, 'Lobby previews load captured game boards');
+  assert.match(lobbyHtml, /board\.replaceWith\(image\)/, 'Lobby replaces synthetic previews with real board images');
+  for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii']) {
+    assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
+  }
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
   assert.doesNotMatch(shellCss, /\.santorini-level[^}]*animation:/, 'Santorini buildings do not replay their entry animation on every render');
   assert.match(shellCss, /\.board-wrap \{ width: 100%; min-width: 0;/, 'Board wrappers keep the board at the available width');
@@ -113,7 +119,8 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(shellCss, /\.piece\.santorini-worker \{ width: 52%;/, 'Santorini worker sizing applies only to pieces, never the worker-phase board');
   assert.doesNotMatch(shellCss, /(?:^|\n)\.santorini-worker \{/, 'Santorini board and worker piece classes cannot collide');
   assert.match(shellCss, /\.mijn-piece \.piece-mark \{ position: absolute; inset: 19%;/, 'Garden board marks use a centered drawing box');
-  assert.match(shellCss, /\.mijn-token \.mark-push, \.mijn-token \.mark-pull \{ font-size: 30px; \}/, 'Garden supply circles keep the original size');
+  assert.match(shellCss, /\.mijn-token \.mark-push, \.mijn-token \.mark-pull \{ width: 30px; height: 30px;/, 'Garden supply circles keep the original size');
+  assert.match(shellCss, /\.mijn-piece \.mark-pull \{ border: clamp\(/, 'Garden hollow circles use the centered element box instead of an oversized pseudo-element');
   assert.match(shellCss, /\.mijn-piece \.mark-push, \.mijn-piece \.mark-pull/);
   const coreSource = fs.readFileSync(path.join(root, 'assets', 'game-core.js'), 'utf8');
   assert.match(coreSource, /label: '隨機電腦'/);

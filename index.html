@@ -27,19 +27,13 @@
   </main>
   <footer class="site-footer">棋類遊戲 3.0 · 網頁版僅供遊戲推廣與程式練習，實體遊戲版權屬各設計者與出版社。</footer>
   <script>
-    const previews = {
-      soulaween: ['', 'g', 'g', 'o', '', 'g', 'o', 'g', '', '', 'g', '', '', '', 'o', ''],
-      mijnlieff: ['+', '×', '●', '○', '○', '+', '×', '●', '×', '●', '○', '+', '+', '○', '●', '×'],
-      santorini: ['', '', 'h1', '', '', '', 'h2', 'worker-blue', 'h1', '', '', 'h1', 'h3', 'dome', '', '', '', 'worker-orange', 'h2', '', '', '', '', '', ''],
-      zombie: ['r2', '', 'r3', '', 'r2', 'r1', 'r1', 'r1', 'r1', 'r1', '', '', '', '', '', 'b1', 'b1', 'b1', 'b1', 'b1', 'b2', '', 'b3', '', 'b2'],
-      'four-color': ['cr', 'cb', 'cy', 'cg', 'cb', 'cr', 'cg', 'cy', 'cy', 'cg', 'cr', 'cb', 'cg', 'cy', 'cb', 'cr'],
-      'four-moves': ['1', '2', '3', '4', '2', '3', 'blue-piece', '1', '3', 'red-piece', '1', '2', '4', '1', '2', '3'],
-      torii: ['', '', '', '', '', 'red-spirit', 'red-follower', '', '', 'red-follower', 'blue-spirit', '', '', '', 'blue-follower', 'blue-torii']
-    };
+    const previewImages = { zombie: 'zombie-jump', 'four-color': 'four-color-chess', 'four-moves': 'four-moves-chess' };
     document.querySelectorAll('[data-preview]').forEach((board) => {
-      const cells = previews[board.dataset.preview] || [];
-      board.style.setProperty('--cols', board.dataset.cols || 4);
-      board.innerHTML = cells.map((value) => `<i class="v-${value || 'empty'}" aria-hidden="true">${/^[1-4+×●○]$/.test(value) ? value : ''}</i>`).join('');
+      const image = document.createElement('img');
+      image.className = 'game-preview-image';
+      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || board.dataset.preview}.png`;
+      image.alt = `${board.dataset.preview} 實際遊戲中局棋盤`;
+      board.replaceWith(image);
     });
   </script>
 </body>
