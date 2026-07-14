@@ -158,17 +158,18 @@
         const item = state.board[r][c];
         if (item === false) board += cellButton(r, c, 'blocked', '', '不可用格');
         else {
-          const piece = item ? `<span class="piece ${item.owner === 'first' ? 'dark' : 'light'}"><span class="piece-mark">${MIJN_MARKS[item.type]}</span></span>` : '';
+          const piece = item ? `<span class="piece mijn-piece ${item.owner === 'first' ? 'dark' : 'light'}" data-anim-id="mijn-${r}-${c}"><span class="piece-mark">${MIJN_MARKS[item.type]}</span></span>` : '';
           board += cellButton(r, c, legal.has(key(r, c)) && selected ? 'legal' : '', piece);
         }
       }
-      const tray = MIJN_TYPES.map((type) => `<button class="tray-btn ${selected === type ? 'selected' : ''}" data-piece="${type}" ${state.hands[state.turn][type] ? '' : 'disabled'}><span class="piece-mark">${MIJN_MARKS[type]}</span><small>×${state.hands[state.turn][type]}</small></button>`).join('');
+      const handPanel = (owner, label) => `<section class="choice-zone mijn-hand ${state.turn === owner ? 'active' : ''}"><b>${label}剩餘棋子</b><div>${MIJN_TYPES.map((type) => `<button class="tray-btn mijn-token ${state.turn === owner && selected === type ? 'selected' : ''}" data-piece="${type}" data-owner="${owner}" ${state.turn === owner && state.hands[owner][type] ? '' : 'disabled'}><span class="piece-mark">${MIJN_MARKS[type]}</span><small>×${state.hands[owner][type]}</small></button>`).join('')}</div></section>`;
+      const tray = `<div class="dual-choice">${handPanel('first', '深色')}${handPanel('second', '淺色')}</div>`;
       const outcome = this.outcome(state);
       const hint = outcome ? outcome === 'draw' ? '遊戲結束：雙方平手' : `遊戲結束：${outcome === 'first' ? '深色' : '淺色'}玩家獲勝` : `現在是${state.turn === 'first' ? '深色' : '淺色'}玩家的回合，請先選棋子`;
-      return { cols: state.cols, board, tray, hint, firstScore: scoreHtml(scores.first, '分'), secondScore: scoreHtml(scores.second, '分') };
+      return { cols: state.cols, rows: state.rows, board, tray, hint, firstScore: scoreHtml(scores.first, '分'), secondScore: scoreHtml(scores.second, '分') };
     },
     bind(state, ui, controller, board, tray) {
-      tray.querySelectorAll('[data-piece]').forEach((button) => button.addEventListener('click', () => controller.setUi({ pieceType: button.dataset.piece })));
+      tray.querySelectorAll(`[data-piece][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => controller.setUi({ pieceType: button.dataset.piece })));
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
         if (!controller.isHumanTurn() || !ui.pieceType) return;
         const r = Number(button.dataset.r), c = Number(button.dataset.c);
@@ -297,8 +298,8 @@
       for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
         const height = state.board[r][c];
         const worker = workerAt(state, { r, c });
-        const building = height ? `<span class="building level-${height}"><b>${height === 4 ? 'D' : height}</b></span>` : '';
-        const piece = worker ? `<span class="piece worker ${worker.owner}">${worker.owner === 'first' ? '藍' : '橘'}</span>` : '';
+        const building = height ? `<span class="santorini-building">${Array.from({ length: height }, (_, level) => `<i class="santorini-level ${level === 3 ? 'dome' : ''}" style="--level:${level}"></i>`).join('')}</span>` : '';
+        const piece = worker ? `<span class="piece worker santorini-worker ${worker.owner}" data-anim-id="${worker.id}"><span class="worker-head"></span><span class="worker-body"></span></span>` : '';
         let classes = '';
         if (state.phase === 'placement' && !worker) classes = 'legal';
         if (worker?.id === ui.workerId) classes = 'selected';
@@ -315,7 +316,7 @@
       else if (!ui.workerId) hint = `${state.turn === 'first' ? '藍方' : '橘方'}請選擇工人`;
       else if (!ui.move) hint = '請選擇移動位置';
       else hint = '請選擇建築位置';
-      return { cols: 5, board, tray: '<span>移動一名工人，再建築一層</span>', hint, firstScore: scoreHtml(`${firstWorkers} / 2`, '工人'), secondScore: scoreHtml(`${secondWorkers} / 2`, '工人') };
+      return { cols: 5, rows: 5, boardClass: 'santorini-board', board, tray: '<span>移動一名工人，再建築一層</span>', hint, firstScore: scoreHtml(`${firstWorkers} / 2`, '工人'), secondScore: scoreHtml(`${secondWorkers} / 2`, '工人') };
     },
     bind(state, ui, controller, board) {
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
@@ -346,7 +347,7 @@
   // 殭屍棋 JUMP
   // ---------------------------------------------------------------------------
   const zombieTotal = (piece) => piece.stack.reduce((sum, tier) => sum + tier, 0);
-  const zombiePiece = (owner, tier) => ({ owner, stack: [tier] });
+  const zombiePiece = (owner, tier, id) => ({ id, owner, stack: [tier] });
   function zombieCanStack(moving, target) {
     const m = zombieTotal(moving), t = zombieTotal(target);
     const movingStack = moving.stack.length > 1, targetStack = target.stack.length > 1;
@@ -394,7 +395,7 @@
     }
     return result;
   }
-  function zombieCombine(moving, target) { return { owner: moving.owner, stack: [...target.stack, ...moving.stack] }; }
+  function zombieCombine(moving, target) { return { id: moving.id, owner: moving.owner, stack: [...target.stack, ...moving.stack] }; }
 
   games['zombie-jump'] = {
     title: '殭屍棋 JUMP', credit: '設計者：來源未載，出版社：來源未載',
@@ -408,11 +409,13 @@
     ],
     create() {
       const board = Array.from({ length: 5 }, () => Array(5).fill(null));
-      board[0][0] = zombiePiece('first', 2); board[0][2] = zombiePiece('first', 3); board[0][4] = zombiePiece('first', 2);
-      for (let c = 0; c < 5; c += 1) board[1][c] = zombiePiece('first', 1);
-      for (let c = 0; c < 5; c += 1) board[3][c] = zombiePiece('second', 1);
-      board[4][0] = zombiePiece('second', 2); board[4][2] = zombiePiece('second', 3); board[4][4] = zombiePiece('second', 2);
-      return { turn: 'first', board, waiting: { first: [2, 2], second: [2, 2] }, scores: { first: 0, second: 0 }, continuing: null, path: [], winner: null };
+      let nextId = 0;
+      const piece = (owner, tier) => zombiePiece(owner, tier, `z${nextId++}`);
+      board[0][0] = piece('first', 2); board[0][2] = piece('first', 3); board[0][4] = piece('first', 2);
+      for (let c = 0; c < 5; c += 1) board[1][c] = piece('first', 1);
+      for (let c = 0; c < 5; c += 1) board[3][c] = piece('second', 1);
+      board[4][0] = piece('second', 2); board[4][2] = piece('second', 3); board[4][4] = piece('second', 2);
+      return { turn: 'first', board, waiting: { first: [2, 2], second: [2, 2] }, scores: { first: 0, second: 0 }, continuing: null, path: [], winner: null, nextId };
     },
     actions(state) {
       if (state.winner) return [];
@@ -434,7 +437,7 @@
       if (action.type === 'revive') {
         const index = state.waiting[state.turn].indexOf(action.tier);
         state.waiting[state.turn].splice(index, 1);
-        state.board[action.to.r][action.to.c] = zombiePiece(state.turn, action.tier);
+        state.board[action.to.r][action.to.c] = zombiePiece(state.turn, action.tier, `z${state.nextId++}`);
         state.turn = other(state.turn);
         return state;
       }
@@ -485,27 +488,34 @@
       const selected = state.continuing || ui.selectedPos;
       const waitTier = ui.waitTier;
       const legal = this.actions(state);
-      const targets = new Set(legal.filter((action) => action.to && action.to !== 'out' && (!selected || !action.from || samePos(action.from, selected)) && (!waitTier || action.type === 'revive' && action.tier === waitTier)).map((action) => key(action.to.r, action.to.c)));
+      const targets = new Set(legal.filter((action) => {
+        if (!action.to || action.to === 'out') return false;
+        if (waitTier) return action.type === 'revive' && action.tier === waitTier;
+        if (selected) return (action.type === 'move' || action.type === 'jump') && samePos(action.from, selected);
+        return false;
+      }).map((action) => key(action.to.r, action.to.c)));
       let board = '';
       for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
         const piece = state.board[r][c];
         const total = piece ? zombieTotal(piece) : '';
-        const content = piece ? `<span class="piece ${piece.owner}"><b>${total}</b><span class="stack-list">${piece.stack.join('+')}</span></span>` : '';
+        const outActions = selected && samePos(selected, { r, c }) ? legal.filter((action) => action.type === 'jump' && action.to === 'out' && samePos(action.from, selected)) : [];
+        const outControls = outActions.map((action) => `<span class="zombie-out dr-${action.dir.dr} dc-${action.dir.dc}" role="button" tabindex="0" data-out data-dr="${action.dir.dr}" data-dc="${action.dir.dc}" aria-label="跳出棋盤">${action.dir.dr < 0 ? '↑' : action.dir.dr > 0 ? '↓' : action.dir.dc < 0 ? '←' : '→'}</span>`).join('');
+        const content = piece ? `<span class="piece zombie-piece ${piece.owner}" data-anim-id="${piece.id}">${piece.stack.map((tier, index) => `<i style="--stack:${index}">${index === piece.stack.length - 1 ? total : ''}</i>`).join('')}<span class="stack-list">${piece.stack.join('+')}</span></span>${outControls}` : '';
         const classes = samePos(selected, { r, c }) ? 'selected' : targets.has(key(r, c)) ? 'legal' : '';
         board += cellButton(r, c, classes, content);
       }
-      const waiting = state.waiting[state.turn].map((tier, index) => `<button class="tray-btn ${waitTier === tier ? 'selected' : ''}" data-wait="${tier}" data-index="${index}">陰 ${tier}</button>`).join('');
-      const outs = legal.filter((action) => action.type === 'jump' && action.to === 'out').map((action, index) => `<button class="tray-btn" data-out="${index}" data-dr="${action.dir.dr}" data-dc="${action.dir.dc}">跳出${action.dir.dr < 0 ? '↑' : action.dir.dr > 0 ? '↓' : action.dir.dc < 0 ? '←' : '→'}</button>`).join('');
+      const waitingZone = (owner, label) => `<section class="choice-zone zombie-wait ${state.turn === owner ? 'active' : ''}"><b>${label}陰間</b><div>${state.waiting[owner].length ? state.waiting[owner].map((tier, index) => `<button class="tray-btn zombie-wait-piece ${state.turn === owner && waitTier === tier ? 'selected' : ''}" data-wait="${tier}" data-owner="${owner}" data-index="${index}" ${state.turn === owner ? '' : 'disabled'}>${tier}</button>`).join('') : '<small>目前沒有棋子</small>'}</div></section>`;
       const stop = state.continuing ? '<button class="tray-btn selected" data-stop>停止連跳</button>' : '';
-      const tray = waiting + outs + stop || '<span>選擇己方棋子進行移動或跳躍</span>';
+      const tray = `<div class="dual-choice">${waitingZone('first', '紅方')}${waitingZone('second', '藍方')}</div>${stop}`;
       const outcome = this.outcome(state);
       let hint = outcome ? `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝` : state.continuing ? '可繼續跳躍，或選擇停止連跳' : `${state.turn === 'first' ? '紅方' : '藍方'}請選擇復活、移動或跳躍`;
-      return { cols: 5, board, tray, hint, firstScore: scoreHtml(`${state.scores.first} / 8`, '分'), secondScore: scoreHtml(`${state.scores.second} / 8`, '分') };
+      return { cols: 5, rows: 5, boardClass: 'zombie-board', board, tray, hint, firstScore: scoreHtml(`${state.scores.first} / 8`, '分'), secondScore: scoreHtml(`${state.scores.second} / 8`, '分') };
     },
     bind(state, ui, controller, board, tray) {
-      tray.querySelectorAll('[data-wait]').forEach((button) => button.addEventListener('click', () => controller.setUi({ waitTier: Number(button.dataset.wait), selectedPos: null })));
+      tray.querySelectorAll(`[data-wait][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => controller.setUi({ waitTier: Number(button.dataset.wait), selectedPos: null })));
       tray.querySelector('[data-stop]')?.addEventListener('click', () => controller.commit({ type: 'stop' }));
-      tray.querySelectorAll('[data-out]').forEach((button) => button.addEventListener('click', () => {
+      board.querySelectorAll('[data-out]').forEach((button) => button.addEventListener('click', (event) => {
+        event.stopPropagation();
         const action = this.actions(state).find((item) => item.type === 'jump' && item.to === 'out' && item.dir.dr === Number(button.dataset.dr) && item.dir.dc === Number(button.dataset.dc));
         if (action) controller.commit(action);
       }));
@@ -609,14 +619,14 @@
       let board = '';
       for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
         const occupied = fcgOccupied(state, { r, c });
-        const piece = occupied ? `<span class="piece ${occupied.owner === 'first' ? 'dark' : 'light'}"><span>${FCG_NAMES[occupied.color]}</span></span>` : '';
+        const piece = occupied ? `<span class="piece fcg-piece fcg-${occupied.color} owner-${occupied.owner}" data-anim-id="fcg-${occupied.owner}-${occupied.color}" aria-label="${occupied.owner === 'first' ? '黑方' : '白方'}${FCG_NAMES[occupied.color]}棋"></span>` : '';
         const focused = occupied && state.focus && occupied.owner === state.focus.owner && occupied.color === state.focus.color;
         const classes = `tile-${state.pattern[r][c]} ${focused ? 'focused' : legal.has(key(r, c)) ? 'legal' : ''}`;
         board += cellButton(r, c, classes, piece, `${FCG_NAMES[state.pattern[r][c]]}格`);
       }
       const outcome = this.outcome(state);
       const hint = outcome ? `遊戲結束：${outcome === 'first' ? '黑方' : '白方'}獲勝` : !state.focus ? '黑方請選擇第一枚焦點棋' : `${state.turn === 'first' ? '黑方' : '白方'}請移動${FCG_NAMES[state.focus.color]}色焦點棋`;
-      return { cols: 4, board, tray: '<span>紫色外框標示本回合焦點棋</span>', hint, firstScore: scoreHtml(fcgMobility(state, 'first'), '總合法步'), secondScore: scoreHtml(fcgMobility(state, 'second'), '總合法步') };
+      return { cols: 4, rows: 4, board, tray: '<span>棋子顏色代表種類；黑、白外框代表玩家</span>', hint, firstScore: scoreHtml(fcgMobility(state, 'first'), '總合法步'), secondScore: scoreHtml(fcgMobility(state, 'second'), '總合法步') };
     },
     bind(state, ui, controller, board) {
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
@@ -660,19 +670,23 @@
   }
   function fmgReachable(state, steps) {
     const start = state.positions[state.turn];
-    const results = new Set();
-    const walk = (pos, depth, visited) => {
-      if (depth === steps) { results.add(key(pos.r, pos.c)); return; }
+    const results = new Map();
+    const walk = (pos, depth, visited, path) => {
+      if (depth === steps) {
+        const id = key(pos.r, pos.c);
+        if (!results.has(id)) results.set(id, { r: pos.r, c: pos.c, path: clone(path) });
+        return;
+      }
       for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
         const next = fmgJump(state, pos, dr, dc);
         if (!next || visited.has(key(next.r, next.c))) continue;
         const nextVisited = new Set(visited); nextVisited.add(key(next.r, next.c));
-        walk(next, depth + 1, nextVisited);
+        walk(next, depth + 1, nextVisited, [...path, next]);
       }
     };
-    walk(start, 0, new Set([key(start.r, start.c)]));
+    walk(start, 0, new Set([key(start.r, start.c)]), []);
     results.delete(key(start.r, start.c));
-    return [...results].map((item) => { const [r, c] = item.split(',').map(Number); return { r, c }; });
+    return [...results.values()];
   }
   function fmgStepChoices(state) {
     const tile = state.tiles[state.positions[state.turn].r][state.positions[state.turn].c];
@@ -706,7 +720,10 @@
     actions(state) {
       if (state.winner) return [];
       const actions = [];
-      for (const steps of fmgStepChoices(state)) for (const to of fmgReachable(state, steps)) actions.push({ type: 'move', steps, to });
+      for (const steps of fmgStepChoices(state)) for (const destination of fmgReachable(state, steps)) {
+        const { path, ...to } = destination;
+        actions.push({ type: 'move', steps, to, path });
+      }
       return actions;
     },
     apply(source, action) {
@@ -729,15 +746,15 @@
       for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
         const first = samePos(state.positions.first, { r, c });
         const second = samePos(state.positions.second, { r, c });
-        const piece = first ? '<span class="piece first">R</span>' : second ? '<span class="piece second">B</span>' : '';
-        const tile = state.covered[r][c] ? 'X' : state.tiles[r][c] === 'SR' || state.tiles[r][c] === 'SB' ? 'S' : state.tiles[r][c];
-        const classes = `${state.covered[r][c] ? 'covered' : ''} ${legal.has(key(r, c)) && selectedSteps ? 'legal' : ''}`;
-        board += cellButton(r, c, classes, `<b>${tile}</b>${piece}`);
+        const piece = first ? '<span class="piece first" data-anim-id="fmg-first">R</span>' : second ? '<span class="piece second" data-anim-id="fmg-second">B</span>' : '';
+        const tile = state.tiles[r][c] === 'SR' || state.tiles[r][c] === 'SB' ? 'S' : state.tiles[r][c];
+        const classes = `${state.covered[r][c] ? 'removed-space' : ''} ${legal.has(key(r, c)) && selectedSteps ? 'legal' : ''}`;
+        board += cellButton(r, c, classes, state.covered[r][c] ? '' : `<b>${tile}</b>${piece}`);
       }
       const tray = choices.length > 1 ? choices.map((steps) => `<button class="tray-btn ${ui.steps === steps ? 'selected' : ''}" data-steps="${steps}">${steps} 步</button>`).join('') : `<span>本回合必須移動 ${choices[0]} 步</span>`;
       const outcome = this.outcome(state);
       const hint = outcome ? `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝` : choices.length > 1 && !ui.steps ? `${state.turn === 'first' ? '紅方' : '藍方'}請先選擇步數` : `${state.turn === 'first' ? '紅方' : '藍方'}請選擇目的地`;
-      return { cols: 4, board, tray, hint, firstScore: scoreHtml(fmgMobility(state, 'first'), '合法目的地'), secondScore: scoreHtml(fmgMobility(state, 'second'), '合法目的地') };
+      return { cols: 4, rows: 4, boardClass: 'four-moves-board', board, tray, hint, firstScore: scoreHtml(fmgMobility(state, 'first'), '合法目的地'), secondScore: scoreHtml(fmgMobility(state, 'second'), '合法目的地') };
     },
     bind(state, ui, controller, board, tray) {
       tray.querySelectorAll('[data-steps]').forEach((button) => button.addEventListener('click', () => controller.setUi({ steps: Number(button.dataset.steps) })));
@@ -874,23 +891,24 @@
       for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
         const pos = { r, c };
         const spiritOwner = samePos(state.spirits.first, pos) ? 'first' : samePos(state.spirits.second, pos) ? 'second' : null;
-        const follower = state.followers[r][c] ? `<span class="follower ${state.followers[r][c]}"></span>` : '';
-        const gate = state.torii[r][c] ? `<span class="torii-mark ${state.torii[r][c]}">鳥</span>` : '';
-        const spirit = spiritOwner ? `<span class="piece spirit ${spiritOwner}">${spiritOwner === 'first' ? '紅' : '藍'}</span>` : '';
+        const follower = state.followers[r][c] ? `<span class="follower ${state.followers[r][c]}" data-anim-id="torii-follower-${r}-${c}"></span>` : '';
+        const gate = state.torii[r][c] ? `<span class="torii-mark ${state.torii[r][c]}" data-anim-id="torii-gate-${state.torii[r][c]}-${r}-${c}"><i></i><i></i></span>` : '';
+        const spirit = spiritOwner ? `<span class="piece spirit ${spiritOwner}" data-anim-id="torii-spirit-${spiritOwner}"><i></i></span>` : '';
         const classes = `${path.some((item) => samePos(item, pos)) ? 'path' : ''} ${next.has(key(r, c)) || builds.has(key(r, c)) ? 'legal' : ''}`;
         board += cellButton(r, c, classes, follower + gate + spirit);
       }
-      const tray = state.building ? '<span>請在四連線中選擇鳥居位置</span>' : [1,2,3].map((tile) => `<button class="tray-btn ${state.pendingTile === tile ? 'selected' : ''}" data-tile="${tile}" ${state.tilesUsed[state.turn][tile] ? 'disabled' : ''}>${tile} 步</button>`).join('');
+      const tileZone = (owner, label) => `<section class="choice-zone torii-tiles ${state.turn === owner && !state.building ? 'active' : ''}"><b>${label}行動板塊</b><div>${[1,2,3].map((tile) => `<button class="tray-btn ${state.turn === owner && state.pendingTile === tile ? 'selected' : ''}" data-tile="${tile}" data-owner="${owner}" ${state.turn === owner && !state.building && !state.tilesUsed[owner][tile] ? '' : 'disabled'}>${tile}</button>`).join('')}</div></section>`;
+      const tray = `<div class="dual-choice">${tileZone('first', '紅方')}${tileZone('second', '藍方')}</div>${state.building ? '<small class="tray-note">請在四連線中選擇鳥居位置</small>' : ''}`;
       const outcome = this.outcome(state);
       let hint;
       if (outcome) hint = `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝`;
       else if (state.building) hint = `${state.turn === 'first' ? '紅方' : '藍方'}請建立鳥居`;
       else if (state.pendingTile === null) hint = `${state.turn === 'first' ? '紅方' : '藍方'}請選擇行動板塊`;
       else hint = `請走第 ${path.length + 1} / ${state.pendingTile} 步`;
-      return { cols: 4, board, tray, hint, firstScore: scoreHtml(`${toriiCount(state.followers, 'first')} / 9`, `信徒・鳥居 ${toriiCount(state.torii, 'first')}/4`), secondScore: scoreHtml(`${toriiCount(state.followers, 'second')} / 9`, `信徒・鳥居 ${toriiCount(state.torii, 'second')}/4`) };
+      return { cols: 4, rows: 4, boardClass: 'torii-board', board, tray, hint, firstScore: scoreHtml(`${toriiCount(state.followers, 'first')} / 9`, `信徒・鳥居 ${toriiCount(state.torii, 'first')}/4`), secondScore: scoreHtml(`${toriiCount(state.followers, 'second')} / 9`, `信徒・鳥居 ${toriiCount(state.torii, 'second')}/4`) };
     },
     bind(state, ui, controller, board, tray) {
-      tray.querySelectorAll('[data-tile]').forEach((button) => button.addEventListener('click', () => {
+      tray.querySelectorAll(`[data-tile][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => {
         if (!controller.isHumanTurn()) return;
         const action = this.actions(state).find((item) => item.type === 'tile' && item.tile === Number(button.dataset.tile));
         if (action) controller.commit(action);

@@ -16,6 +16,42 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal(basic.length, 6);
   assert.deepEqual(basic.filter((item) => !item.ok), []);
 
+  const mijn = BOARD_GAMES.mijnlieff.create('A');
+  const mijnView = BOARD_GAMES.mijnlieff.view(mijn, {});
+  assert.equal((mijnView.tray.match(/class="choice-zone/g) || []).length, 2, 'Mijnlieff shows both remaining-piece hands');
+
+  const santoriniGame = BOARD_GAMES.santorini;
+  const santorini = santoriniGame.apply(santoriniGame.create(), santoriniGame.actions(santoriniGame.create())[0]);
+  assert.match(santoriniGame.view(santorini, {}).board, /data-anim-id="w0"/, 'Santorini workers have stable animation ids');
+
+  const zombieGame = BOARD_GAMES['zombie-jump'];
+  const zombie = zombieGame.create();
+  const zombieIds = zombie.board.flat().filter(Boolean).map((piece) => piece.id);
+  assert.equal(new Set(zombieIds).size, zombieIds.length, 'Zombie pieces have unique animation ids');
+  assert.equal((zombieGame.view(zombie, {}).tray.match(/class="choice-zone zombie-wait/g) || []).length, 2, 'Zombie shows both waiting areas');
+
+  const fcgGame = BOARD_GAMES['four-color-chess'];
+  const fcg = fcgGame.create('standard').state;
+  const fcgBoard = fcgGame.view(fcg, {}).board;
+  assert.match(fcgBoard, /fcg-red owner-second/);
+  assert.match(fcgBoard, /fcg-green owner-first/);
+
+  const fmgGame = BOARD_GAMES['four-moves-chess'];
+  const fmg = fmgGame.create('standard').state;
+  const firstFmgAction = fmgGame.actions(fmg)[0];
+  assert.equal(firstFmgAction.path.length, firstFmgAction.steps, 'Four Moves keeps its step-by-step animation path');
+  const fmgMoved = fmgGame.apply(fmg, firstFmgAction);
+  const fmgBoard = fmgGame.view(fmgMoved, {}).board;
+  assert.match(fmgBoard, /removed-space/);
+  assert.doesNotMatch(fmgBoard, />X</, 'Removed Four Moves cells are empty holes');
+
+  const toriiGame = BOARD_GAMES.torii;
+  const torii = toriiGame.create('standard').state;
+  const toriiView = toriiGame.view(torii, {});
+  assert.match(toriiView.tray, /data-owner="first"/);
+  assert.match(toriiView.tray, /data-owner="second"/);
+  assert.equal((toriiView.tray.match(/class="choice-zone torii-tiles/g) || []).length, 2, 'Torii shows both action-tile sets');
+
   for (const [id, game] of Object.entries(BOARD_GAMES)) {
     const created = game.create(game.openings[0].value, null);
     let state = created.state || created;

@@ -76,8 +76,9 @@ button { cursor: pointer; }
 
 .board-wrap { padding: 6px; margin-bottom: 8px; background: #eee; box-shadow: 0 4px 12px rgba(0,0,0,.18); }
 .board {
-  aspect-ratio: 1;
+  width: 100%;
   display: grid;
+  grid-template-rows: repeat(var(--board-rows, 4), auto);
   gap: 6px;
   padding: 12px;
   background: #d8d7c9;
@@ -90,6 +91,7 @@ button { cursor: pointer; }
 .board.cols-6 { grid-template-columns: repeat(6, 1fr); }
 .cell {
   position: relative;
+  aspect-ratio: 1;
   min-width: 0;
   border: 0;
   display: grid;
@@ -126,6 +128,8 @@ button { cursor: pointer; }
 .piece.green { background: var(--green); }
 .piece.orange { background: var(--orange); }
 .piece.square { border-radius: 12px; }
+.piece.mijn-piece { width: 78%; border-radius: 9px; box-shadow: 0 4px 8px rgba(0,0,0,.18); }
+.mijn-piece .piece-mark { font-family: Arial, sans-serif; font-weight: 800; }
 .piece.worker { width: 58%; border-radius: 45% 45% 38% 38%; }
 .piece.spirit { width: 56%; clip-path: polygon(50% 0, 92% 34%, 76% 100%, 24% 100%, 8% 34%); border-radius: 0; }
 .piece.tiny { width: 40%; font-size: 11px; }
@@ -141,7 +145,7 @@ button { cursor: pointer; }
 
 .below-board { display: grid; gap: 6px; margin-bottom: 12px; }
 .choice-tray { min-height: 62px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px; padding: 6px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
-.tray-btn { min-width: 48px; min-height: 48px; border: 2px solid transparent; border-radius: 8px; display: grid; place-items: center; background: #fffef9; font-weight: 950; color: #555; box-shadow: inset 0 2px 7px rgba(0,0,0,.08); }
+.tray-btn { position: relative; min-width: 48px; min-height: 48px; border: 2px solid transparent; border-radius: 8px; display: grid; place-items: center; background: #fffef9; font-weight: 950; color: #555; box-shadow: inset 0 2px 7px rgba(0,0,0,.08); }
 .tray-btn.selected { border-color: var(--dark); transform: translateY(-2px); }
 .tray-btn:disabled { opacity: .45; cursor: not-allowed; }
 .turn-card { min-height: 42px; display: grid; place-items: center; padding: 7px 10px; color: #fff; background: var(--first); border-radius: 8px; box-shadow: 0 3px 7px rgba(0,0,0,.16); font-size: clamp(15px, 3.4vw, 20px); font-weight: 800; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -157,13 +161,87 @@ button { cursor: pointer; }
 .tile-blue { background: #d7ddff; }
 .tile-yellow { background: #fff1a8; }
 .tile-green { background: #ccead1; }
-.covered { background: #777; color: #fff; }
+.removed-space { visibility: hidden; pointer-events: none; }
 .follower { width: 36%; aspect-ratio: 1; position: absolute; right: 7%; bottom: 7%; border-radius: 50%; background: currentColor; box-shadow: 0 2px 4px rgba(0,0,0,.24); }
 .follower.first { color: var(--first); }
 .follower.second { color: var(--second); }
 .torii-mark { position: absolute; left: 6%; top: 6%; width: 44%; color: currentColor; font-size: clamp(18px, 4vw, 28px); line-height: 1; }
 .torii-mark.first { color: var(--first); }
 .torii-mark.second { color: var(--second); }
+
+/* Shared two-player supplies */
+.dual-choice { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.choice-zone { min-width: 0; padding: 6px; border: 2px solid var(--line); border-radius: 8px; background: #f8f7f1; opacity: .52; transition: opacity .2s, border-color .2s, box-shadow .2s; }
+.choice-zone.active { opacity: 1; border-color: #777; box-shadow: 0 0 0 2px rgba(18,189,134,.2); }
+.choice-zone > b { display: block; margin-bottom: 5px; font-size: 11px; text-align: center; white-space: nowrap; }
+.choice-zone > div { display: flex; justify-content: center; gap: 4px; }
+.choice-zone .tray-btn { min-width: 0; width: 100%; min-height: 38px; padding: 2px; }
+.mijn-hand .mijn-token { aspect-ratio: 1; border-radius: 7px; }
+.mijn-token .piece-mark { font-size: 20px; }
+.mijn-token small { position: absolute; right: 2px; bottom: 0; font-size: 9px; }
+.tray-note { flex-basis: 100%; text-align: center; }
+
+/* Four Color Chess: colour identifies the piece; border identifies the player. */
+.fcg-piece { width: 70%; border-radius: 50%; box-shadow: inset 0 -6px 0 rgba(0,0,0,.1), 0 4px 7px rgba(0,0,0,.22); }
+.fcg-piece.fcg-red { background: #e54343; }
+.fcg-piece.fcg-blue { background: #347bd1; }
+.fcg-piece.fcg-yellow { background: #f1c62f; }
+.fcg-piece.fcg-green { background: #43a75b; }
+.fcg-piece.owner-first { border: 5px solid #242126; }
+.fcg-piece.owner-second { border: 5px solid #fff; outline: 1px solid rgba(0,0,0,.42); }
+
+/* Santorini 2.0 inspired island, layered buildings and workers. */
+.santorini-board { background: #8bd4d1; border-color: #fff; border-radius: 20px; box-shadow: inset 0 0 0 4px #48a9a6, 0 7px 18px rgba(0,96,100,.25); }
+.santorini-board .cell { overflow: visible; background: rgba(232,255,249,.66); box-shadow: inset 0 0 0 1px rgba(255,255,255,.75); }
+.santorini-building { position: absolute; inset: 5%; display: grid; place-items: center; }
+.santorini-level { position: absolute; width: calc(92% - var(--level) * 10%); height: calc(92% - var(--level) * 10%); transform: translateY(calc(var(--level) * -5px)); border-radius: 8px; background: #f4f7f8; border-bottom: 4px solid #b5c9d1; box-shadow: 0 3px 5px rgba(37,70,83,.18); animation: build-rise .24s ease-out; }
+.santorini-level.dome { width: 52%; height: 52%; border-radius: 50%; background: #397db7; border-bottom-color: #23577e; }
+.santorini-worker { width: 52%; border-radius: 12px; border: 2px solid #fff; overflow: visible; box-shadow: 0 5px 9px rgba(0,0,0,.28); }
+.santorini-worker.first { background: #19b8d2; }
+.santorini-worker.second { background: #f0a13a; }
+.worker-head { position: absolute; top: 12%; width: 31%; aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,.9); }
+.worker-body { position: absolute; bottom: 13%; width: 52%; height: 39%; border-radius: 50% 50% 35% 35%; background: rgba(255,255,255,.9); }
+@keyframes build-rise { from { opacity: 0; transform: translateY(9px) scale(.75); } }
+
+/* Zombie JUMP 2.0 inspired graveyard and stacked blocks. */
+.zombie-board { overflow: visible; background: #282624; border-color: #151414; box-shadow: inset 0 0 0 3px #55504a, 0 7px 18px rgba(0,0,0,.35); }
+.zombie-board .cell { overflow: visible; background: #514d47; box-shadow: inset 0 0 0 1px #777068, inset 0 3px 8px rgba(0,0,0,.35); }
+.zombie-board .cell.legal { outline-color: rgba(76,230,171,.72); }
+.zombie-piece { width: 68%; border-radius: 10px; background: transparent !important; box-shadow: none; }
+.zombie-piece i { position: absolute; width: 100%; height: 100%; display: grid; place-items: center; transform: translateY(calc(var(--stack) * -4px)) scale(calc(1 - var(--stack) * .06)); border-radius: 10px; border-bottom: 4px solid rgba(0,0,0,.3); color: #fff; font-style: normal; box-shadow: 0 4px 7px rgba(0,0,0,.35); }
+.zombie-piece.first i { background: #e44e51; }
+.zombie-piece.second i { background: #3977d4; }
+.zombie-piece .stack-list { position: absolute; bottom: -9px; z-index: 10; color: #fff; font-size: 8px; text-shadow: 0 1px 2px #000; }
+.zombie-out { position: absolute; z-index: 30; width: 27px; height: 27px; display: grid; place-items: center; border-radius: 50%; background: #12bd86; color: #fff; box-shadow: 0 3px 7px rgba(0,0,0,.35); cursor: pointer; }
+.zombie-out.dr--1 { top: -31px; left: calc(50% - 13px); }
+.zombie-out.dr-1 { bottom: -31px; left: calc(50% - 13px); }
+.zombie-out.dc--1 { left: -31px; top: calc(50% - 13px); }
+.zombie-out.dc-1 { right: -31px; top: calc(50% - 13px); }
+.zombie-wait-piece { color: #fff; border-radius: 9px; }
+.zombie-wait:first-child .zombie-wait-piece { background: #e44e51; }
+.zombie-wait:last-child .zombie-wait-piece { background: #3977d4; }
+
+/* Torii 1.0 supplies with active-side highlight and code-native pieces. */
+.torii-board { background: #a8c98c; border-color: #5f7950; }
+.torii-board .cell { background: #e9f2db; }
+.torii-tiles:first-child > b { color: #d94e55; }
+.torii-tiles:last-child > b { color: #416fd0; }
+.torii-tiles:first-child .tray-btn { color: #d94e55; }
+.torii-tiles:last-child .tray-btn { color: #416fd0; }
+.torii-mark { width: 52%; height: 48%; font-size: 0; }
+.torii-mark::before, .torii-mark::after { content: ''; position: absolute; background: currentColor; }
+.torii-mark::before { left: 8%; right: 8%; top: 12%; height: 16%; border-radius: 50% 50% 2px 2px; }
+.torii-mark::after { left: 20%; right: 20%; top: 35%; height: 11%; }
+.torii-mark i { position: absolute; top: 40%; width: 10%; height: 55%; background: currentColor; }
+.torii-mark i:first-child { left: 25%; }
+.torii-mark i:last-child { right: 25%; }
+.piece.spirit { overflow: visible; background: currentColor; }
+.piece.spirit.first { color: var(--first); }
+.piece.spirit.second { color: var(--second); }
+.piece.spirit i { width: 34%; height: 34%; border-radius: 50%; background: #fff; opacity: .9; }
+.follower { animation: token-pop .2s ease-out; }
+@keyframes token-pop { from { opacity: 0; transform: scale(.3); } }
+.piece-ghost { transform-origin: center; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
 .desktop-card { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }

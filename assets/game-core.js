@@ -285,6 +285,7 @@
       const before = clone(this.state);
       this.history.push({ state: before, ui: clone(this.ui), logLength: this.logs.length });
       this.state = this.game.apply(this.state, action);
+      this.animationAction = action;
       this.ui = {};
       this.logs.push(this.game.describe(action, before, this.state));
       this.render();
@@ -349,6 +350,7 @@
     }
 
     render() {
+      const previousPieces = this.captureAnimatedPieces();
       const view = this.game.view(this.state, this.ui, this);
       const outcome = this.game.outcome(this.state);
       const rate = Math.max(0, Math.min(1, this.firstRate));
@@ -361,6 +363,8 @@
       this.$('firstScore').innerHTML = view.firstScore;
       this.$('secondScore').innerHTML = view.secondScore;
       this.$('board').className = `board cols-${view.cols} ${view.boardClass || ''}`;
+      this.$('board').style.setProperty('--board-cols', view.cols);
+      this.$('board').style.setProperty('--board-rows', view.rows || view.cols);
       this.$('board').innerHTML = view.board;
       this.$('choiceTray').innerHTML = view.tray || '<span>本回合直接操作棋盤</span>';
       this.$('turnCard').className = `turn-card ${outcome ? 'finished' : this.state.turn === 'second' ? 'second' : ''}`;
@@ -368,7 +372,57 @@
       this.$('undoMove').disabled = this.busy || !this.history.length;
       this.$('desktopStatus').innerHTML = `<strong>${view.hint}</strong><br>AI：純 MCTS 隨機模擬<br>迭代：${this.settings.iterations.toLocaleString()} 次`;
       this.game.bind(this.state, this.ui, this, this.$('board'), this.$('choiceTray'));
+      this.animatePieces(previousPieces, this.animationAction);
+      this.animationAction = null;
       this.renderInfo();
+    }
+
+    captureAnimatedPieces() {
+      const board = this.$('board');
+      if (!board?.children.length) return new Map();
+      return new Map([...board.querySelectorAll('[data-anim-id]')].map((element) => {
+        const rect = element.getBoundingClientRect();
+        const cell = element.closest('[data-r][data-c]');
+        return [element.dataset.animId, { rect, clone: element.cloneNode(true), r: Number(cell?.dataset.r), c: Number(cell?.dataset.c) }];
+      }));
+    }
+
+    animatePieces(previous, action) {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const current = new Map([...this.$('board').querySelectorAll('[data-anim-id]')].map((element) => [element.dataset.animId, element]));
+      current.forEach((element, id) => {
+        const old = previous.get(id);
+        if (!old) {
+          element.animate([{ opacity: 0, transform: 'scale(.72)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' });
+          return;
+        }
+        const next = element.getBoundingClientRect();
+        const dx = old.rect.left - next.left;
+        const dy = old.rect.top - next.top;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+        let frames = [{ transform: `translate(${dx}px, ${dy}px) scale(1.04)`, zIndex: 20 }, { transform: 'translate(0, 0) scale(1)', zIndex: 20 }];
+        if (Array.isArray(action?.path) && (id.startsWith('torii-spirit-') || id.startsWith('fmg-'))) {
+          frames = [{ transform: `translate(${dx}px, ${dy}px) scale(1.04)`, zIndex: 20 }];
+          action.path.forEach((pos) => {
+            const cell = this.$('board').querySelector(`[data-r="${pos.r}"][data-c="${pos.c}"]`);
+            const rect = cell?.getBoundingClientRect();
+            if (rect) frames.push({ transform: `translate(${rect.left + rect.width / 2 - next.left - next.width / 2}px, ${rect.top + rect.height / 2 - next.top - next.height / 2}px) scale(1.04)`, zIndex: 20 });
+          });
+          frames.push({ transform: 'translate(0, 0) scale(1)', zIndex: 20 });
+        }
+        element.animate(frames, { duration: Math.max(260, frames.length * 150), easing: 'cubic-bezier(.22,.75,.25,1)' });
+      });
+      previous.forEach((old, id) => {
+        if (current.has(id)) return;
+        const ghost = old.clone;
+        ghost.classList.add('piece-ghost');
+        Object.assign(ghost.style, { position: 'fixed', left: `${old.rect.left}px`, top: `${old.rect.top}px`, width: `${old.rect.width}px`, height: `${old.rect.height}px`, margin: 0, pointerEvents: 'none', zIndex: 50 });
+        document.body.appendChild(ghost);
+        const out = action?.to === 'out' && action.dir && action.from?.r === old.r && action.from?.c === old.c;
+        const x = out ? action.dir.dc * old.rect.width * 2.5 : 0;
+        const y = out ? action.dir.dr * old.rect.height * 2.5 : 0;
+        ghost.animate([{ opacity: 1, transform: 'translate(0,0) scale(1)' }, { opacity: 0, transform: `translate(${x}px,${y}px) scale(.65)` }], { duration: out ? 520 : 220, easing: 'ease-in', fill: 'forwards' }).finished.finally(() => ghost.remove());
+      });
     }
 
     renderInfo() {
