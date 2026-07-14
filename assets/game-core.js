@@ -2,9 +2,9 @@
   'use strict';
 
   const PLAYER_TYPES = [
-    { value: 'human', label: '人類玩家', icon: '人' },
-    { value: 'random', label: '隨機玩家', icon: '骰' },
-    { value: 'mcts', label: '電腦 AI', icon: 'AI' }
+    { value: 'human', label: '人類玩家', icon: 'human' },
+    { value: 'random', label: '隨機電腦', icon: 'random' },
+    { value: 'mcts', label: 'MCTS 電腦', icon: 'mcts' }
   ];
   const PRESETS = [
     { label: '簡單', value: 400 },
@@ -262,7 +262,7 @@
       }));
       document.querySelectorAll('.player-grid').forEach((grid) => {
         const side = grid.dataset.player;
-        grid.innerHTML = PLAYER_TYPES.map((item) => `<button class="player-choice ${this.settings.players[side] === item.value ? 'selected' : ''}" data-type="${item.value}"><b>${item.icon}</b><span>${item.label}</span></button>`).join('');
+        grid.innerHTML = PLAYER_TYPES.map((item) => `<button class="player-choice ${this.settings.players[side] === item.value ? 'selected' : ''}" data-type="${item.value}"><b class="player-type-icon ${item.icon}" aria-hidden="true"></b><span>${item.label}</span></button>`).join('');
         grid.querySelectorAll('[data-type]').forEach((button) => button.addEventListener('click', () => {
           this.settings.players[side] = button.dataset.type;
           this.renderSettings();

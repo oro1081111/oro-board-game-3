@@ -308,7 +308,7 @@
       for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
         const height = state.board[r][c];
         const worker = visualWorkerAt({ r, c });
-        const building = height ? `<span class="santorini-building">${Array.from({ length: height }, (_, level) => `<i class="santorini-level ${level === 3 ? 'dome' : ''}" style="--level:${level}"></i>`).join('')}</span>` : '';
+        const building = height ? `<span class="santorini-building">${Array.from({ length: height }, (_, level) => `<i class="santorini-level ${level === 3 ? 'dome' : ''}" data-anim-id="santorini-building-${r}-${c}-${level}" style="--level:${level}"></i>`).join('')}</span>` : '';
         const piece = worker ? `<span class="piece worker santorini-worker ${worker.owner}" data-anim-id="${worker.id}"><span class="worker-head"></span><span class="worker-body"></span></span>` : '';
         let classes = '';
         if (state.phase === 'move' && !ui.workerId && worker?.owner === state.turn && movableWorkers.has(worker.id)) classes = 'legal';
@@ -647,8 +647,8 @@
       const outcome = this.outcome(state);
       const hint = outcome ? `遊戲結束：${outcome === 'first' ? '黑方' : '白方'}獲勝` : !state.focus ? '黑方請選擇第一枚焦點棋' : `${state.turn === 'first' ? '黑方' : '白方'}請移動${FCG_NAMES[state.focus.color]}色焦點棋`;
       return {
-        cols: 4, rows: 4, board, tray: '<span>棋子顏色代表種類；黑、白外框代表玩家</span>', hint,
-        hideScores: true,
+        cols: 4, rows: 4, board, tray: '', hint,
+        hideScores: true, hideTray: true,
         winColors: { first: '#2e2a2f', second: '#bab9b3', secondText: '#77746f' },
         firstScore: '', secondScore: ''
       };
@@ -813,6 +813,11 @@
     }
     return result;
   }
+  function toriiResourceScore(state, owner) {
+    const followers = toriiCount(state.followers, owner);
+    const gates = toriiCount(state.torii, owner);
+    return `<span class="torii-resource-score"><span aria-label="信徒 ${followers} / 9"><i class="torii-resource-follower"></i><strong>${followers}</strong><small>/9</small></span><span aria-label="鳥居 ${gates} / 4"><i class="torii-resource-gate"><b></b><b></b></i><strong>${gates}</strong><small>/4</small></span></span>`;
+  }
   function toriiPaths(state, steps) {
     const results = [];
     const walk = (path) => {
@@ -846,7 +851,7 @@
     firstName: '紅方', secondName: '藍方', designer: '陳致寬；1.0 介紹記載其為臺灣原創抽象棋設計團隊作品。', publisher: '桌遊愛樂事。1.0 頁面記載已取得原出版社與設計師同意製作與分享。',
     intro: '玩家使用 1、2、3 行動板塊移動森靈，在停留格放置或替換信徒；四名信徒連線可建立鳥居。',
     openings: [{ value: 'standard', label: '標準' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 80,
-    animationDuration(action) { return action.type === 'path' ? action.path.length * 200 : action.type === 'build' ? 200 : 0; },
+    animationDuration(action) { return action.type === 'path' && !action.previewed ? action.path.length * 200 : action.type === 'build' ? 200 : 0; },
     rules: [
       { title: '回合流程', html: '<ol><li>選一張尚未使用的 1、2、3 行動板塊。</li><li>森靈依數字走足步數，不能重訪或回起點。</li><li>在每個實際停留格放置或替換己方信徒。</li></ol>' },
       { title: '跳躍與鳥居', html: '<p>移動遇到對手森靈所在行列時依 1.0 程式整段跳過，被跳過格不放信徒。四格己方信徒成橫列或直列時，在其中一格建立鳥居並移除該線其他未受鳥居保護的信徒。</p>' },
@@ -924,7 +929,7 @@
       else if (state.building) hint = `${state.turn === 'first' ? '紅方' : '藍方'}請建立鳥居`;
       else if (state.pendingTile === null) hint = `${state.turn === 'first' ? '紅方' : '藍方'}請選擇行動板塊`;
       else hint = `請走第 ${path.length + 1} / ${state.pendingTile} 步`;
-      return { cols: 4, rows: 4, boardClass: 'torii-board', board, tray, hint, firstScore: scoreHtml(`${toriiCount(state.followers, 'first')} / 9`, `信徒・鳥居 ${toriiCount(state.torii, 'first')}/4`), secondScore: scoreHtml(`${toriiCount(state.followers, 'second')} / 9`, `信徒・鳥居 ${toriiCount(state.torii, 'second')}/4`) };
+      return { cols: 4, rows: 4, boardClass: 'torii-board', board, tray, hint, compactScores: true, firstScore: toriiResourceScore(state, 'first'), secondScore: toriiResourceScore(state, 'second') };
     },
     bind(state, ui, controller, board, tray) {
       tray.querySelectorAll(`[data-tile][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => {
@@ -944,7 +949,7 @@
         const path = ui.path || [];
         if (!toriiNextSteps(state, path).some((item) => samePos(item, pos))) return;
         const nextPath = [...path, pos];
-        const finishPath = nextPath.length === state.pendingTile ? () => controller.commit({ type: 'path', path: nextPath }) : null;
+        const finishPath = nextPath.length === state.pendingTile ? () => controller.commit({ type: 'path', path: nextPath, previewed: true }) : null;
         controller.previewUi({ path: nextPath }, { path: [pos], stepDuration: 200 }, 200, finishPath);
       }));
     }

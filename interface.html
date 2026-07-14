@@ -110,12 +110,16 @@
     .mini-board i.green::after { background: var(--green); }
     .mini-board i.orange::after { background: var(--orange); }
     .mini-board i.dot::after { inset: 35%; background: #8d8a7a; box-shadow: none; opacity: .55; }
-    .player-icon { width: 48px; height: 48px; display: grid; place-items: center; color: currentColor; }
-    .player-icon svg { width: 100%; height: 100%; display: block; overflow: visible; }
-    .player-icon .line { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
-    .player-icon .fill { fill: currentColor; stroke: none; opacity: .92; }
+    .player-type-icon { position: relative; width: 30px; height: 30px; display: block; color: currentColor; }
+    .player-type-icon.human::before { content: ''; position: absolute; left: 10px; top: 2px; width: 10px; height: 10px; border: 3px solid currentColor; border-radius: 50%; }
+    .player-type-icon.human::after { content: ''; position: absolute; left: 4px; right: 4px; bottom: 1px; height: 12px; border: 3px solid currentColor; border-bottom: 0; border-radius: 12px 12px 0 0; }
+    .player-type-icon.random { border: 3px solid currentColor; border-radius: 6px; }
+    .player-type-icon.random::before { content: ''; position: absolute; left: 5px; top: 5px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; box-shadow: 11px 0 currentColor, 0 11px currentColor, 11px 11px currentColor, 5.5px 5.5px currentColor; }
+    .player-type-icon.mcts { border: 3px solid currentColor; border-radius: 5px; }
+    .player-type-icon.mcts::before { content: 'AI'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 950; }
+    .player-type-icon.mcts::after { content: ''; position: absolute; inset: -6px 4px; border-top: 2px solid currentColor; border-bottom: 2px solid currentColor; }
     .player-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-    .player-choice { border: 2px solid transparent; border-radius: 12px; background: transparent; min-height: 76px; color: #777; font-weight: 900; display: grid; place-items: center; gap: 4px; padding: 6px 3px; font-size: clamp(13px, 3.2vw, 17px); }
+    .player-choice { border: 2px solid transparent; border-radius: 12px; background: transparent; min-height: 68px; color: #777; font-weight: 900; display: grid; place-items: center; gap: 2px; padding: 5px 3px; font-size: clamp(12px, 3vw, 16px); }
     .player-choice.selected { background: white; border-color: #777; color: #000; box-shadow: 0 7px 13px rgba(0,0,0,.22); }
     .ai-input { width: 100%; min-height: 52px; border: 4px solid var(--line); border-radius: 28px; padding: 0 28px; font-size: clamp(30px, 6vw, 42px); font-weight: 950; background: white; }
     .confirm-btn { margin: 12px auto 20px; width: calc(100% - 58px); min-height: 58px; border: 0; border-radius: 999px; background: var(--dark); color: white; font-size: clamp(22px, 4.5vw, 32px); font-weight: 950; }
@@ -243,7 +247,7 @@
           <input class="ai-input" id="aiIterations" type="number" min="100" step="100" value="5000">
         </section>
       </div>
-      <button class="confirm-btn" id="closeSettings">確認並關閉</button>
+      <button class="confirm-btn" id="closeSettings">確認並開始新對局</button>
     </section>
   </div>
 
@@ -268,7 +272,12 @@ const PLAYER = { FIRST: 'first', SECOND: 'second' };
 const COLOR = { GREEN: 'green', ORANGE: 'orange' };
 const TARGET_SCORE = 3;
 const PLAYER_NAMES = { first: '先手', second: '後手' };
-const PLAYER_TYPES = { '人類玩家': 'human', '隨機猴子': 'random', '電腦AI': 'mcts' };
+const PLAYER_TYPE_OPTIONS = [
+  { name: '人類玩家', value: 'human' },
+  { name: '隨機電腦', value: 'random' },
+  { name: 'MCTS 電腦', value: 'mcts' }
+];
+const PLAYER_TYPES = Object.fromEntries(PLAYER_TYPE_OPTIONS.map((item) => [item.name, item.value]));
 const ITERATION_PRESETS = [
   { label: '簡單', value: 400 },
   { label: '中級', value: 1200 },
@@ -289,7 +298,7 @@ const state = {
   winner: null,
   gameOver: false,
   first: '人類玩家',
-  second: '電腦AI',
+  second: 'MCTS 電腦',
   iterations: 1200,
   history: [],
   logs: [],
@@ -851,9 +860,9 @@ function phaseLabel() {
 
 function playerIconMarkup(name) {
   const icons = {
-    '人類玩家': '<span class="player-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="line" d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle class="line" cx="12" cy="7" r="4"/></svg></span>',
-    '隨機猴子': '<span class="player-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect class="line" x="6" y="6" width="12" height="12" rx="2"/><path class="line" d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg></span>',
-    '電腦AI': '<span class="player-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="line" d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z"/></svg></span>'
+    '人類玩家': '<span class="player-type-icon human" aria-hidden="true"></span>',
+    '隨機電腦': '<span class="player-type-icon random" aria-hidden="true"></span>',
+    'MCTS 電腦': '<span class="player-type-icon mcts" aria-hidden="true"></span>'
   };
   return icons[name] || icons['人類玩家'];
 }
@@ -862,7 +871,7 @@ function renderSettings() {
   $('setupSection').style.display = 'none';
   document.querySelectorAll('[data-player]').forEach((wrap) => {
     const key = wrap.dataset.player;
-    wrap.innerHTML = ['人類玩家','隨機猴子','電腦AI'].map((name) => `
+    wrap.innerHTML = PLAYER_TYPE_OPTIONS.map(({ name }) => `
       <button class="player-choice ${state[key] === name ? 'selected' : ''}" data-${key}="${name}">
         ${playerIconMarkup(name)}<span>${name}</span>
       </button>
@@ -909,11 +918,8 @@ $('openSettings').addEventListener('click', () => setOpen('settingsLayer', true)
 $('settingsGear').addEventListener('click', () => setOpen('settingsLayer', false));
 $('closeSettings').addEventListener('click', () => {
   state.iterations = Math.max(100, Number($('aiIterations').value || 5000));
-  state.aiStats = null;
-  addLog(`更新設定：先手 ${state.first}，後手 ${state.second}，AI 迭代 ${state.iterations}。`);
   setOpen('settingsLayer', false);
-  render();
-  scheduleTurnWork();
+  newGame();
 });
 $('openInfo').addEventListener('click', () => setOpen('infoLayer', true));
 $('closeInfo').addEventListener('click', () => setOpen('infoLayer', false));

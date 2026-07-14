@@ -35,6 +35,8 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal((santoriniReadyView.board.match(/cell legal/g) || []).length, 2, 'Santorini highlights only movable current workers before selection');
   assert.equal((santoriniReadyView.board.match(/cell selected/g) || []).length, 0, 'Santorini never marks empty cells as selected');
   assert.ok(santoriniGame.actions(santoriniReady).some((action) => action.workerId === 'w0' && action.move.r === 0 && action.move.c === 1 && action.build.r === 0 && action.build.c === 0), 'Santorini may build on the vacated worker cell');
+  const santoriniBuilt = santoriniGame.apply(santoriniReady, santoriniGame.actions(santoriniReady)[0]);
+  assert.match(santoriniGame.view(santoriniBuilt, {}).board, /data-anim-id="santorini-building-\d-\d-0"/, 'Santorini building levels have stable animation ids');
 
   const zombieGame = BOARD_GAMES['zombie-jump'];
   const zombie = zombieGame.create();
@@ -54,6 +56,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(fcgBoard, /fcg-red owner-second/);
   assert.match(fcgBoard, /fcg-green owner-first/);
   assert.equal(fcgGame.view(fcg, {}).hideScores, true, 'Four Color hides mobility score cards');
+  assert.equal(fcgGame.view(fcg, {}).hideTray, true, 'Four Color removes the colour explanation tray');
   assert.equal(fcgGame.view(fcg, {}).winColors.first, '#2e2a2f', 'Four Color win bar follows player outlines');
 
   const fmgGame = BOARD_GAMES['four-moves-chess'];
@@ -77,13 +80,29 @@ const { BOARD_GAMES, GameCore } = window;
   assert.doesNotMatch(toriiView.tray, /<b>.*行動板塊/, 'Torii identifies action tiles by colour rather than text');
   assert.equal((toriiView.tray.match(/ used /g) || []).length, 2, 'Torii always shows used tiles for both players');
   assert.equal(toriiGame.animationDuration({ type: 'path', path: [{ r: 0, c: 0 }] }), 200, 'Torii uses the 1.0 step timing');
+  assert.equal(toriiGame.animationDuration({ type: 'path', path: [{ r: 0, c: 0 }], previewed: true }), 0, 'Torii does not replay the final human step animation');
+  assert.match(toriiView.firstScore, /torii-resource-follower/);
+  assert.match(toriiView.firstScore, /torii-resource-gate/);
+  const toriiAfterTile = toriiGame.apply(torii, { type: 'tile', tile: 1 });
+  const toriiOneStepActions = toriiGame.actions(toriiAfterTile);
+  assert.ok(toriiOneStepActions.length > 0 && toriiOneStepActions.every((action) => action.path.length === 1), 'Torii tile 1 commits exactly one landing');
+  const toriiAfterOneStep = toriiGame.apply(toriiAfterTile, toriiOneStepActions[0]);
+  assert.equal(toriiAfterOneStep.followers.flat().filter(Boolean).length, 1, 'Torii tile 1 places exactly one follower');
 
   const soulaweenSource = fs.readFileSync(path.join(root, 'interface.html'), 'utf8');
   assert.doesNotMatch(soulaweenSource, /cell === null\) classes\.push\('legal'\)/, 'Soulaween does not highlight every empty cell');
   assert.doesNotMatch(soulaweenSource, /classList\.toggle\('current'/, 'Soulaween score cards do not glow for the current player');
   assert.match(soulaweenSource, /class="score-pip/, 'Soulaween renders three circle score markers');
+  assert.match(soulaweenSource, /確認並開始新對局/, 'Soulaween settings start a new game');
+  assert.match(soulaweenSource, /隨機電腦/);
+  assert.match(soulaweenSource, /MCTS 電腦/);
   const shellCss = fs.readFileSync(path.join(root, 'assets', 'game-shell.css'), 'utf8');
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
+  assert.doesNotMatch(shellCss, /\.santorini-level[^}]*animation:/, 'Santorini buildings do not replay their entry animation on every render');
+  const coreSource = fs.readFileSync(path.join(root, 'assets', 'game-core.js'), 'utf8');
+  assert.match(coreSource, /label: '隨機電腦'/);
+  assert.match(coreSource, /label: 'MCTS 電腦'/);
+  assert.match(coreSource, /確認並開始新對局/);
 
   for (const [id, game] of Object.entries(BOARD_GAMES)) {
     const created = game.create(game.openings[0].value, null);

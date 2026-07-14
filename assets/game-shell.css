@@ -210,14 +210,13 @@ button { cursor: pointer; }
 .santorini-board { background: #8bd4d1; border-color: #fff; border-radius: 20px; box-shadow: inset 0 0 0 4px #48a9a6, 0 7px 18px rgba(0,96,100,.25); }
 .santorini-board .cell { overflow: visible; background: rgba(232,255,249,.66); box-shadow: inset 0 0 0 1px rgba(255,255,255,.75); }
 .santorini-building { position: absolute; inset: 5%; display: grid; place-items: center; }
-.santorini-level { position: absolute; width: calc(92% - var(--level) * 10%); height: calc(92% - var(--level) * 10%); transform: translateY(calc(var(--level) * -5px)); border-radius: 8px; background: #f4f7f8; border-bottom: 4px solid #b5c9d1; box-shadow: 0 3px 5px rgba(37,70,83,.18); animation: build-rise .24s ease-out; }
+.santorini-level { position: absolute; width: calc(92% - var(--level) * 10%); height: calc(92% - var(--level) * 10%); transform: translateY(calc(var(--level) * -5px)); border-radius: 8px; background: #f4f7f8; border-bottom: 4px solid #b5c9d1; box-shadow: 0 3px 5px rgba(37,70,83,.18); }
 .santorini-level.dome { width: 52%; height: 52%; border-radius: 50%; background: #397db7; border-bottom-color: #23577e; }
 .santorini-worker { width: 52%; border-radius: 12px; border: 2px solid #fff; overflow: visible; box-shadow: 0 5px 9px rgba(0,0,0,.28); }
 .santorini-worker.first { background: #19b8d2; }
 .santorini-worker.second { background: #f0a13a; }
 .worker-head { position: absolute; top: 12%; width: 31%; aspect-ratio: 1; border-radius: 50%; background: rgba(255,255,255,.9); }
 .worker-body { position: absolute; bottom: 13%; width: 52%; height: 39%; border-radius: 50% 50% 35% 35%; background: rgba(255,255,255,.9); }
-@keyframes build-rise { from { opacity: 0; transform: translateY(9px) scale(.75); } }
 
 /* Zombie JUMP 2.0 inspired graveyard and stacked blocks. */
 .zombie-board { overflow: visible; background: #282624; border-color: #151414; box-shadow: inset 0 0 0 3px #55504a, 0 7px 18px rgba(0,0,0,.35); }
@@ -261,6 +260,16 @@ button { cursor: pointer; }
 .piece.spirit.second { color: var(--second); }
 .piece.spirit i { width: 34%; height: 34%; border-radius: 50%; background: #fff; opacity: .9; }
 .piece-ghost { transform-origin: center; }
+.torii-resource-score { width: 100%; display: flex; align-items: center; justify-content: center; gap: clamp(10px, 3vw, 22px); color: currentColor; white-space: nowrap; }
+.torii-resource-score > span { display: inline-flex; align-items: center; gap: 3px; }
+.torii-resource-score strong { color: #242126; font-size: clamp(18px, 4.4vw, 25px); }
+.torii-resource-score small { color: #777; font-size: 11px; }
+.torii-resource-follower { width: 16px; aspect-ratio: 1; border-radius: 50%; background: currentColor; box-shadow: inset 0 0 0 2px rgba(255,255,255,.28); }
+.torii-resource-gate { position: relative; width: 22px; height: 18px; display: inline-block; border-top: 4px solid currentColor; }
+.torii-resource-gate::before { content: ''; position: absolute; left: 2px; right: 2px; top: 3px; border-top: 3px solid currentColor; }
+.torii-resource-gate b { position: absolute; top: 3px; width: 3px; height: 15px; background: currentColor; }
+.torii-resource-gate b:first-child { left: 4px; }
+.torii-resource-gate b:last-child { right: 4px; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
 .desktop-card { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }
@@ -284,7 +293,14 @@ button { cursor: pointer; }
 .mode-card.selected { color: #000; background: #fff; border-color: #777; box-shadow: 0 6px 12px rgba(0,0,0,.18); }
 .player-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
 .player-choice { min-height: 68px; border: 2px solid transparent; border-radius: 12px; background: transparent; color: #777; font-weight: 900; display: grid; place-items: center; gap: 2px; padding: 5px 2px; font-size: clamp(12px, 3vw, 16px); }
-.player-choice b { font-size: 25px; }
+.player-type-icon { position: relative; width: 30px; height: 30px; display: block; color: currentColor; }
+.player-type-icon.human::before { content: ''; position: absolute; left: 10px; top: 2px; width: 10px; height: 10px; border: 3px solid currentColor; border-radius: 50%; }
+.player-type-icon.human::after { content: ''; position: absolute; left: 4px; right: 4px; bottom: 1px; height: 12px; border: 3px solid currentColor; border-bottom: 0; border-radius: 12px 12px 0 0; }
+.player-type-icon.random { border: 3px solid currentColor; border-radius: 6px; }
+.player-type-icon.random::before { content: ''; position: absolute; left: 5px; top: 5px; width: 4px; height: 4px; border-radius: 50%; background: currentColor; box-shadow: 11px 0 currentColor, 0 11px currentColor, 11px 11px currentColor, 5.5px 5.5px currentColor; }
+.player-type-icon.mcts { border: 3px solid currentColor; border-radius: 5px; }
+.player-type-icon.mcts::before { content: 'AI'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; font-weight: 950; }
+.player-type-icon.mcts::after { content: ''; position: absolute; inset: -6px 4px; border-top: 2px solid currentColor; border-bottom: 2px solid currentColor; }
 .player-choice.selected { color: #000; background: #fff; border-color: #777; box-shadow: 0 6px 12px rgba(0,0,0,.18); }
 .ai-input { width: 100%; min-height: 50px; padding: 0 22px; border: 4px solid var(--line); border-radius: 26px; background: #fff; font-size: clamp(25px, 5vw, 34px); font-weight: 950; }
 .difficulty-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
