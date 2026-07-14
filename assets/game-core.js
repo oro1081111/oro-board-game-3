@@ -382,6 +382,12 @@
       const view = this.game.view(this.state, this.ui, this);
       const outcome = this.game.outcome(this.state);
       const rate = Math.max(0, Math.min(1, this.firstRate));
+      const phone = document.querySelector('.phone-app');
+      const winColors = view.winColors || {};
+      phone.style.setProperty('--win-first', winColors.first || 'var(--first)');
+      phone.style.setProperty('--win-second', winColors.second || 'var(--second)');
+      phone.style.setProperty('--win-first-text', winColors.firstText || winColors.first || 'var(--first)');
+      phone.style.setProperty('--win-second-text', winColors.secondText || winColors.second || 'var(--second)');
       this.$('firstWin').textContent = `${this.game.firstName}勝率${(rate * 100).toFixed(1)}%`;
       this.$('secondWin').textContent = `${this.game.secondName}勝率${((1 - rate) * 100).toFixed(1)}%`;
       this.$('firstBar').style.width = `${rate * 100}%`;
@@ -391,11 +397,13 @@
       this.$('firstScore').innerHTML = view.firstScore;
       this.$('secondScore').innerHTML = view.secondScore;
       this.$('scoreRow').hidden = Boolean(view.hideScores);
+      this.$('scoreRow').classList.toggle('compact', Boolean(view.compactScores));
       this.$('board').className = `board cols-${view.cols} ${view.boardClass || ''}`;
       this.$('board').style.setProperty('--board-cols', view.cols);
       this.$('board').style.setProperty('--board-rows', view.rows || view.cols);
       this.$('board').innerHTML = view.board;
-      this.$('choiceTray').innerHTML = view.tray || '<span>本回合直接操作棋盤</span>';
+      this.$('choiceTray').hidden = Boolean(view.hideTray);
+      this.$('choiceTray').innerHTML = view.hideTray ? '' : view.tray || '<span>本回合直接操作棋盤</span>';
       this.$('turnCard').className = `turn-card ${outcome ? 'finished' : this.state.turn === 'second' ? 'second' : ''}`;
       this.$('turnCard').textContent = this.busy ? `${this.state.turn === 'first' ? this.game.firstName : this.game.secondName}思考中…` : view.hint;
       this.$('undoMove').disabled = this.busy || this.animating || !this.history.length;

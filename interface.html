@@ -50,10 +50,12 @@
     .winbar span:first-child { background: var(--red); }
     .winbar span:last-child { background: var(--blue); }
     .score-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 3vw, 16px); margin-bottom: 8px; }
-    .score-card { height: clamp(48px, 11vw, 58px); display: grid; place-items: center; background: white; border: 2px solid currentColor; border-radius: 8px; box-shadow: 0 3px 7px rgba(0,0,0,.16); font-size: clamp(29px, 6.5vw, 40px); font-weight: 950; line-height: 1; }
+    .score-card { height: clamp(40px, 9vw, 48px); display: grid; place-items: center; background: white; border: 2px solid currentColor; border-radius: 8px; box-shadow: 0 3px 7px rgba(0,0,0,.16); line-height: 1; }
     .score-card.red { color: var(--red); }
     .score-card.blue { color: var(--blue); }
-    .score-card span { color: #000; }
+    .score-pips { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2.4vw, 13px); color: inherit; }
+    .score-pip { display: block; width: clamp(16px, 4vw, 22px); aspect-ratio: 1; border: 3px solid currentColor; border-radius: 50%; background: transparent; }
+    .score-pip.filled { background: currentColor; }
     .board-wrap { background: #eee; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.18); margin-bottom: 8px; }
     .board { aspect-ratio: 1; display: grid; gap: 6px; padding: 12px; background: #d8d7c9; border: 6px solid var(--board); border-radius: 18px; box-shadow: inset 0 0 0 3px rgba(255,255,255,.55), 0 0 0 2px rgba(73,73,55,.4); }
     .board.cols-4 { grid-template-columns: repeat(4, 1fr); }
@@ -185,7 +187,7 @@
         <section class="play-area">
           <div class="win-labels"><span class="red" id="redWinText">先手勝率60.0%</span><span class="blue" id="blueWinText">後手勝率40.0%</span></div>
           <div class="winbar" id="winbar"><span></span><span></span></div>
-          <div class="score-row"><div class="score-card red"><span id="redScore">2 / 3</span></div><div class="score-card blue"><span id="blueScore">0 / 3</span></div></div>
+          <div class="score-row"><div class="score-card red" aria-label="先手 0 分"><span class="score-pips" id="redScore"></span></div><div class="score-card blue" aria-label="後手 0 分"><span class="score-pips" id="blueScore"></span></div></div>
           <div class="board-wrap"><div class="board cols-4" id="board"></div></div>
           <div class="below-board">
             <div class="choice-tray" id="choiceTray"></div>
@@ -718,8 +720,11 @@ function undoMove() {
 function render() {
   $('gameTitle').textContent = '蒐靈祭 Soulaween';
   $('gameCredit').textContent = '設計者：陳曦， 出版社：玩聚設計';
-  $('redScore').textContent = `${state.scores.first} / ${TARGET_SCORE}`;
-  $('blueScore').textContent = `${state.scores.second} / ${TARGET_SCORE}`;
+  const scorePips = (score) => Array.from({ length: TARGET_SCORE }, (_, index) => `<i class="score-pip ${index < score ? 'filled' : ''}"></i>`).join('');
+  $('redScore').innerHTML = scorePips(state.scores.first);
+  $('blueScore').innerHTML = scorePips(state.scores.second);
+  $('redScore').parentElement.setAttribute('aria-label', `先手 ${state.scores.first} 分`);
+  $('blueScore').parentElement.setAttribute('aria-label', `後手 ${state.scores.second} 分`);
   $('redScore').parentElement.classList.remove('current');
   $('blueScore').parentElement.classList.remove('current');
   renderWinRate();

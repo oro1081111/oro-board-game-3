@@ -9,6 +9,10 @@
   --board: #70705d;
   --first: #fb6a70;
   --second: #7188f4;
+  --win-first: var(--first);
+  --win-second: var(--second);
+  --win-first-text: var(--first);
+  --win-second-text: var(--second);
   --green: #12bd86;
   --orange: #ffa50f;
   --shadow: 0 7px 16px rgba(0, 0, 0, .18);
@@ -60,19 +64,25 @@ button { cursor: pointer; }
 
 .play-area { padding: 12px clamp(18px, 6vw, 34px) 20px; }
 .win-labels { display: flex; justify-content: space-between; margin: 0 7px 3px; font-size: clamp(13px, 3vw, 17px); line-height: 1.1; }
-.win-labels .first { color: var(--first); }
-.win-labels .second { color: var(--second); }
+.win-labels .first { color: var(--win-first-text); }
+.win-labels .second { color: var(--win-second-text); }
 .winbar { height: 16px; display: flex; overflow: hidden; margin-bottom: 9px; border-radius: 999px; background: #ddd; }
 .winbar span { transition: width .25s ease; }
-.winbar .first { background: var(--first); }
-.winbar .second { background: var(--second); }
+.winbar .first { background: var(--win-first); }
+.winbar .second { background: var(--win-second); }
 .score-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(10px, 3vw, 16px); margin-bottom: 8px; }
+.score-row[hidden], .choice-tray[hidden] { display: none !important; }
 .score-card { min-height: 48px; display: grid; place-items: center; padding: 4px; background: #fff; border: 2px solid currentColor; border-radius: 8px; box-shadow: 0 3px 7px rgba(0,0,0,.16); text-align: center; }
-.score-card.first { color: var(--first); }
-.score-card.second { color: var(--second); }
+.score-card.first { color: var(--win-first); }
+.score-card.second { color: var(--win-second); }
 .score-card strong { color: #000; font-size: clamp(23px, 5.5vw, 34px); line-height: 1; }
 .score-card small { color: #777; font-size: 11px; font-weight: 800; }
 .score-card.current { box-shadow: 0 0 0 2px rgba(46,42,47,.18), 0 3px 7px rgba(0,0,0,.16); }
+.score-row.compact { gap: 8px; margin-bottom: 6px; }
+.score-row.compact .score-card { min-height: 34px; padding: 2px 6px; }
+.score-inline { display: flex; align-items: baseline; justify-content: center; gap: 4px; white-space: nowrap; }
+.score-inline strong { font-size: clamp(20px, 4.8vw, 27px); }
+.score-inline small { font-size: 12px; }
 
 .board-wrap { padding: 6px; margin-bottom: 8px; background: #eee; box-shadow: 0 4px 12px rgba(0,0,0,.18); }
 .board {
@@ -233,10 +243,12 @@ button { cursor: pointer; }
 /* Torii 1.0 supplies with active-side highlight and code-native pieces. */
 .torii-board { background: #a8c98c; border-color: #5f7950; }
 .torii-board .cell { background: #e9f2db; }
-.torii-tiles:first-child > b { color: #d94e55; }
-.torii-tiles:last-child > b { color: #416fd0; }
+.torii-tiles.first { background: #fff4f4; border-color: #e9b9bb; }
+.torii-tiles.second { background: #f2f5ff; border-color: #bcc8ef; }
 .torii-tiles:first-child .tray-btn { color: #d94e55; }
 .torii-tiles:last-child .tray-btn { color: #416fd0; }
+.torii-tiles .tray-btn.used { opacity: .22; filter: grayscale(1); text-decoration: line-through; }
+.torii-tiles .tray-btn[aria-disabled="true"] { cursor: default; }
 .torii-mark { width: 52%; height: 48%; font-size: 0; }
 .torii-mark::before, .torii-mark::after { content: ''; position: absolute; background: currentColor; }
 .torii-mark::before { left: 8%; right: 8%; top: 12%; height: 16%; border-radius: 50% 50% 2px 2px; }
@@ -248,8 +260,6 @@ button { cursor: pointer; }
 .piece.spirit.first { color: var(--first); }
 .piece.spirit.second { color: var(--second); }
 .piece.spirit i { width: 34%; height: 34%; border-radius: 50%; background: #fff; opacity: .9; }
-.follower { animation: token-pop .2s ease-out; }
-@keyframes token-pop { from { opacity: 0; transform: scale(.3); } }
 .piece-ghost { transform-origin: center; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }

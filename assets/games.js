@@ -5,6 +5,7 @@
   const games = {};
   const posText = (pos) => `第 ${pos.r + 1} 列第 ${pos.c + 1} 欄`;
   const scoreHtml = (value, label) => `<strong>${value}</strong><small>${label}</small>`;
+  const scoreInline = (value, label) => `<span class="score-inline"><strong>${value}</strong><small>${label}</small></span>`;
   const cellButton = (r, c, classes, content, label) => `<button class="cell ${classes || ''}" data-r="${r}" data-c="${c}" aria-label="${label || posText({ r, c })}">${content || ''}</button>`;
   const inBounds = (r, c, rows, cols) => r >= 0 && r < rows && c >= 0 && c < cols;
 
@@ -166,7 +167,12 @@
       const tray = `<div class="dual-choice">${handPanel('first')}${handPanel('second')}</div>`;
       const outcome = this.outcome(state);
       const hint = outcome ? outcome === 'draw' ? '遊戲結束：雙方平手' : `遊戲結束：${outcome === 'first' ? '深色' : '淺色'}玩家獲勝` : `現在是${state.turn === 'first' ? '深色' : '淺色'}玩家的回合，請先選棋子`;
-      return { cols: state.cols, rows: state.rows, board, tray, hint, firstScore: scoreHtml(scores.first, '分'), secondScore: scoreHtml(scores.second, '分') };
+      return {
+        cols: state.cols, rows: state.rows, board, tray, hint,
+        compactScores: true,
+        winColors: { first: '#2d2a2e', second: '#b9b6aa', secondText: '#77746d' },
+        firstScore: scoreInline(scores.first, '分'), secondScore: scoreInline(scores.second, '分')
+      };
     },
     bind(state, ui, controller, board, tray) {
       tray.querySelectorAll(`[data-piece][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => controller.setUi({ pieceType: button.dataset.piece })));
@@ -294,6 +300,7 @@
     view(state, ui) {
       const all = this.actions(state);
       const moves = ui.workerId ? all.filter((action) => action.workerId === ui.workerId) : [];
+      const movableWorkers = new Set(all.map((action) => action.workerId).filter(Boolean));
       const moveKeys = new Set(moves.map((action) => key(action.move.r, action.move.c)));
       const buildKeys = new Set(ui.move ? moves.filter((action) => samePos(action.move, ui.move) && action.build).map((action) => key(action.build.r, action.build.c)) : []);
       const visualWorkerAt = (pos) => state.workers.find((worker) => samePos(worker.id === ui.workerId && ui.move ? ui.move : worker.pos, pos));
@@ -304,13 +311,12 @@
         const building = height ? `<span class="santorini-building">${Array.from({ length: height }, (_, level) => `<i class="santorini-level ${level === 3 ? 'dome' : ''}" style="--level:${level}"></i>`).join('')}</span>` : '';
         const piece = worker ? `<span class="piece worker santorini-worker ${worker.owner}" data-anim-id="${worker.id}"><span class="worker-head"></span><span class="worker-body"></span></span>` : '';
         let classes = '';
-        if (worker?.id === ui.workerId) classes = 'selected';
+        if (state.phase === 'move' && !ui.workerId && worker?.owner === state.turn && movableWorkers.has(worker.id)) classes = 'legal';
+        if (ui.workerId && worker?.id === ui.workerId) classes = 'selected';
         if (!ui.move && moveKeys.has(key(r, c))) classes = 'legal';
         if (ui.move && buildKeys.has(key(r, c))) classes = 'legal';
         board += cellButton(r, c, classes, building + piece);
       }
-      const firstWorkers = state.workers.filter((worker) => worker.owner === 'first').length;
-      const secondWorkers = state.workers.filter((worker) => worker.owner === 'second').length;
       const outcome = this.outcome(state);
       let hint;
       if (outcome) hint = `遊戲結束：${outcome === 'first' ? '藍方' : '橘方'}獲勝`;
@@ -318,7 +324,7 @@
       else if (!ui.workerId) hint = `${state.turn === 'first' ? '藍方' : '橘方'}請選擇工人`;
       else if (!ui.move) hint = '請選擇移動位置';
       else hint = '請選擇建築位置';
-      return { cols: 5, rows: 5, boardClass: 'santorini-board', board, tray: '<span>移動一名工人，再建築一層</span>', hint, firstScore: scoreHtml(`${firstWorkers} / 2`, '工人'), secondScore: scoreHtml(`${secondWorkers} / 2`, '工人') };
+      return { cols: 5, rows: 5, boardClass: 'santorini-board', board, hideScores: true, hideTray: true, hint, firstScore: '', secondScore: '' };
     },
     bind(state, ui, controller, board) {
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
@@ -329,19 +335,22 @@
           if (action) controller.commit(action);
           return;
         }
-        const worker = workerAt(state, pos);
-        if (worker?.owner === state.turn) { controller.setUi({ workerId: worker.id, move: null }); return; }
         const actions = this.actions(state).filter((action) => action.workerId === ui.workerId);
-        if (!ui.move) {
-          const candidates = actions.filter((action) => samePos(action.move, pos));
-          if (!candidates.length) return;
-          const chosen = candidates[0];
-          const finishMove = chosen.build === null ? () => controller.commit({ ...chosen, previewed: true }) : null;
-          controller.previewUi({ move: pos }, { spring: true }, 360, finishMove);
-        } else {
+        if (ui.move) {
           const action = actions.find((item) => samePos(item.move, ui.move) && samePos(item.build, pos));
           if (action) controller.commit({ ...action, previewed: true });
+          return;
         }
+        const worker = workerAt(state, pos);
+        if (worker?.owner === state.turn) {
+          if (this.actions(state).some((action) => action.workerId === worker.id)) controller.setUi({ workerId: worker.id, move: null });
+          return;
+        }
+        const candidates = actions.filter((action) => samePos(action.move, pos));
+        if (!candidates.length) return;
+        const chosen = candidates[0];
+        const finishMove = chosen.build === null ? () => controller.commit({ ...chosen, previewed: true }) : null;
+        controller.previewUi({ move: pos }, { spring: true }, 360, finishMove);
       }));
     }
   };
@@ -519,7 +528,7 @@
       const tray = `<div class="dual-choice">${waitingZone('first', '紅方')}${waitingZone('second', '藍方')}</div>${stop}`;
       const outcome = this.outcome(state);
       let hint = outcome ? `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝` : state.continuing ? '可繼續跳躍，或選擇停止連跳' : `${state.turn === 'first' ? '紅方' : '藍方'}請選擇復活、移動或跳躍`;
-      return { cols: 5, rows: 5, boardClass: 'zombie-board', board, tray, hint, firstScore: scoreHtml(`${state.scores.first} / 8`, '分'), secondScore: scoreHtml(`${state.scores.second} / 8`, '分') };
+      return { cols: 5, rows: 5, boardClass: 'zombie-board', board, tray, hint, compactScores: true, firstScore: scoreInline(`${state.scores.first} / 8`, '分'), secondScore: scoreInline(`${state.scores.second} / 8`, '分') };
     },
     bind(state, ui, controller, board, tray) {
       tray.querySelectorAll(`[data-wait][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => controller.setUi({ waitTier: Number(button.dataset.wait), selectedPos: null })));
@@ -533,12 +542,12 @@
         if (!controller.isHumanTurn()) return;
         const pos = { r: Number(button.dataset.r), c: Number(button.dataset.c) };
         const piece = state.board[pos.r][pos.c];
-        if (!state.continuing && !ui.waitTier && piece?.owner === state.turn) { controller.setUi({ selectedPos: pos, waitTier: null }); return; }
         const selected = state.continuing || ui.selectedPos;
         let action;
         if (ui.waitTier) action = this.actions(state).find((item) => item.type === 'revive' && item.tier === ui.waitTier && samePos(item.to, pos));
         else if (selected) action = this.actions(state).find((item) => (item.type === 'move' || item.type === 'jump') && samePos(item.from, selected) && item.to !== 'out' && samePos(item.to, pos));
-        if (action) controller.commit(action);
+        if (action) { controller.commit(action); return; }
+        if (!state.continuing && piece?.owner === state.turn) controller.setUi({ selectedPos: pos, waitTier: null });
       }));
     }
   };
@@ -637,7 +646,12 @@
       }
       const outcome = this.outcome(state);
       const hint = outcome ? `遊戲結束：${outcome === 'first' ? '黑方' : '白方'}獲勝` : !state.focus ? '黑方請選擇第一枚焦點棋' : `${state.turn === 'first' ? '黑方' : '白方'}請移動${FCG_NAMES[state.focus.color]}色焦點棋`;
-      return { cols: 4, rows: 4, board, tray: '<span>棋子顏色代表種類；黑、白外框代表玩家</span>', hint, hideScores: true, firstScore: '', secondScore: '' };
+      return {
+        cols: 4, rows: 4, board, tray: '<span>棋子顏色代表種類；黑、白外框代表玩家</span>', hint,
+        hideScores: true,
+        winColors: { first: '#2e2a2f', second: '#bab9b3', secondText: '#77746f' },
+        firstScore: '', secondScore: ''
+      };
     },
     bind(state, ui, controller, board) {
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
@@ -703,20 +717,12 @@
     const tile = state.tiles[state.positions[state.turn].r][state.positions[state.turn].c];
     return tile === 'SR' || tile === 'SB' ? [1, 2, 3, 4] : [Number(tile)];
   }
-  function fmgMobility(state, owner) {
-    const copy = clone(state);
-    copy.turn = owner;
-    const destinations = new Set();
-    for (const steps of fmgStepChoices(copy)) for (const pos of fmgReachable(copy, steps)) destinations.add(key(pos.r, pos.c));
-    return destinations.size;
-  }
-
   games['four-moves-chess'] = {
     title: '四步棋 Four Moves Chess', credit: '設計者：來源未載，遊戲名稱：奧羅暫定',
     firstName: '紅方', secondName: '藍方', designer: '具體設計者不可考。1.0 記載此玩法來自 IG 帳號 celine.et.sasha 的短片，網頁名稱由奧羅暫定。', publisher: '沒有查到正式出版社；目前為非商業網頁實作。',
     intro: '棋子所在格的數字決定本回合步數。每一步沿正交方向跳到下一個可停留格，離開後原格封閉；讓對手無路可走即可獲勝。',
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 50,
-    animationDuration(action) { return action.type === 'move' ? action.steps * 280 : 0; },
+    animationDuration(action) { return action.type === 'move' ? action.path.length * 250 : 0; },
     rules: [
       { title: '步數', html: '<p>所在格為數字 n 時必須移動 n 步；所在格為 S 時可選 1 到 4 步。</p>' },
       { title: '每一步', html: '<p>只能往上下左右，並跳過已封閉格與棋子，停在該方向下一個可停留格。同一回合不能重訪格子。</p>' },
@@ -731,12 +737,13 @@
     },
     actions(state) {
       if (state.winner) return [];
-      const actions = [];
+      const actions = new Map();
       for (const steps of fmgStepChoices(state)) for (const destination of fmgReachable(state, steps)) {
         const { path, ...to } = destination;
-        actions.push({ type: 'move', steps, to, path, stepDuration: 280 });
+        const destinationKey = key(to.r, to.c);
+        if (!actions.has(destinationKey)) actions.set(destinationKey, { type: 'move', steps, to, path, stepDuration: 250 });
       }
-      return actions;
+      return [...actions.values()];
     },
     apply(source, action) {
       const state = clone(source);
@@ -750,33 +757,26 @@
     },
     outcome(state) { return state.winner; },
     describe(action, before) { return `${before.turn === 'first' ? '紅方' : '藍方'}移動 ${action.steps} 步到${posText(action.to)}。`; },
-    view(state, ui) {
-      const choices = fmgStepChoices(state);
-      const selectedSteps = choices.length === 1 ? choices[0] : ui.steps;
-      const legal = new Set(this.actions(state).filter((action) => !selectedSteps || action.steps === selectedSteps).map((action) => key(action.to.r, action.to.c)));
+    view(state) {
+      const legal = new Set(this.actions(state).map((action) => key(action.to.r, action.to.c)));
       let board = '';
       for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
         const first = samePos(state.positions.first, { r, c });
         const second = samePos(state.positions.second, { r, c });
         const piece = first ? '<span class="piece first" data-anim-id="fmg-first">R</span>' : second ? '<span class="piece second" data-anim-id="fmg-second">B</span>' : '';
         const tile = state.tiles[r][c] === 'SR' || state.tiles[r][c] === 'SB' ? 'S' : state.tiles[r][c];
-        const classes = `${state.covered[r][c] ? 'removed-space' : ''} ${legal.has(key(r, c)) && selectedSteps ? 'legal' : ''}`;
+        const classes = `${state.covered[r][c] ? 'removed-space' : ''} ${legal.has(key(r, c)) ? 'legal' : ''}`;
         board += cellButton(r, c, classes, state.covered[r][c] ? '' : `<b>${tile}</b>${piece}`);
       }
-      const tray = choices.length > 1 ? choices.map((steps) => `<button class="tray-btn ${ui.steps === steps ? 'selected' : ''}" data-steps="${steps}">${steps} 步</button>`).join('') : `<span>本回合必須移動 ${choices[0]} 步</span>`;
       const outcome = this.outcome(state);
-      const hint = outcome ? `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝` : choices.length > 1 && !ui.steps ? `${state.turn === 'first' ? '紅方' : '藍方'}請先選擇步數` : `${state.turn === 'first' ? '紅方' : '藍方'}請選擇目的地`;
-      return { cols: 4, rows: 4, boardClass: 'four-moves-board', board, tray, hint, firstScore: scoreHtml(fmgMobility(state, 'first'), '合法目的地'), secondScore: scoreHtml(fmgMobility(state, 'second'), '合法目的地') };
+      const hint = outcome ? `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝` : `${state.turn === 'first' ? '紅方' : '藍方'}請選擇高亮目的地`;
+      return { cols: 4, rows: 4, boardClass: 'four-moves-board', board, hideScores: true, hideTray: true, hint, firstScore: '', secondScore: '' };
     },
-    bind(state, ui, controller, board, tray) {
-      tray.querySelectorAll('[data-steps]').forEach((button) => button.addEventListener('click', () => controller.setUi({ steps: Number(button.dataset.steps) })));
+    bind(state, ui, controller, board) {
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
         if (!controller.isHumanTurn()) return;
-        const choices = fmgStepChoices(state);
-        const steps = choices.length === 1 ? choices[0] : ui.steps;
-        if (!steps) return;
         const pos = { r: Number(button.dataset.r), c: Number(button.dataset.c) };
-        const action = this.actions(state).find((item) => item.steps === steps && samePos(item.to, pos));
+        const action = this.actions(state).find((item) => samePos(item.to, pos));
         if (action) controller.commit(action);
       }));
     }
@@ -846,7 +846,7 @@
     firstName: '紅方', secondName: '藍方', designer: '陳致寬；1.0 介紹記載其為臺灣原創抽象棋設計團隊作品。', publisher: '桌遊愛樂事。1.0 頁面記載已取得原出版社與設計師同意製作與分享。',
     intro: '玩家使用 1、2、3 行動板塊移動森靈，在停留格放置或替換信徒；四名信徒連線可建立鳥居。',
     openings: [{ value: 'standard', label: '標準' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 80,
-    animationDuration(action) { return action.type === 'path' ? action.path.length * 220 : action.type === 'build' ? 220 : 0; },
+    animationDuration(action) { return action.type === 'path' ? action.path.length * 200 : action.type === 'build' ? 200 : 0; },
     rules: [
       { title: '回合流程', html: '<ol><li>選一張尚未使用的 1、2、3 行動板塊。</li><li>森靈依數字走足步數，不能重訪或回起點。</li><li>在每個實際停留格放置或替換己方信徒。</li></ol>' },
       { title: '跳躍與鳥居', html: '<p>移動遇到對手森靈所在行列時依 1.0 程式整段跳過，被跳過格不放信徒。四格己方信徒成橫列或直列時，在其中一格建立鳥居並移除該線其他未受鳥居保護的信徒。</p>' },
@@ -911,8 +911,13 @@
         const classes = `${path.some((item) => samePos(item, pos)) ? 'path' : ''} ${next.has(key(r, c)) || builds.has(key(r, c)) ? 'legal' : ''}`;
         board += cellButton(r, c, classes, follower + gate + spirit);
       }
-      const tileZone = (owner, label) => `<section class="choice-zone torii-tiles ${state.turn === owner && !state.building ? 'active' : ''}"><b>${label}行動板塊</b><div>${[1,2,3].map((tile) => `<button class="tray-btn ${state.turn === owner && state.pendingTile === tile ? 'selected' : ''}" data-tile="${tile}" data-owner="${owner}" ${state.turn === owner && !state.building && !state.tilesUsed[owner][tile] ? '' : 'disabled'}>${tile}</button>`).join('')}</div></section>`;
-      const tray = `<div class="dual-choice">${tileZone('first', '紅方')}${tileZone('second', '藍方')}</div>${state.building ? '<small class="tray-note">請在四連線中選擇鳥居位置</small>' : ''}`;
+      const tileZone = (owner) => `<section class="choice-zone torii-tiles ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${owner === 'first' ? '紅方' : '藍方'}行動板塊"><div>${[1,2,3].map((tile) => {
+        const used = state.tilesUsed[owner][tile];
+        const selected = state.turn === owner && state.pendingTile === tile;
+        const unavailable = used || state.turn !== owner || state.building || state.pendingTile !== null;
+        return `<button class="tray-btn ${used ? 'used' : ''} ${selected ? 'selected' : ''}" data-tile="${tile}" data-owner="${owner}" aria-disabled="${unavailable}" ${used ? 'disabled' : ''}>${tile}</button>`;
+      }).join('')}</div></section>`;
+      const tray = `<div class="dual-choice">${tileZone('first')}${tileZone('second')}</div>${state.building ? '<small class="tray-note">請在四連線中選擇鳥居位置</small>' : ''}`;
       const outcome = this.outcome(state);
       let hint;
       if (outcome) hint = `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝`;
@@ -940,7 +945,7 @@
         if (!toriiNextSteps(state, path).some((item) => samePos(item, pos))) return;
         const nextPath = [...path, pos];
         const finishPath = nextPath.length === state.pendingTile ? () => controller.commit({ type: 'path', path: nextPath }) : null;
-        controller.previewUi({ path: nextPath }, { path: [pos], stepDuration: 220 }, 220, finishPath);
+        controller.previewUi({ path: nextPath }, { path: [pos], stepDuration: 200 }, 200, finishPath);
       }));
     }
   };
