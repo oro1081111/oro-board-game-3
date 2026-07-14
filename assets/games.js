@@ -411,6 +411,13 @@
   }
   function zombieCombine(moving, target) { return { id: moving.id, owner: moving.owner, stack: [...target.stack, ...moving.stack] }; }
 
+  function zombieRolloutWeight(action) {
+    if (action.type === 'jump') return 1.5 + (action.score || 0) * 4;
+    if (action.type === 'stop') return 0.25;
+    if (action.type === 'revive') return 0.8;
+    return 1;
+  }
+
   games['zombie-jump'] = {
     title: '殭屍棋 JUMP', credit: '設計者：來源未載，出版社：來源未載',
     firstName: '紅方', secondName: '藍方', designer: '1.0 與 2.0 參考程式未記載設計者。', publisher: '1.0 與 2.0 參考程式未記載出版社。',
@@ -418,6 +425,26 @@
     openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 90,
     animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
     animationOptions() { return { spring: true }; },
+    rolloutAction(state, actions) {
+      let winningJump = null;
+      let winningCount = 0;
+      let total = 0;
+      for (const action of actions) {
+        if (action.type === 'jump' && state.scores[state.turn] + (action.score || 0) >= 8) {
+          winningCount += 1;
+          if (Math.random() * winningCount < 1) winningJump = action;
+        }
+        total += zombieRolloutWeight(action);
+      }
+      if (winningJump) return winningJump;
+
+      let target = Math.random() * total;
+      for (const action of actions) {
+        target -= zombieRolloutWeight(action);
+        if (target < 0) return action;
+      }
+      return actions[actions.length - 1];
+    },
     rules: [
       { title: '三種行動', html: '<p>每回合可從陰間復活一枚棋、將棋往正交相鄰格移動，或沿正交方向跳過一串連續棋。</p>' },
       { title: '堆疊', html: '<p>等級 1 可疊上單枚 2 或 3；等級 2 可疊上單枚 3；由單枚 1 與單枚 2 組成的總等級 3 堆疊可疊上單枚 3；等級 1 可疊上總等級 5 的堆疊。</p>' },

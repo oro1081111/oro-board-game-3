@@ -147,7 +147,7 @@ rolloutAction(state, actions)
 cutoffReward(state, rootPlayer)
 ```
 
-只有規則／產品決策明確允許時才加入啟發式。目前僅聖托里尼使用高度、移動性、中央控制與立即勝利 rollout policy；其他共用遊戲維持隨機 rollout。
+只有規則／產品決策明確允許時才加入啟發式。聖托里尼使用高度、移動性、中央控制與立即勝利 rollout policy。殭屍棋只在 rollout 行動抽樣中優先立即勝利，並提高得分跳躍與續跳的權重；不使用 cutoff 靜態分差，UCT、正式合法行動與畫面勝率仍維持共用 MCTS 流程。其他共用遊戲維持隨機 rollout。
 
 ## 7. Undo 與日誌
 

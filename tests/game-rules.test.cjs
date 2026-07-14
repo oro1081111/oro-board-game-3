@@ -54,6 +54,25 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal(zombieGame.animationDuration({ type: 'jump', to: 'out' }), 520);
   assert.ok(zombieGame.actions(zombie).some((action) => action.type === 'move' && action.from.r === 1 && action.from.c === 0 && action.to.r === 0 && action.to.c === 0), 'Zombie level 1 can move onto its own level 2 piece');
   assert.equal(zombieGame.view(zombie, {}).compactScores, true, 'Zombie scores stay on one compact line');
+  const originalRandom = Math.random;
+  try {
+    Math.random = () => 0.99;
+    const winningJump = { type: 'jump', score: 1, id: 'winning-jump' };
+    assert.equal(zombieGame.rolloutAction(
+      { turn: 'first', scores: { first: 7, second: 0 } },
+      [{ type: 'move' }, { type: 'jump', score: 0 }, winningJump]
+    ), winningJump, 'Zombie rollout always takes an immediate winning jump');
+
+    Math.random = () => 0;
+    const stop = { type: 'stop' };
+    assert.equal(zombieGame.rolloutAction(
+      { turn: 'first', scores: { first: 0, second: 0 } },
+      [stop, { type: 'jump', score: 3 }]
+    ), stop, 'Zombie rollout keeps a non-zero chance to stop instead of acting greedily');
+  } finally {
+    Math.random = originalRandom;
+  }
+  assert.equal(zombieGame.cutoffReward, undefined, 'Zombie MCTS remains terminal-result based without cutoff scoring');
 
   const fcgGame = BOARD_GAMES['four-color-chess'];
   const fcg = fcgGame.create('standard').state;
