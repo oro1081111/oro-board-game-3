@@ -44,7 +44,10 @@
         children: [],
         untried: done ? [] : this.game.actions(state),
         visits: 0,
-        value: 0
+        value: 0,
+        firstWins: 0,
+        secondWins: 0,
+        draws: 0
       };
     }
 
@@ -82,22 +85,26 @@
       const limit = this.game.rolloutLimit || 100;
       for (let depth = 0; depth < limit; depth += 1) {
         const outcome = this.game.outcome(state);
-        if (outcome !== null) return outcome === 'draw' ? .5 : outcome === this.rootPlayer ? 1 : 0;
+        if (outcome !== null) return outcome;
         const actions = this.game.actions(state);
-        if (!actions.length) return .5;
+        if (!actions.length) return 'draw';
         const action = this.game.rolloutAction ? this.game.rolloutAction(state, actions) : pick(actions);
         state = this.game.apply(state, action);
       }
-      return this.game.cutoffReward ? this.game.cutoffReward(state, this.rootPlayer) : .5;
+      return this.game.cutoffReward ? this.game.cutoffReward(state, this.rootPlayer) : 'draw';
     }
 
     iterate() {
       let node = this.select(this.root);
       node = this.expand(node);
-      const reward = this.rollout(node.state);
+      const result = this.rollout(node.state);
+      const reward = typeof result === 'number' ? result : result === 'draw' ? .5 : result === this.rootPlayer ? 1 : 0;
       while (node) {
         node.visits += 1;
         node.value += reward;
+        if (result === 'first') node.firstWins += 1;
+        else if (result === 'second') node.secondWins += 1;
+        else if (result === 'draw') node.draws += 1;
         node = node.parent;
       }
     }
@@ -105,11 +112,18 @@
     result() {
       if (!this.root.children.length) return null;
       const best = this.root.children.reduce((a, b) => a.visits >= b.visits ? a : b);
-      const rootRate = best.value / Math.max(1, best.visits);
-      const firstRate = this.rootPlayer === 'first' ? rootRate : 1 - rootRate;
+      const rootRate = this.root.value / Math.max(1, this.root.visits);
+      const counted = this.root.firstWins + this.root.secondWins + this.root.draws;
+      const firstWinRate = counted ? this.root.firstWins / counted : this.rootPlayer === 'first' ? rootRate : 1 - rootRate;
+      const secondWinRate = counted ? this.root.secondWins / counted : 1 - firstWinRate;
+      const drawRate = counted ? this.root.draws / counted : 0;
+      const firstRate = firstWinRate + drawRate / 2;
       return {
         action: clone(best.action),
         firstRate,
+        firstWinRate,
+        secondWinRate,
+        drawRate,
         visits: best.visits,
         iterations: this.root.visits
       };
@@ -144,8 +158,8 @@
               <button class="icon-btn" id="openSettings" aria-label="遊戲設定">${gearSvg}</button>
             </header>
             <section class="play-area">
-              <div class="win-labels"><span class="first" id="firstWin"></span><span class="second" id="secondWin"></span></div>
-              <div class="winbar"><span class="first" id="firstBar"></span><span class="second" id="secondBar"></span></div>
+              <div class="win-labels"><span class="first" id="firstWin"></span><span class="draw" id="drawWin"></span><span class="second" id="secondWin"></span></div>
+              <div class="winbar"><span class="first" id="firstBar"></span><span class="draw" id="drawBar"></span><span class="second" id="secondBar"></span></div>
               <div class="score-row" id="scoreRow">
                 <div class="score-card first" id="firstScore"></div>
                 <div class="score-card second" id="secondScore"></div>
@@ -200,9 +214,13 @@
       this.history = [];
       this.logs = [];
       this.firstRate = .5;
+      this.firstWinRate = .5;
+      this.secondWinRate = .5;
+      this.drawRate = 0;
       this.busy = false;
       this.animating = false;
       this.token = 0;
+      this.animationSequence = 0;
       this.openingSnapshot = null;
       document.getElementById('app').innerHTML = shell(game);
       this.bindShell();
@@ -216,12 +234,12 @@
     previewUi(patch, action, duration = 260, done) {
       if (this.animating) return;
       this.animating = true;
+      const animationSequence = ++this.animationSequence;
       this.animationAction = { ...action, duration };
       this.ui = { ...this.ui, ...patch };
       this.render();
-      const token = this.token;
       setTimeout(() => {
-        if (token !== this.token) return;
+        if (animationSequence !== this.animationSequence) return;
         this.animating = false;
         if (done) done();
         else this.render();
@@ -281,6 +299,7 @@
 
     newGame() {
       this.token += 1;
+      this.animationSequence += 1;
       this.busy = false;
       this.animating = false;
       const created = this.game.create(this.settings.opening, this.openingSnapshot);
@@ -290,6 +309,9 @@
       this.history = [];
       this.logs = [`開始新對局：${this.game.openings.find((item) => item.value === this.settings.opening)?.label || '標準'}。`];
       this.firstRate = .5;
+      this.firstWinRate = .5;
+      this.secondWinRate = .5;
+      this.drawRate = 0;
       this.render();
       this.scheduleTurn();
     }
@@ -298,8 +320,9 @@
       if (this.busy || this.game.outcome(this.state) !== null) return;
       if (source === 'human' && !this.isHumanTurn()) return;
       this.token += 1;
+      this.animationSequence += 1;
       const before = clone(this.state);
-      this.history.push({ state: before, ui: clone(this.ui), logLength: this.logs.length });
+      this.history.push({ state: before, ui: clone(this.ui), logLength: this.logs.length, firstRate: this.firstRate, firstWinRate: this.firstWinRate, secondWinRate: this.secondWinRate, drawRate: this.drawRate });
       this.state = this.game.apply(this.state, action);
       this.ui = {};
       this.logs.push(this.game.describe(action, before, this.state));
@@ -322,6 +345,7 @@
     undo() {
       if (this.busy || !this.history.length) return;
       this.token += 1;
+      this.animationSequence += 1;
       this.animating = false;
       let entry = this.history.pop();
       while (this.history.length && this.settings.players[entry.state.turn] !== 'human') entry = this.history.pop();
@@ -329,7 +353,10 @@
       this.ui = clone(entry.ui);
       this.logs.length = entry.logLength;
       this.logs.push('已返回上一步。');
-      this.firstRate = .5;
+      this.firstRate = entry.firstRate ?? this.firstRate;
+      this.firstWinRate = entry.firstWinRate ?? this.firstWinRate;
+      this.secondWinRate = entry.secondWinRate ?? this.secondWinRate;
+      this.drawRate = entry.drawRate ?? this.drawRate;
       this.render();
       this.scheduleTurn();
     }
@@ -338,13 +365,16 @@
       const outcome = this.game.outcome(this.state);
       if (outcome !== null) {
         this.firstRate = outcome === 'draw' ? .5 : outcome === 'first' ? 1 : 0;
+        this.firstWinRate = outcome === 'first' ? 1 : 0;
+        this.secondWinRate = outcome === 'second' ? 1 : 0;
+        this.drawRate = outcome === 'draw' ? 1 : 0;
         this.render();
         return;
       }
       const type = this.settings.players[this.state.turn];
       if (type === 'human') {
         const scheduledToken = ++this.token;
-        setTimeout(() => { if (scheduledToken === this.token) this.evaluatePosition(); }, 500);
+        setTimeout(() => { if (scheduledToken === this.token) this.evaluatePosition(); }, 60);
       }
       else setTimeout(() => this.runComputer(type), 320);
     }
@@ -354,6 +384,9 @@
       const result = await runMcts(this.game, this.state, Math.min(this.game.evaluationIterations || 40, Math.max(20, Math.round(this.settings.iterations / 50))), () => token === this.token);
       if (!result || token !== this.token) return;
       this.firstRate = result.firstRate;
+      this.firstWinRate = result.firstWinRate;
+      this.secondWinRate = result.secondWinRate;
+      this.drawRate = result.drawRate;
       this.render();
     }
 
@@ -365,12 +398,22 @@
       this.render();
       const token = ++this.token;
       let action;
-      if (type === 'random') action = pick(actions);
-      else {
+      if (type === 'random') {
+        const result = await runMcts(this.game, this.state, Math.min(this.game.evaluationIterations || 40, Math.max(20, Math.round(this.settings.iterations / 50))), () => token === this.token);
+        if (!result || token !== this.token) return;
+        this.firstRate = result.firstRate;
+        this.firstWinRate = result.firstWinRate;
+        this.secondWinRate = result.secondWinRate;
+        this.drawRate = result.drawRate;
+        action = pick(actions);
+      } else {
         const result = await runMcts(this.game, this.state, this.settings.iterations, () => token === this.token);
         if (!result || token !== this.token) return;
         action = result.action;
         this.firstRate = result.firstRate;
+        this.firstWinRate = result.firstWinRate;
+        this.secondWinRate = result.secondWinRate;
+        this.drawRate = result.drawRate;
       }
       if (token !== this.token) return;
       this.busy = false;
@@ -382,16 +425,32 @@
       const view = this.game.view(this.state, this.ui, this);
       const outcome = this.game.outcome(this.state);
       const rate = Math.max(0, Math.min(1, this.firstRate));
+      const firstWinRate = Math.max(0, Math.min(1, this.firstWinRate));
+      const secondWinRate = Math.max(0, Math.min(1, this.secondWinRate));
+      const drawRate = Math.max(0, Math.min(1, this.drawRate));
+      const threeWayWin = Boolean(view.threeWayWin);
       const phone = document.querySelector('.phone-app');
       const winColors = view.winColors || {};
+      const turnColors = view.turnColors || {};
       phone.style.setProperty('--win-first', winColors.first || 'var(--first)');
       phone.style.setProperty('--win-second', winColors.second || 'var(--second)');
+      phone.style.setProperty('--win-draw', winColors.draw || '#d9a441');
       phone.style.setProperty('--win-first-text', winColors.firstText || winColors.first || 'var(--first)');
       phone.style.setProperty('--win-second-text', winColors.secondText || winColors.second || 'var(--second)');
-      this.$('firstWin').textContent = `${this.game.firstName}勝率${(rate * 100).toFixed(1)}%`;
-      this.$('secondWin').textContent = `${this.game.secondName}勝率${((1 - rate) * 100).toFixed(1)}%`;
-      this.$('firstBar').style.width = `${rate * 100}%`;
-      this.$('secondBar').style.width = `${(1 - rate) * 100}%`;
+      phone.style.setProperty('--turn-first', turnColors.first || 'var(--first)');
+      phone.style.setProperty('--turn-second', turnColors.second || 'var(--second)');
+      phone.style.setProperty('--turn-first-text', turnColors.firstText || '#fff');
+      phone.style.setProperty('--turn-second-text', turnColors.secondText || '#fff');
+      this.$('firstWin').textContent = threeWayWin ? `${this.game.firstName} ${(firstWinRate * 100).toFixed(1)}%` : `${this.game.firstName}勝率${(rate * 100).toFixed(1)}%`;
+      this.$('drawWin').textContent = `平手 ${(drawRate * 100).toFixed(1)}%`;
+      this.$('secondWin').textContent = threeWayWin ? `${this.game.secondName} ${(secondWinRate * 100).toFixed(1)}%` : `${this.game.secondName}勝率${((1 - rate) * 100).toFixed(1)}%`;
+      this.$('firstBar').style.width = `${(threeWayWin ? firstWinRate : rate) * 100}%`;
+      this.$('drawBar').style.width = `${threeWayWin ? drawRate * 100 : 0}%`;
+      this.$('secondBar').style.width = `${(threeWayWin ? secondWinRate : 1 - rate) * 100}%`;
+      this.$('drawWin').hidden = !threeWayWin;
+      this.$('drawBar').hidden = !threeWayWin;
+      this.$('firstWin').parentElement.classList.toggle('three-way', threeWayWin);
+      this.$('firstBar').parentElement.classList.toggle('three-way', threeWayWin);
       this.$('firstScore').className = `score-card first ${this.state.turn === 'first' && !outcome ? 'current' : ''}`;
       this.$('secondScore').className = `score-card second ${this.state.turn === 'second' && !outcome ? 'current' : ''}`;
       this.$('firstScore').innerHTML = view.firstScore;

@@ -22,7 +22,11 @@ const { BOARD_GAMES, GameCore } = window;
   assert.doesNotMatch(mijnView.tray, /<b>.*剩餘棋子/, 'Mijnlieff hands use colour instead of visible labels');
   assert.match(mijnView.board, /cell legal/, 'Mijnlieff shows legal cells before selecting a piece');
   assert.equal(mijnView.compactScores, true, 'Mijnlieff uses compact inline scores');
+  assert.equal(mijnView.threeWayWin, true, 'Mijnlieff exposes draw probability as a third win-bar segment');
   assert.equal(mijnView.winColors.first, '#2d2a2e', 'Mijnlieff win bar follows piece colours');
+  assert.equal(mijnView.turnColors.secondText, '#2d2a2e', 'Mijnlieff light turn prompt uses dark text');
+  assert.match(mijnView.tray, /mark-push/);
+  assert.match(mijnView.tray, /mark-pull/);
 
   const santoriniGame = BOARD_GAMES.santorini;
   const santorini = santoriniGame.apply(santoriniGame.create(), santoriniGame.actions(santoriniGame.create())[0]);
@@ -32,6 +36,7 @@ const { BOARD_GAMES, GameCore } = window;
   for (const pos of [{ r: 0, c: 0 }, { r: 0, c: 2 }, { r: 4, c: 0 }, { r: 4, c: 2 }]) santoriniReady = santoriniGame.apply(santoriniReady, { type: 'place', ...pos });
   const santoriniReadyView = santoriniGame.view(santoriniReady, {});
   assert.equal(santoriniReadyView.hideScores && santoriniReadyView.hideTray, true, 'Santorini keeps one instruction panel');
+  assert.match(santoriniReadyView.boardClass, /santorini-worker/);
   assert.equal((santoriniReadyView.board.match(/cell legal/g) || []).length, 2, 'Santorini highlights only movable current workers before selection');
   assert.equal((santoriniReadyView.board.match(/cell selected/g) || []).length, 0, 'Santorini never marks empty cells as selected');
   assert.ok(santoriniGame.actions(santoriniReady).some((action) => action.workerId === 'w0' && action.move.r === 0 && action.move.c === 1 && action.build.r === 0 && action.build.c === 0), 'Santorini may build on the vacated worker cell');
@@ -58,6 +63,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal(fcgGame.view(fcg, {}).hideScores, true, 'Four Color hides mobility score cards');
   assert.equal(fcgGame.view(fcg, {}).hideTray, true, 'Four Color removes the colour explanation tray');
   assert.equal(fcgGame.view(fcg, {}).winColors.first, '#2e2a2f', 'Four Color win bar follows player outlines');
+  assert.equal(fcgGame.view(fcg, {}).turnColors.secondText, '#2e2a2f', 'Four Color light turn prompt uses dark text');
 
   const fmgGame = BOARD_GAMES['four-moves-chess'];
   const fmg = fmgGame.create('standard').state;
@@ -96,13 +102,20 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(soulaweenSource, /確認並開始新對局/, 'Soulaween settings start a new game');
   assert.match(soulaweenSource, /隨機電腦/);
   assert.match(soulaweenSource, /MCTS 電腦/);
+  assert.equal((soulaweenSource.match(/state\.aiStats = null/g) || []).length, 1, 'Soulaween only resets win rate for a new game');
+  assert.match(soulaweenSource, /if \(!isHumanTurn\(\)\) aiTimer = setTimeout\(doAI, 520\)/, 'Soulaween evaluates every player type before scheduling computer play');
   const shellCss = fs.readFileSync(path.join(root, 'assets', 'game-shell.css'), 'utf8');
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
   assert.doesNotMatch(shellCss, /\.santorini-level[^}]*animation:/, 'Santorini buildings do not replay their entry animation on every render');
+  assert.match(shellCss, /\.santorini-board \{ background: #62a95f; border-color: #327ab2/);
+  assert.match(shellCss, /\.mijn-piece \.mark-push, \.mijn-piece \.mark-pull/);
   const coreSource = fs.readFileSync(path.join(root, 'assets', 'game-core.js'), 'utf8');
   assert.match(coreSource, /label: '隨機電腦'/);
   assert.match(coreSource, /label: 'MCTS 電腦'/);
   assert.match(coreSource, /確認並開始新對局/);
+  assert.match(coreSource, /animationSequence !== this\.animationSequence/, 'Preview animations use an independent cancellation sequence');
+  assert.doesNotMatch(coreSource, /previewUi[\s\S]{0,500}token !== this\.token/, 'MCTS updates cannot strand a preview animation');
+  assert.match(coreSource, /if \(type === 'random'\) \{[\s\S]{0,500}runMcts/, 'Random computers still calculate an MCTS win rate');
 
   for (const [id, game] of Object.entries(BOARD_GAMES)) {
     const created = game.create(game.openings[0].value, null);
@@ -116,6 +129,8 @@ const { BOARD_GAMES, GameCore } = window;
     const result = await GameCore.runMcts(game, initial, 40, () => true);
     assert.ok(result && result.action, `${id}: MCTS must return an action`);
     assert.ok(result.firstRate >= 0 && result.firstRate <= 1, `${id}: MCTS rate must be bounded`);
+    assert.ok(result.drawRate >= 0 && result.drawRate <= 1, `${id}: MCTS draw rate must be bounded`);
+    assert.ok(Math.abs(result.firstWinRate + result.drawRate + result.secondWinRate - 1) < 1e-9, `${id}: MCTS outcome rates must sum to one`);
   }
 
   console.log(`ok - ${Object.keys(BOARD_GAMES).length} games passed rules and MCTS smoke tests`);

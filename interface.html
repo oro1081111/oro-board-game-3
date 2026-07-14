@@ -489,7 +489,6 @@ function performPlacement(move, automatic) {
   state.board = next;
   state.lastPlacedColor = move.color;
   state.possibleLines = checkLines(next);
-  state.aiStats = null;
   state.thinking = false;
   addLog(`${PLAYER_NAMES[state.turn]}${automatic ? 'AI' : '玩家'}在 ${coord(move.r, move.c)} 放置${colorName(move.color)}面，翻轉上下左右相鄰棋子。`);
 
@@ -539,7 +538,6 @@ function finalizeTurn(board, placedColor) {
   state.phase = 'move';
   state.possibleLines = [];
   state.lastPlacedColor = null;
-  state.aiStats = null;
   state.thinking = false;
   addLog(`輪到${PLAYER_NAMES[state.turn]}行動。`);
   render();
@@ -690,23 +688,16 @@ function doAI() {
 function scheduleTurnWork() {
   clearTimers();
   if (state.gameOver || state.phase !== 'move') return;
-  if (!isHumanTurn()) {
-    aiTimer = setTimeout(doAI, 520);
-  } else {
-    if (state.aiStats) {
-      renderWinRate();
-      return;
-    }
-    evalTimer = setTimeout(() => {
-      if (state.gameOver || state.phase !== 'move' || !isHumanTurn()) return;
-      const iterations = Math.max(
-        WINRATE_MIN_ITERATIONS,
-        Math.min(WINRATE_MAX_ITERATIONS, Math.floor(state.iterations / 2))
-      );
-      state.aiStats = mctsSearch(state.board, state.scores, state.turn, iterations).stats;
-      renderWinRate();
-    }, 0);
-  }
+  evalTimer = setTimeout(() => {
+    if (state.gameOver || state.phase !== 'move') return;
+    const iterations = Math.max(
+      WINRATE_MIN_ITERATIONS,
+      Math.min(WINRATE_MAX_ITERATIONS, Math.floor(state.iterations / 2))
+    );
+    state.aiStats = mctsSearch(state.board, state.scores, state.turn, iterations).stats;
+    renderWinRate();
+  }, 0);
+  if (!isHumanTurn()) aiTimer = setTimeout(doAI, 520);
 }
 
 function undoMove() {

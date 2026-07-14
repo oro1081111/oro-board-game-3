@@ -159,18 +159,19 @@
         const item = state.board[r][c];
         if (item === false) board += cellButton(r, c, 'blocked', '', '不可用格');
         else {
-          const piece = item ? `<span class="piece mijn-piece ${item.owner === 'first' ? 'dark' : 'light'}" data-anim-id="mijn-${r}-${c}"><span class="piece-mark">${MIJN_MARKS[item.type]}</span></span>` : '';
+          const piece = item ? `<span class="piece mijn-piece ${item.owner === 'first' ? 'dark' : 'light'}" data-anim-id="mijn-${r}-${c}"><span class="piece-mark mark-${item.type}">${MIJN_MARKS[item.type]}</span></span>` : '';
           board += cellButton(r, c, legal.has(key(r, c)) ? 'legal' : '', piece);
         }
       }
-      const handPanel = (owner) => `<section class="choice-zone mijn-hand ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${owner === 'first' ? '深色' : '淺色'}剩餘棋子"><div>${MIJN_TYPES.map((type) => `<button class="tray-btn mijn-token ${state.turn === owner && selected === type ? 'selected' : ''}" data-piece="${type}" data-owner="${owner}" ${state.turn === owner && state.hands[owner][type] ? '' : 'disabled'}><span class="piece-mark">${MIJN_MARKS[type]}</span><small>×${state.hands[owner][type]}</small></button>`).join('')}</div></section>`;
+      const handPanel = (owner) => `<section class="choice-zone mijn-hand ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${owner === 'first' ? '深色' : '淺色'}剩餘棋子"><div>${MIJN_TYPES.map((type) => `<button class="tray-btn mijn-token ${state.turn === owner && selected === type ? 'selected' : ''}" data-piece="${type}" data-owner="${owner}" ${state.turn === owner && state.hands[owner][type] ? '' : 'disabled'}><span class="piece-mark mark-${type}">${MIJN_MARKS[type]}</span><small>×${state.hands[owner][type]}</small></button>`).join('')}</div></section>`;
       const tray = `<div class="dual-choice">${handPanel('first')}${handPanel('second')}</div>`;
       const outcome = this.outcome(state);
       const hint = outcome ? outcome === 'draw' ? '遊戲結束：雙方平手' : `遊戲結束：${outcome === 'first' ? '深色' : '淺色'}玩家獲勝` : `現在是${state.turn === 'first' ? '深色' : '淺色'}玩家的回合，請先選棋子`;
       return {
         cols: state.cols, rows: state.rows, board, tray, hint,
-        compactScores: true,
-        winColors: { first: '#2d2a2e', second: '#b9b6aa', secondText: '#77746d' },
+        compactScores: true, threeWayWin: true,
+        winColors: { first: '#2d2a2e', draw: '#d9a441', second: '#ebe7db', secondText: '#77746d' },
+        turnColors: { first: '#2d2a2e', second: '#ebe7db', secondText: '#2d2a2e' },
         firstScore: scoreInline(scores.first, '分'), secondScore: scoreInline(scores.second, '分')
       };
     },
@@ -324,7 +325,8 @@
       else if (!ui.workerId) hint = `${state.turn === 'first' ? '藍方' : '橘方'}請選擇工人`;
       else if (!ui.move) hint = '請選擇移動位置';
       else hint = '請選擇建築位置';
-      return { cols: 5, rows: 5, boardClass: 'santorini-board', board, hideScores: true, hideTray: true, hint, firstScore: '', secondScore: '' };
+      const boardMode = state.phase === 'placement' ? 'placement' : ui.move ? 'build' : ui.workerId ? 'move' : 'worker';
+      return { cols: 5, rows: 5, boardClass: `santorini-board santorini-${boardMode}`, board, hideScores: true, hideTray: true, hint, firstScore: '', secondScore: '' };
     },
     bind(state, ui, controller, board) {
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
@@ -650,6 +652,7 @@
         cols: 4, rows: 4, board, tray: '', hint,
         hideScores: true, hideTray: true,
         winColors: { first: '#2e2a2f', second: '#bab9b3', secondText: '#77746f' },
+        turnColors: { first: '#2e2a2f', second: '#e5e2d8', secondText: '#2e2a2f' },
         firstScore: '', secondScore: ''
       };
     },
