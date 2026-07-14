@@ -484,7 +484,7 @@
     }
 
     animatePieces(previous, action) {
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (action?.previewed || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const current = new Map([...document.getElementById('app').querySelectorAll('[data-anim-id]')].map((element) => [element.dataset.animId, element]));
       current.forEach((element, id) => {
         const old = previous.get(id);
