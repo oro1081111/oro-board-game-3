@@ -720,8 +720,8 @@ function render() {
   $('gameCredit').textContent = '設計者：陳曦， 出版社：玩聚設計';
   $('redScore').textContent = `${state.scores.first} / ${TARGET_SCORE}`;
   $('blueScore').textContent = `${state.scores.second} / ${TARGET_SCORE}`;
-  $('redScore').parentElement.classList.toggle('current', state.turn === PLAYER.FIRST && !state.gameOver);
-  $('blueScore').parentElement.classList.toggle('current', state.turn === PLAYER.SECOND && !state.gameOver);
+  $('redScore').parentElement.classList.remove('current');
+  $('blueScore').parentElement.classList.remove('current');
   renderWinRate();
   renderTurn();
   renderBoard();
@@ -786,7 +786,6 @@ function renderBoard() {
   board.innerHTML = state.board.flatMap((row, r) => row.map((cell, c) => {
     const collectIndex = state.possibleLines.findIndex((line) => line.positions.some((pos) => pos.r === r && pos.c === c));
     const classes = ['cell'];
-    if (humanMove && cell === null) classes.push('legal');
     if (state.phase === 'collect' && collectIndex >= 0 && isHumanTurn()) classes.push('collectable');
     if (!humanMove && collectIndex < 0) classes.push('blocked');
     const piece = cell ? `<span class="piece ${cell}"></span>` : '';

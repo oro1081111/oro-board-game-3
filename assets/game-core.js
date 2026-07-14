@@ -146,7 +146,7 @@
             <section class="play-area">
               <div class="win-labels"><span class="first" id="firstWin"></span><span class="second" id="secondWin"></span></div>
               <div class="winbar"><span class="first" id="firstBar"></span><span class="second" id="secondBar"></span></div>
-              <div class="score-row">
+              <div class="score-row" id="scoreRow">
                 <div class="score-card first" id="firstScore"></div>
                 <div class="score-card second" id="secondScore"></div>
               </div>
@@ -201,6 +201,7 @@
       this.logs = [];
       this.firstRate = .5;
       this.busy = false;
+      this.animating = false;
       this.token = 0;
       this.openingSnapshot = null;
       document.getElementById('app').innerHTML = shell(game);
@@ -210,8 +211,22 @@
     }
 
     $(id) { return document.getElementById(id); }
-    isHumanTurn() { return !this.busy && this.game.outcome(this.state) === null && this.settings.players[this.state.turn] === 'human'; }
+    isHumanTurn() { return !this.busy && !this.animating && this.game.outcome(this.state) === null && this.settings.players[this.state.turn] === 'human'; }
     setUi(patch) { this.ui = { ...this.ui, ...patch }; this.render(); }
+    previewUi(patch, action, duration = 260, done) {
+      if (this.animating) return;
+      this.animating = true;
+      this.animationAction = { ...action, duration };
+      this.ui = { ...this.ui, ...patch };
+      this.render();
+      const token = this.token;
+      setTimeout(() => {
+        if (token !== this.token) return;
+        this.animating = false;
+        if (done) done();
+        else this.render();
+      }, duration);
+    }
 
     bindShell() {
       this.$('backHome').addEventListener('click', () => { location.href = '../../index.html'; });
@@ -267,6 +282,7 @@
     newGame() {
       this.token += 1;
       this.busy = false;
+      this.animating = false;
       const created = this.game.create(this.settings.opening, this.openingSnapshot);
       this.state = created.state || created;
       if (created.snapshot) this.openingSnapshot = clone(created.snapshot);
@@ -285,16 +301,28 @@
       const before = clone(this.state);
       this.history.push({ state: before, ui: clone(this.ui), logLength: this.logs.length });
       this.state = this.game.apply(this.state, action);
-      this.animationAction = action;
       this.ui = {};
       this.logs.push(this.game.describe(action, before, this.state));
+      const duration = this.game.animationDuration?.(action) || 0;
+      this.animationAction = { ...action, ...this.game.animationOptions?.(action), duration };
+      this.animating = duration > 0;
       this.render();
-      this.scheduleTurn();
+      if (!duration) this.scheduleTurn();
+      else {
+        const token = this.token;
+        setTimeout(() => {
+          if (token !== this.token) return;
+          this.animating = false;
+          this.render();
+          this.scheduleTurn();
+        }, duration);
+      }
     }
 
     undo() {
       if (this.busy || !this.history.length) return;
       this.token += 1;
+      this.animating = false;
       let entry = this.history.pop();
       while (this.history.length && this.settings.players[entry.state.turn] !== 'human') entry = this.history.pop();
       this.state = clone(entry.state);
@@ -362,6 +390,7 @@
       this.$('secondScore').className = `score-card second ${this.state.turn === 'second' && !outcome ? 'current' : ''}`;
       this.$('firstScore').innerHTML = view.firstScore;
       this.$('secondScore').innerHTML = view.secondScore;
+      this.$('scoreRow').hidden = Boolean(view.hideScores);
       this.$('board').className = `board cols-${view.cols} ${view.boardClass || ''}`;
       this.$('board').style.setProperty('--board-cols', view.cols);
       this.$('board').style.setProperty('--board-rows', view.rows || view.cols);
@@ -369,7 +398,7 @@
       this.$('choiceTray').innerHTML = view.tray || '<span>本回合直接操作棋盤</span>';
       this.$('turnCard').className = `turn-card ${outcome ? 'finished' : this.state.turn === 'second' ? 'second' : ''}`;
       this.$('turnCard').textContent = this.busy ? `${this.state.turn === 'first' ? this.game.firstName : this.game.secondName}思考中…` : view.hint;
-      this.$('undoMove').disabled = this.busy || !this.history.length;
+      this.$('undoMove').disabled = this.busy || this.animating || !this.history.length;
       this.$('desktopStatus').innerHTML = `<strong>${view.hint}</strong><br>AI：純 MCTS 隨機模擬<br>迭代：${this.settings.iterations.toLocaleString()} 次`;
       this.game.bind(this.state, this.ui, this, this.$('board'), this.$('choiceTray'));
       this.animatePieces(previousPieces, this.animationAction);
@@ -378,9 +407,9 @@
     }
 
     captureAnimatedPieces() {
-      const board = this.$('board');
-      if (!board?.children.length) return new Map();
-      return new Map([...board.querySelectorAll('[data-anim-id]')].map((element) => {
+      const app = document.getElementById('app');
+      if (!app) return new Map();
+      return new Map([...app.querySelectorAll('[data-anim-id]')].map((element) => {
         const rect = element.getBoundingClientRect();
         const cell = element.closest('[data-r][data-c]');
         return [element.dataset.animId, { rect, clone: element.cloneNode(true), r: Number(cell?.dataset.r), c: Number(cell?.dataset.c) }];
@@ -389,7 +418,7 @@
 
     animatePieces(previous, action) {
       if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const current = new Map([...this.$('board').querySelectorAll('[data-anim-id]')].map((element) => [element.dataset.animId, element]));
+      const current = new Map([...document.getElementById('app').querySelectorAll('[data-anim-id]')].map((element) => [element.dataset.animId, element]));
       current.forEach((element, id) => {
         const old = previous.get(id);
         if (!old) {
@@ -401,6 +430,7 @@
         const dy = old.rect.top - next.top;
         if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
         let frames = [{ transform: `translate(${dx}px, ${dy}px) scale(1.04)`, zIndex: 20 }, { transform: 'translate(0, 0) scale(1)', zIndex: 20 }];
+        let duration = action?.duration || 360;
         if (Array.isArray(action?.path) && (id.startsWith('torii-spirit-') || id.startsWith('fmg-'))) {
           frames = [{ transform: `translate(${dx}px, ${dy}px) scale(1.04)`, zIndex: 20 }];
           action.path.forEach((pos) => {
@@ -408,9 +438,9 @@
             const rect = cell?.getBoundingClientRect();
             if (rect) frames.push({ transform: `translate(${rect.left + rect.width / 2 - next.left - next.width / 2}px, ${rect.top + rect.height / 2 - next.top - next.height / 2}px) scale(1.04)`, zIndex: 20 });
           });
-          frames.push({ transform: 'translate(0, 0) scale(1)', zIndex: 20 });
+          duration = action?.duration || Math.max(260, action.path.length * (action.stepDuration || 220));
         }
-        element.animate(frames, { duration: Math.max(260, frames.length * 150), easing: 'cubic-bezier(.22,.75,.25,1)' });
+        element.animate(frames, { duration, easing: action?.spring ? 'cubic-bezier(.22,1,.36,1)' : 'ease-in-out' });
       });
       previous.forEach((old, id) => {
         if (current.has(id)) return;

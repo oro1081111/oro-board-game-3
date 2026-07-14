@@ -129,7 +129,7 @@ button { cursor: pointer; }
 .piece.orange { background: var(--orange); }
 .piece.square { border-radius: 12px; }
 .piece.mijn-piece { width: 78%; border-radius: 9px; box-shadow: 0 4px 8px rgba(0,0,0,.18); }
-.mijn-piece .piece-mark { font-family: Arial, sans-serif; font-weight: 800; }
+.mijn-piece .piece-mark { font-family: Arial, sans-serif; font-size: clamp(30px, 7vw, 48px); font-weight: 800; }
 .piece.worker { width: 58%; border-radius: 45% 45% 38% 38%; }
 .piece.spirit { width: 56%; clip-path: polygon(50% 0, 92% 34%, 76% 100%, 24% 100%, 8% 34%); border-radius: 0; }
 .piece.tiny { width: 40%; font-size: 11px; }
@@ -176,8 +176,14 @@ button { cursor: pointer; }
 .choice-zone > b { display: block; margin-bottom: 5px; font-size: 11px; text-align: center; white-space: nowrap; }
 .choice-zone > div { display: flex; justify-content: center; gap: 4px; }
 .choice-zone .tray-btn { min-width: 0; width: 100%; min-height: 38px; padding: 2px; }
+.mijn-hand { padding: 5px; opacity: 1; box-shadow: none; }
+.mijn-hand.active { box-shadow: none; }
 .mijn-hand .mijn-token { aspect-ratio: 1; border-radius: 7px; }
-.mijn-token .piece-mark { font-size: 20px; }
+.mijn-hand.first { background: #2d2a2e; border-color: #2d2a2e; }
+.mijn-hand.first .mijn-token { background: #2d2a2e; color: #fff; box-shadow: inset 0 0 0 1px #5b565d; }
+.mijn-hand.second { background: #fefcf0; }
+.mijn-hand.second .mijn-token { background: #fefcf0; color: #2d2a2e; border-color: #d6d3c1; }
+.mijn-token .piece-mark { font-size: 27px; line-height: 1; }
 .mijn-token small { position: absolute; right: 2px; bottom: 0; font-size: 9px; }
 .tray-note { flex-basis: 100%; text-align: center; }
 
@@ -217,7 +223,10 @@ button { cursor: pointer; }
 .zombie-out.dr-1 { bottom: -31px; left: calc(50% - 13px); }
 .zombie-out.dc--1 { left: -31px; top: calc(50% - 13px); }
 .zombie-out.dc-1 { right: -31px; top: calc(50% - 13px); }
-.zombie-wait-piece { color: #fff; border-radius: 9px; }
+.zombie-wait > div { min-height: 54px; align-items: center; }
+.zombie-wait .zombie-wait-piece { position: relative; flex: 0 0 48px; width: 48px; height: 48px; min-height: 48px; padding: 0; box-sizing: border-box; color: #fff; border-radius: 7px; }
+.zombie-wait-piece > span { font-size: 22px; font-weight: 850; }
+.zombie-wait-piece .piece-count { position: absolute; top: -7px; right: -7px; min-width: 21px; height: 21px; padding: 0 5px; display: grid; place-items: center; border: 2px solid #fff; border-radius: 11px; background: #29262b; color: #fff; font-size: 12px; font-weight: 850; line-height: 1; box-shadow: 0 2px 5px rgba(0,0,0,.24); }
 .zombie-wait:first-child .zombie-wait-piece { background: #e44e51; }
 .zombie-wait:last-child .zombie-wait-piece { background: #3977d4; }
 

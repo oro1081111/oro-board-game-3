@@ -159,11 +159,11 @@
         if (item === false) board += cellButton(r, c, 'blocked', '', '不可用格');
         else {
           const piece = item ? `<span class="piece mijn-piece ${item.owner === 'first' ? 'dark' : 'light'}" data-anim-id="mijn-${r}-${c}"><span class="piece-mark">${MIJN_MARKS[item.type]}</span></span>` : '';
-          board += cellButton(r, c, legal.has(key(r, c)) && selected ? 'legal' : '', piece);
+          board += cellButton(r, c, legal.has(key(r, c)) ? 'legal' : '', piece);
         }
       }
-      const handPanel = (owner, label) => `<section class="choice-zone mijn-hand ${state.turn === owner ? 'active' : ''}"><b>${label}剩餘棋子</b><div>${MIJN_TYPES.map((type) => `<button class="tray-btn mijn-token ${state.turn === owner && selected === type ? 'selected' : ''}" data-piece="${type}" data-owner="${owner}" ${state.turn === owner && state.hands[owner][type] ? '' : 'disabled'}><span class="piece-mark">${MIJN_MARKS[type]}</span><small>×${state.hands[owner][type]}</small></button>`).join('')}</div></section>`;
-      const tray = `<div class="dual-choice">${handPanel('first', '深色')}${handPanel('second', '淺色')}</div>`;
+      const handPanel = (owner) => `<section class="choice-zone mijn-hand ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${owner === 'first' ? '深色' : '淺色'}剩餘棋子"><div>${MIJN_TYPES.map((type) => `<button class="tray-btn mijn-token ${state.turn === owner && selected === type ? 'selected' : ''}" data-piece="${type}" data-owner="${owner}" ${state.turn === owner && state.hands[owner][type] ? '' : 'disabled'}><span class="piece-mark">${MIJN_MARKS[type]}</span><small>×${state.hands[owner][type]}</small></button>`).join('')}</div></section>`;
+      const tray = `<div class="dual-choice">${handPanel('first')}${handPanel('second')}</div>`;
       const outcome = this.outcome(state);
       const hint = outcome ? outcome === 'draw' ? '遊戲結束：雙方平手' : `遊戲結束：${outcome === 'first' ? '深色' : '淺色'}玩家獲勝` : `現在是${state.turn === 'first' ? '深色' : '淺色'}玩家的回合，請先選棋子`;
       return { cols: state.cols, rows: state.rows, board, tray, hint, firstScore: scoreHtml(scores.first, '分'), secondScore: scoreHtml(scores.second, '分') };
@@ -238,6 +238,8 @@
     designer: 'Gordon Hamilton。', publisher: 'Roxley Games；本頁採用不含神力的基本規則。',
     intro: '雙方各控制兩名工人，每回合移動一名工人並在相鄰格建築。登上第三層或封鎖對手即可獲勝。',
     openings: [{ value: 'standard', label: '標準空盤' }], rolloutLimit: 70,
+    animationDuration(action) { return action.type === 'place' ? 220 : action.previewed ? 240 : 420; },
+    animationOptions() { return { spring: true }; },
     rules: [
       { title: '初始設置', html: '<p>藍方先放置兩名工人，接著橘方放置兩名工人，再由藍方開始第一回合。</p>' },
       { title: '完整回合', html: '<ol><li>選自己一名工人。</li><li>往周圍八格移動一格，最多向上爬一層。</li><li>在移動後的工人周圍八格建築一層。</li></ol>' },
@@ -294,14 +296,14 @@
       const moves = ui.workerId ? all.filter((action) => action.workerId === ui.workerId) : [];
       const moveKeys = new Set(moves.map((action) => key(action.move.r, action.move.c)));
       const buildKeys = new Set(ui.move ? moves.filter((action) => samePos(action.move, ui.move) && action.build).map((action) => key(action.build.r, action.build.c)) : []);
+      const visualWorkerAt = (pos) => state.workers.find((worker) => samePos(worker.id === ui.workerId && ui.move ? ui.move : worker.pos, pos));
       let board = '';
       for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
         const height = state.board[r][c];
-        const worker = workerAt(state, { r, c });
+        const worker = visualWorkerAt({ r, c });
         const building = height ? `<span class="santorini-building">${Array.from({ length: height }, (_, level) => `<i class="santorini-level ${level === 3 ? 'dome' : ''}" style="--level:${level}"></i>`).join('')}</span>` : '';
         const piece = worker ? `<span class="piece worker santorini-worker ${worker.owner}" data-anim-id="${worker.id}"><span class="worker-head"></span><span class="worker-body"></span></span>` : '';
         let classes = '';
-        if (state.phase === 'placement' && !worker) classes = 'legal';
         if (worker?.id === ui.workerId) classes = 'selected';
         if (!ui.move && moveKeys.has(key(r, c))) classes = 'legal';
         if (ui.move && buildKeys.has(key(r, c))) classes = 'legal';
@@ -333,11 +335,12 @@
         if (!ui.move) {
           const candidates = actions.filter((action) => samePos(action.move, pos));
           if (!candidates.length) return;
-          if (candidates[0].build === null) controller.commit(candidates[0]);
-          else controller.setUi({ move: pos });
+          const chosen = candidates[0];
+          const finishMove = chosen.build === null ? () => controller.commit({ ...chosen, previewed: true }) : null;
+          controller.previewUi({ move: pos }, { spring: true }, 360, finishMove);
         } else {
           const action = actions.find((item) => samePos(item.move, ui.move) && samePos(item.build, pos));
-          if (action) controller.commit(action);
+          if (action) controller.commit({ ...action, previewed: true });
         }
       }));
     }
@@ -402,6 +405,8 @@
     firstName: '紅方', secondName: '藍方', designer: '1.0 與 2.0 參考程式未記載設計者。', publisher: '1.0 與 2.0 參考程式未記載出版社。',
     intro: '玩家讓殭屍復活、移動、堆疊與跳躍。跳過對手殭屍可依等級得分，先得到 8 分獲勝。',
     openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 90,
+    animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
+    animationOptions() { return { spring: true }; },
     rules: [
       { title: '三種行動', html: '<p>每回合可從陰間復活一枚棋、將棋往正交相鄰格移動，或沿正交方向跳過一串連續棋。</p>' },
       { title: '堆疊', html: '<p>等級 1 可疊上單枚 2 或 3；等級 2 可疊上單枚 3；由單枚 1 與單枚 2 組成的總等級 3 堆疊可疊上單枚 3；等級 1 可疊上總等級 5 的堆疊。</p>' },
@@ -415,13 +420,13 @@
       for (let c = 0; c < 5; c += 1) board[1][c] = piece('first', 1);
       for (let c = 0; c < 5; c += 1) board[3][c] = piece('second', 1);
       board[4][0] = piece('second', 2); board[4][2] = piece('second', 3); board[4][4] = piece('second', 2);
-      return { turn: 'first', board, waiting: { first: [2, 2], second: [2, 2] }, scores: { first: 0, second: 0 }, continuing: null, path: [], winner: null, nextId };
+      return { turn: 'first', board, waiting: { first: [piece('first', 2), piece('first', 2)], second: [piece('second', 2), piece('second', 2)] }, scores: { first: 0, second: 0 }, continuing: null, path: [], winner: null, nextId };
     },
     actions(state) {
       if (state.winner) return [];
       if (state.continuing) return [{ type: 'stop' }, ...zombieJumps(state, state.continuing, state.path)];
       const result = [];
-      const tiers = [...new Set(state.waiting[state.turn])];
+      const tiers = [...new Set(state.waiting[state.turn].map((piece) => piece.stack[0]))];
       for (const tier of tiers) for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) if (!state.board[r][c]) result.push({ type: 'revive', tier, to: { r, c } });
       for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
         if (state.board[r][c]?.owner !== state.turn) continue;
@@ -435,9 +440,8 @@
       const state = clone(source);
       if (action.type === 'stop') { state.turn = other(state.turn); state.continuing = null; state.path = []; return state; }
       if (action.type === 'revive') {
-        const index = state.waiting[state.turn].indexOf(action.tier);
-        state.waiting[state.turn].splice(index, 1);
-        state.board[action.to.r][action.to.c] = zombiePiece(state.turn, action.tier, `z${state.nextId++}`);
+        const index = state.waiting[state.turn].findIndex((piece) => piece.stack[0] === action.tier);
+        state.board[action.to.r][action.to.c] = state.waiting[state.turn].splice(index, 1)[0];
         state.turn = other(state.turn);
         return state;
       }
@@ -454,13 +458,13 @@
       for (const pos of action.jumped) {
         const over = state.board[pos.r][pos.c];
         if (over && over.owner !== state.turn) {
-          state.waiting[over.owner].push(...over.stack);
+          state.waiting[over.owner].push(...over.stack.map((tier) => zombiePiece(over.owner, tier, `z${state.nextId++}`)));
           state.board[pos.r][pos.c] = null;
         }
       }
       state.scores[state.turn] += action.score;
       if (action.to === 'out') {
-        state.waiting[state.turn].push(...piece.stack);
+        state.waiting[state.turn].push(...piece.stack.map((tier) => zombiePiece(state.turn, tier, `z${state.nextId++}`)));
         state.turn = other(state.turn);
         state.continuing = null;
         state.path = [];
@@ -504,7 +508,13 @@
         const classes = samePos(selected, { r, c }) ? 'selected' : targets.has(key(r, c)) ? 'legal' : '';
         board += cellButton(r, c, classes, content);
       }
-      const waitingZone = (owner, label) => `<section class="choice-zone zombie-wait ${state.turn === owner ? 'active' : ''}"><b>${label}陰間</b><div>${state.waiting[owner].length ? state.waiting[owner].map((tier, index) => `<button class="tray-btn zombie-wait-piece ${state.turn === owner && waitTier === tier ? 'selected' : ''}" data-wait="${tier}" data-owner="${owner}" data-index="${index}" ${state.turn === owner ? '' : 'disabled'}>${tier}</button>`).join('') : '<small>目前沒有棋子</small>'}</div></section>`;
+      const waitingZone = (owner, label) => {
+        const groups = [...new Set(state.waiting[owner].map((piece) => piece.stack[0]))].map((tier) => {
+          const pieces = state.waiting[owner].filter((piece) => piece.stack[0] === tier);
+          return `<button class="tray-btn zombie-wait-piece ${state.turn === owner && waitTier === tier ? 'selected' : ''}" data-anim-id="${pieces[0].id}" data-wait="${tier}" data-owner="${owner}" ${state.turn === owner ? '' : 'disabled'}><span>${tier}</span>${pieces.length > 1 ? `<small class="piece-count">${pieces.length}</small>` : ''}</button>`;
+        }).join('');
+        return `<section class="choice-zone zombie-wait ${state.turn === owner ? 'active' : ''}" aria-label="${label}陰間"><div>${groups}</div></section>`;
+      };
       const stop = state.continuing ? '<button class="tray-btn selected" data-stop>停止連跳</button>' : '';
       const tray = `<div class="dual-choice">${waitingZone('first', '紅方')}${waitingZone('second', '藍方')}</div>${stop}`;
       const outcome = this.outcome(state);
@@ -580,6 +590,7 @@
     firstName: '黑方', secondName: '白方', designer: '奧羅。1.0 遊戲介紹記載此作為其第一款雙人抽象棋。', publisher: '奧羅桌遊設計工作室；目前為程式練習與非商業分享版本。',
     intro: '落點的格色會指定對手下一回合必須移動的棋子。玩家持續改變焦點，直到被指定的棋無路可走。',
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 80,
+    animationDuration(action) { return action.type === 'move' ? 360 : 0; },
     rules: [
       { title: '初始設置', html: '<p>白方棋放在最上列，黑方棋放在最下列，棋子顏色對應所在格色。黑方先手並先選一枚有合法移動的黑棋作為焦點。</p>' },
       { title: '移動焦點棋', html: '<p>焦點棋可沿正交直線滑行到任一空格，不能跳過棋子。落點格色會把焦點移到對手同色棋上。</p>' },
@@ -626,7 +637,7 @@
       }
       const outcome = this.outcome(state);
       const hint = outcome ? `遊戲結束：${outcome === 'first' ? '黑方' : '白方'}獲勝` : !state.focus ? '黑方請選擇第一枚焦點棋' : `${state.turn === 'first' ? '黑方' : '白方'}請移動${FCG_NAMES[state.focus.color]}色焦點棋`;
-      return { cols: 4, rows: 4, board, tray: '<span>棋子顏色代表種類；黑、白外框代表玩家</span>', hint, firstScore: scoreHtml(fcgMobility(state, 'first'), '總合法步'), secondScore: scoreHtml(fcgMobility(state, 'second'), '總合法步') };
+      return { cols: 4, rows: 4, board, tray: '<span>棋子顏色代表種類；黑、白外框代表玩家</span>', hint, hideScores: true, firstScore: '', secondScore: '' };
     },
     bind(state, ui, controller, board) {
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
@@ -705,6 +716,7 @@
     firstName: '紅方', secondName: '藍方', designer: '具體設計者不可考。1.0 記載此玩法來自 IG 帳號 celine.et.sasha 的短片，網頁名稱由奧羅暫定。', publisher: '沒有查到正式出版社；目前為非商業網頁實作。',
     intro: '棋子所在格的數字決定本回合步數。每一步沿正交方向跳到下一個可停留格，離開後原格封閉；讓對手無路可走即可獲勝。',
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 50,
+    animationDuration(action) { return action.type === 'move' ? action.steps * 280 : 0; },
     rules: [
       { title: '步數', html: '<p>所在格為數字 n 時必須移動 n 步；所在格為 S 時可選 1 到 4 步。</p>' },
       { title: '每一步', html: '<p>只能往上下左右，並跳過已封閉格與棋子，停在該方向下一個可停留格。同一回合不能重訪格子。</p>' },
@@ -722,7 +734,7 @@
       const actions = [];
       for (const steps of fmgStepChoices(state)) for (const destination of fmgReachable(state, steps)) {
         const { path, ...to } = destination;
-        actions.push({ type: 'move', steps, to, path });
+        actions.push({ type: 'move', steps, to, path, stepDuration: 280 });
       }
       return actions;
     },
@@ -834,6 +846,7 @@
     firstName: '紅方', secondName: '藍方', designer: '陳致寬；1.0 介紹記載其為臺灣原創抽象棋設計團隊作品。', publisher: '桌遊愛樂事。1.0 頁面記載已取得原出版社與設計師同意製作與分享。',
     intro: '玩家使用 1、2、3 行動板塊移動森靈，在停留格放置或替換信徒；四名信徒連線可建立鳥居。',
     openings: [{ value: 'standard', label: '標準' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 80,
+    animationDuration(action) { return action.type === 'path' ? action.path.length * 220 : action.type === 'build' ? 220 : 0; },
     rules: [
       { title: '回合流程', html: '<ol><li>選一張尚未使用的 1、2、3 行動板塊。</li><li>森靈依數字走足步數，不能重訪或回起點。</li><li>在每個實際停留格放置或替換己方信徒。</li></ol>' },
       { title: '跳躍與鳥居', html: '<p>移動遇到對手森靈所在行列時依 1.0 程式整段跳過，被跳過格不放信徒。四格己方信徒成橫列或直列時，在其中一格建立鳥居並移除該線其他未受鳥居保護的信徒。</p>' },
@@ -887,10 +900,11 @@
       const path = ui.path || [];
       const next = state.pendingTile !== null && !state.building ? new Set(toriiNextSteps(state, path).map((pos) => key(pos.r, pos.c))) : new Set();
       const builds = new Set(state.buildChoices.map((pos) => key(pos.r, pos.c)));
+      const visibleSpirits = path.length ? { ...state.spirits, [state.turn]: path[path.length - 1] } : state.spirits;
       let board = '';
       for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
         const pos = { r, c };
-        const spiritOwner = samePos(state.spirits.first, pos) ? 'first' : samePos(state.spirits.second, pos) ? 'second' : null;
+        const spiritOwner = samePos(visibleSpirits.first, pos) ? 'first' : samePos(visibleSpirits.second, pos) ? 'second' : null;
         const follower = state.followers[r][c] ? `<span class="follower ${state.followers[r][c]}" data-anim-id="torii-follower-${r}-${c}"></span>` : '';
         const gate = state.torii[r][c] ? `<span class="torii-mark ${state.torii[r][c]}" data-anim-id="torii-gate-${state.torii[r][c]}-${r}-${c}"><i></i><i></i></span>` : '';
         const spirit = spiritOwner ? `<span class="piece spirit ${spiritOwner}" data-anim-id="torii-spirit-${spiritOwner}"><i></i></span>` : '';
@@ -925,8 +939,8 @@
         const path = ui.path || [];
         if (!toriiNextSteps(state, path).some((item) => samePos(item, pos))) return;
         const nextPath = [...path, pos];
-        if (nextPath.length === state.pendingTile) controller.commit({ type: 'path', path: nextPath });
-        else controller.setUi({ path: nextPath });
+        const finishPath = nextPath.length === state.pendingTile ? () => controller.commit({ type: 'path', path: nextPath }) : null;
+        controller.previewUi({ path: nextPath }, { path: [pos], stepDuration: 220 }, 220, finishPath);
       }));
     }
   };
