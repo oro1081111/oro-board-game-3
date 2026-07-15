@@ -207,9 +207,9 @@ button { cursor: pointer; }
 .mijn-hand.second { background: #fefcf0; }
 .mijn-hand.second .mijn-token { background: #fefcf0; color: #2d2a2e; border-color: #d6d3c1; }
 .mijn-token .piece-mark { font-size: 30px; line-height: 1; }
-.mijn-token .mark-push, .mijn-token .mark-pull { width: 30px; height: 30px; border-radius: 50%; font-size: 0; }
+.mijn-token .mark-push, .mijn-token .mark-pull { width: 24px; height: 24px; border-radius: 50%; font-size: 0; }
 .mijn-token .mark-push { background: currentColor; }
-.mijn-token .mark-pull { border: 3px solid currentColor; }
+.mijn-token .mark-pull { border: 2px solid currentColor; }
 .mijn-token small { position: absolute; right: 2px; bottom: 0; font-size: 9px; }
 .tray-note { flex-basis: 100%; text-align: center; }
 

@@ -27,34 +27,27 @@ a { color: inherit; }
 .section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
 .section-head h2 { margin: 0; font-size: 24px; }
 .count { color: var(--muted); font-size: 13px; }
-.catalog-head { margin-top: 36px; }
-
 .game-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .game-card { min-width: 0; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(45,45,38,.08); }
-.game-card.featured { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(320px, 1.1fr); }
 .game-body { padding: 18px; }
-.game-title-row { display: flex; justify-content: space-between; gap: 16px; }
 .game-card h3 { margin: 5px 0 9px; font-size: 21px; line-height: 1.2; }
 .game-card h3 span { display: block; margin-top: 3px; color: var(--muted); font-family: Georgia, serif; font-size: 15px; font-weight: 600; }
-.featured h3 { font-size: 28px; }
-.arrow { color: var(--muted); font-size: 38px; line-height: 1; }
 .description { min-height: 66px; margin: 0; color: #5f5f59; font-size: 14px; line-height: 1.6; }
-.featured .description { min-height: auto; font-size: 16px; }
 .status { width: fit-content; margin: 0; padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: 900; }
 .status.playable { background: #dff7ed; color: #087452; }
 .status.pending { background: #ecebe5; color: #74736c; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
 .meta span { padding: 4px 7px; background: #f0efe9; border: 1px solid #e0ded3; border-radius: 4px; color: #5e5e58; font-size: 11px; font-weight: 700; }
 .actions { display: flex; gap: 8px; margin-top: 16px; }
-.button { min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 7px 12px; border: 1px solid #aaa89e; border-radius: 6px; background: #fff; color: #565650; font-size: 13px; font-weight: 800; text-decoration: none; }
+.button { width: 100%; min-height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 7px 12px; border: 1px solid #aaa89e; border-radius: 6px; background: #fff; color: #565650; font-size: 13px; font-weight: 800; text-decoration: none; }
 .button.primary { border-color: var(--dark); background: var(--dark); color: #fff; }
 .button:hover, .button:focus-visible { border-color: var(--ink); outline: 2px solid rgba(36,36,33,.16); outline-offset: 2px; }
 
-.preview-link { display: block; min-height: 100%; text-decoration: none; }
-.game-preview-image { width: 100%; aspect-ratio: 1.35; display: block; object-fit: contain; background: #deddd2; border-bottom: 1px solid var(--line); }
-.featured .game-preview-image { height: 100%; aspect-ratio: auto; min-height: 280px; border-right: 1px solid var(--line); border-bottom: 0; }
+.preview-link { display: block; text-decoration: none; }
+.game-preview-image { width: 100%; aspect-ratio: 1.35; display: block; object-fit: contain; background: #deddd2; border-bottom: 1px solid var(--line); transition: filter .18s ease; }
+.preview-link:hover .game-preview-image, .preview-link:focus-visible .game-preview-image { filter: brightness(.96); }
+.preview-link:focus-visible { outline: 3px solid rgba(36,36,33,.25); outline-offset: -3px; }
 .game-preview { --cols: 4; aspect-ratio: 1.35; display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 5px; padding: 18px; background: #deddd2; border-bottom: 1px solid var(--line); }
-.featured .game-preview { height: 100%; aspect-ratio: auto; min-height: 280px; border-right: 1px solid var(--line); border-bottom: 0; }
 .game-preview i { position: relative; min-width: 0; display: grid; place-items: center; border-radius: 5px; background: #faf9f3; color: #5d5c55; font-style: normal; font-size: 17px; font-weight: 900; box-shadow: inset 0 1px 3px rgba(0,0,0,.09); }
 .game-preview i::after { content: ""; width: 64%; aspect-ratio: 1; border-radius: 50%; }
 .game-preview .v-empty::after { width: 4px; background: #d9d7cc; }
@@ -93,9 +86,6 @@ a { color: inherit; }
 @media (max-width: 620px) {
   .head-inner { padding: 26px 0 22px; }
   .lobby { padding-top: 22px; }
-  .game-card.featured { display: block; }
-  .featured .game-preview-image { height: auto; min-height: 0; aspect-ratio: 1.35; border-right: 0; border-bottom: 1px solid var(--line); }
-  .featured .game-preview { min-height: 0; aspect-ratio: 1.35; border-right: 0; border-bottom: 1px solid var(--line); }
   .game-grid { grid-template-columns: 1fr; }
   .description { min-height: 0; }
 }
