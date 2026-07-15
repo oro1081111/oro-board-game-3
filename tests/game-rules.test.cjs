@@ -86,9 +86,25 @@ const { BOARD_GAMES, GameCore } = window;
   winningBoard[2][1] = { id: 'scoring-zombie', owner: 'second', stack: [1] };
   const winningState = { turn: 'first', board: winningBoard, waiting: { first: [], second: [] }, scores: { first: 7, second: 0 }, continuing: null, path: [], winner: null, nextId: 2 };
   const immediateResult = await GameCore.runMcts(zombieGame, winningState, 200, () => true);
-  assert.equal(immediateResult.action.type, 'jump');
+  assert.equal(immediateResult.action.type, 'zombie-turn');
+  assert.equal(immediateResult.action.steps[0].type, 'jump');
   assert.equal(immediateResult.action.score, 1);
   assert.equal(immediateResult.firstWinRate, 1, 'MCTS bypasses search and reports 100% for an immediate Zombie win');
+  assert.equal(zombieGame.expandSearchAction(immediateResult.action)[0].type, 'jump', 'Zombie MCTS turns expand back into animated atomic jumps');
+
+  let zombieProbe = zombie;
+  let multiJumpTurn = null;
+  for (let turn = 0; turn < 24 && !multiJumpTurn; turn += 1) {
+    const plans = zombieGame.searchActions(zombieProbe);
+    assert.ok(plans.every((plan) => {
+      const next = zombieGame.searchApply(zombieProbe, plan);
+      return zombieGame.outcome(next) !== null || next.turn !== zombieProbe.turn;
+    }), 'Every Zombie search action reaches the end of the current turn');
+    multiJumpTurn = plans.find((plan) => plan.steps.length > 1);
+    zombieProbe = zombieGame.searchApply(zombieProbe, plans[(turn * 7 + Math.floor(plans.length / 2)) % plans.length]);
+    if (zombieGame.outcome(zombieProbe) !== null) break;
+  }
+  assert.ok(multiJumpTurn, 'Zombie MCTS can represent a complete multi-jump sequence as one search action');
 
   const outBoard = Array.from({ length: 5 }, () => Array(5).fill(null));
   outBoard[0][3] = { id: 'other-out', owner: 'first', stack: [2] };
@@ -127,6 +143,13 @@ const { BOARD_GAMES, GameCore } = window;
   const toriiGame = BOARD_GAMES.torii;
   const torii = toriiGame.create('standard').state;
   const toriiView = toriiGame.view(torii, {});
+  const toriiPlans = toriiGame.searchActions(torii);
+  assert.ok(toriiPlans.length > 0 && toriiPlans.every((plan) => plan.type === 'torii-plan' && plan.steps[0].type === 'tile' && plan.steps[1].type === 'path'), 'Torii MCTS combines tile selection and the complete path');
+  assert.ok(toriiPlans.every((plan) => {
+    const next = toriiGame.searchApply(torii, plan);
+    return next.turn !== torii.turn || next.building || toriiGame.outcome(next) !== null;
+  }), 'A Torii search plan stops only at gate building, turn end, or game end');
+  assert.deepEqual(toriiGame.expandSearchAction(toriiPlans[0]).map((action) => action.type), ['tile', 'path'], 'Torii plans expand into the existing staged animation actions');
   assert.match(toriiView.tray, /data-owner="first"/);
   assert.match(toriiView.tray, /data-owner="second"/);
   assert.equal((toriiView.tray.match(/class="choice-zone torii-tiles/g) || []).length, 2, 'Torii shows both action-tile sets');
@@ -181,7 +204,9 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(coreSource, /if \(action\?\.previewed \|\| matchMedia/, 'A committed preview path never replays DOM entry animations');
   assert.doesNotMatch(coreSource, /previewUi[\s\S]{0,500}token !== this\.token/, 'MCTS updates cannot strand a preview animation');
   assert.match(coreSource, /if \(type === 'random'\) \{[\s\S]{0,500}runMcts/, 'Random computers still calculate an MCTS win rate');
-  assert.match(coreSource, /const immediate = game\.immediateAction\?\.\(state, game\.actions\(state\)\)/, 'MCTS checks game-defined immediate wins before searching');
+  assert.match(coreSource, /const immediate = game\.immediateAction\?\.\(state, searchActions\)/, 'MCTS checks game-defined immediate wins before searching');
+  assert.match(coreSource, /this\.game\.searchActions\?\.\(state\) \|\| this\.game\.actions\(state\)/, 'MCTS supports game-specific search actions');
+  assert.match(coreSource, /this\.plannedActions = plan\.slice\(1\)/, 'Computer macro actions are played through the existing atomic animation flow');
   const gamesSource = fs.readFileSync(path.join(root, 'assets', 'games.js'), 'utf8');
   assert.match(gamesSource, /samePos\(item\.from, from\)[\s\S]{0,120}button\.dataset\.dr/, 'Zombie out clicks match both origin and direction');
 

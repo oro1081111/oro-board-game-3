@@ -140,11 +140,14 @@ state.turn
 - 搜尋必須分批執行並讓出主執行緒，避免手機點擊延遲。
 - 終局時勝方固定 100%，敗方固定 0%；和局 50:50。
 - 遊戲可提供 `immediateAction(state, actions)`；若套用後已產生勝方，共用 MCTS 直接回傳該 action 與 100% 終局率，不再消耗迭代。
-- 多階段 action 可保留同一 `state.turn`，UCT 會在同玩家節點繼續最大化。聖托里尼把移動與建築合為完整回合 action；跳躍森靈為了逐步路徑與鳥居位置選擇，保留板塊、完整路徑、建鳥居三類 action。
+- 多階段 action 可保留同一 `state.turn`，UCT 會在同玩家節點繼續最大化。MCTS 搜尋 action 可以和畫面逐步 action 不同：殭屍棋以包含所有連跳與停止的完整回合為一個搜尋 action；跳躍森靈把板塊與完整路徑合為一個搜尋 action，建鳥居保留為下一階段；聖托里尼的移動與建築本來就是完整回合 action。巨集 action 由 controller 拆回既有原子 action 播放，不能略過逐步動畫。
 
 遊戲可選擇提供：
 
 ```js
+searchActions(state)
+searchApply(state, action)
+expandSearchAction(action)
 rolloutAction(state, actions)
 cutoffReward(state, rootPlayer)
 ```

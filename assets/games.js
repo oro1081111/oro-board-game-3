@@ -412,6 +412,11 @@
   function zombieCombine(moving, target) { return { id: moving.id, owner: moving.owner, stack: [...target.stack, ...moving.stack] }; }
 
   function zombieRolloutWeight(action) {
+    if (action.type === 'zombie-turn') {
+      if (action.score > 0) return 1.5 + action.score * 4;
+      if (action.steps.some((step) => step.type === 'jump')) return 1.5 + action.steps.length * .25;
+      return zombieRolloutWeight(action.steps[0]);
+    }
     if (action.type === 'jump') return 1.5 + (action.score || 0) * 4;
     if (action.type === 'stop') return 0.25;
     if (action.type === 'revive') return 0.8;
@@ -426,7 +431,7 @@
     animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
     animationOptions() { return { spring: true }; },
     immediateAction(state, actions) {
-      return actions.find((action) => action.type === 'jump' && state.scores[state.turn] + (action.score || 0) >= 8);
+      return actions.find((action) => state.scores[state.turn] + (action.score || 0) >= 8);
     },
     rolloutAction(state, actions) {
       const winningJump = this.immediateAction(state, actions);
@@ -472,6 +477,26 @@
       }
       return result;
     },
+    searchActions(state) {
+      const actor = state.turn;
+      const turns = [];
+      const walk = (current, steps, score) => {
+        for (const action of this.actions(current)) {
+          const next = this.apply(current, action);
+          const nextSteps = [...steps, action];
+          const nextScore = score + (action.score || 0);
+          if (this.outcome(next) !== null || next.turn !== actor) turns.push({ type: 'zombie-turn', steps: nextSteps, score: nextScore });
+          else walk(next, nextSteps, nextScore);
+        }
+      };
+      walk(state, [], 0);
+      return turns;
+    },
+    searchApply(source, action) {
+      if (action.type !== 'zombie-turn') return this.apply(source, action);
+      return action.steps.reduce((state, step) => this.apply(state, step), source);
+    },
+    expandSearchAction(action) { return action.type === 'zombie-turn' ? action.steps : [action]; },
     apply(source, action) {
       const state = clone(source);
       if (action.type === 'stop') { state.turn = other(state.turn); state.continuing = null; state.path = []; return state; }
@@ -906,6 +931,22 @@
       if (state.pendingTile === null) return [1,2,3].filter((tile) => !state.tilesUsed[state.turn][tile] && toriiPaths(state, tile).length).map((tile) => ({ type: 'tile', tile }));
       return toriiPaths(state, state.pendingTile).map((path) => ({ type: 'path', path }));
     },
+    searchActions(state) {
+      if (state.building || state.pendingTile !== null) return this.actions(state);
+      const plans = [];
+      for (const tileAction of this.actions(state)) {
+        const afterTile = this.apply(state, tileAction);
+        for (const pathAction of this.actions(afterTile)) {
+          plans.push({ type: 'torii-plan', tile: tileAction.tile, path: clone(pathAction.path), steps: [tileAction, pathAction] });
+        }
+      }
+      return plans;
+    },
+    searchApply(source, action) {
+      if (action.type !== 'torii-plan') return this.apply(source, action);
+      return action.steps.reduce((state, step) => this.apply(state, step), source);
+    },
+    expandSearchAction(action) { return action.type === 'torii-plan' ? action.steps : [action]; },
     apply(source, action) {
       const state = clone(source);
       if (action.type === 'tile') { state.pendingTile = action.tile; return state; }

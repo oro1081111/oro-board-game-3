@@ -35,6 +35,9 @@
       this.root = this.node(clone(state), null, null);
     }
 
+    actions(state) { return this.game.searchActions?.(state) || this.game.actions(state); }
+    apply(state, action) { return this.game.searchApply?.(state, action) || this.game.apply(state, action); }
+
     node(state, parent, action) {
       const done = this.game.outcome(state) !== null;
       return {
@@ -42,7 +45,7 @@
         parent,
         action,
         children: [],
-        untried: done ? [] : this.game.actions(state),
+        untried: done ? [] : this.actions(state),
         visits: 0,
         value: 0,
         firstWins: 0,
@@ -75,7 +78,7 @@
       if (!node.untried.length || this.game.outcome(node.state) !== null) return node;
       const index = Math.floor(Math.random() * node.untried.length);
       const action = node.untried.splice(index, 1)[0];
-      const child = this.node(this.game.apply(node.state, action), node, action);
+      const child = this.node(this.apply(node.state, action), node, action);
       node.children.push(child);
       return child;
     }
@@ -86,10 +89,10 @@
       for (let depth = 0; depth < limit; depth += 1) {
         const outcome = this.game.outcome(state);
         if (outcome !== null) return outcome;
-        const actions = this.game.actions(state);
+        const actions = this.actions(state);
         if (!actions.length) return 'draw';
         const action = this.game.rolloutAction ? this.game.rolloutAction(state, actions) : pick(actions);
-        state = this.game.apply(state, action);
+        state = this.apply(state, action);
       }
       return this.game.cutoffReward ? this.game.cutoffReward(state, this.rootPlayer) : 'draw';
     }
@@ -131,9 +134,11 @@
   }
 
   function runMcts(game, state, iterations, tokenIsCurrent) {
-    const immediate = game.immediateAction?.(state, game.actions(state));
+    const searchActions = game.searchActions?.(state) || game.actions(state);
+    const immediate = game.immediateAction?.(state, searchActions);
     if (immediate) {
-      const outcome = game.outcome(game.apply(state, immediate));
+      const next = game.searchApply?.(state, immediate) || game.apply(state, immediate);
+      const outcome = game.outcome(next);
       if (outcome === 'first' || outcome === 'second') return Promise.resolve({
         action: clone(immediate),
         firstRate: outcome === 'first' ? 1 : 0,
@@ -226,6 +231,8 @@
       this.ui = {};
       this.history = [];
       this.logs = [];
+      this.plannedActions = [];
+      this.plannedPlayer = null;
       this.firstRate = .5;
       this.firstWinRate = .5;
       this.secondWinRate = .5;
@@ -320,6 +327,8 @@
       if (created.snapshot) this.openingSnapshot = clone(created.snapshot);
       this.ui = {};
       this.history = [];
+      this.plannedActions = [];
+      this.plannedPlayer = null;
       this.logs = [`開始新對局：${this.game.openings.find((item) => item.value === this.settings.opening)?.label || '標準'}。`];
       this.firstRate = .5;
       this.firstWinRate = .5;
@@ -360,6 +369,8 @@
       this.token += 1;
       this.animationSequence += 1;
       this.animating = false;
+      this.plannedActions = [];
+      this.plannedPlayer = null;
       let entry = this.history.pop();
       while (this.history.length && this.settings.players[entry.state.turn] !== 'human') entry = this.history.pop();
       this.state = clone(entry.state);
@@ -385,6 +396,19 @@
         return;
       }
       const type = this.settings.players[this.state.turn];
+      if (type !== 'human' && this.plannedPlayer === this.state.turn && this.plannedActions.length) {
+        const action = this.plannedActions.shift();
+        if (!this.plannedActions.length) this.plannedPlayer = null;
+        const token = this.token;
+        setTimeout(() => {
+          if (token === this.token) this.commit(action, 'plan');
+        }, 180);
+        return;
+      }
+      if (this.plannedPlayer !== this.state.turn) {
+        this.plannedActions = [];
+        this.plannedPlayer = null;
+      }
       if (type === 'human') {
         const scheduledToken = ++this.token;
         setTimeout(() => { if (scheduledToken === this.token) this.evaluatePosition(); }, 60);
@@ -422,7 +446,10 @@
       } else {
         const result = await runMcts(this.game, this.state, this.settings.iterations, () => token === this.token);
         if (!result || token !== this.token) return;
-        action = result.action;
+        const plan = this.game.expandSearchAction?.(result.action) || [result.action];
+        action = plan[0];
+        this.plannedActions = plan.slice(1);
+        this.plannedPlayer = this.plannedActions.length ? this.state.turn : null;
         this.firstRate = result.firstRate;
         this.firstWinRate = result.firstWinRate;
         this.secondWinRate = result.secondWinRate;
