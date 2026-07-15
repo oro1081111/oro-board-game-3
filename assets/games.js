@@ -241,14 +241,14 @@
   games.santorini = {
     title: '聖托里尼 Santorini',
     credit: '設計者：Gordon Hamilton，出版社：Roxley Games',
-    firstName: '藍方', secondName: '橘方',
+    firstName: '紅方', secondName: '藍方',
     designer: 'Gordon Hamilton。', publisher: 'Roxley Games；本頁採用不含神力的基本規則。',
     intro: '雙方各控制兩名工人，每回合移動一名工人並在相鄰格建築。登上第三層或封鎖對手即可獲勝。',
     openings: [{ value: 'standard', label: '標準空盤' }], rolloutLimit: 70,
     animationDuration(action) { return action.type === 'place' ? 220 : action.previewed ? 240 : 420; },
     animationOptions() { return { spring: true }; },
     rules: [
-      { title: '初始設置', html: '<p>藍方先放置兩名工人，接著橘方放置兩名工人，再由藍方開始第一回合。</p>' },
+      { title: '初始設置', html: '<p>紅方先放置兩名工人，接著藍方放置兩名工人，再由紅方開始第一回合。</p>' },
       { title: '完整回合', html: '<ol><li>選自己一名工人。</li><li>往周圍八格移動一格，最多向上爬一層。</li><li>在移動後的工人周圍八格建築一層。</li></ol>' },
       { title: '勝利', html: '<p>工人移動到第三層立即勝利；或完成建築後使對手沒有任何合法移動，也立即勝利。</p>' }
     ],
@@ -294,7 +294,7 @@
     },
     outcome(state) { return state.winner; },
     describe(action, before) {
-      const actor = before.turn === 'first' ? '藍方' : '橘方';
+      const actor = before.turn === 'first' ? '紅方' : '藍方';
       if (action.type === 'place') return `${actor}將工人放在${posText(action)}。`;
       return `${actor}移動工人到${posText(action.move)}${action.build ? `，並在${posText(action.build)}建築` : '並登上第三層'}。`;
     },
@@ -310,7 +310,7 @@
         const height = state.board[r][c];
         const worker = visualWorkerAt({ r, c });
         const building = height ? `<span class="santorini-building">${Array.from({ length: height }, (_, level) => `<i class="santorini-level ${level === 3 ? 'dome' : ''}" data-anim-id="santorini-building-${r}-${c}-${level}" style="--level:${level}"></i>`).join('')}</span>` : '';
-        const piece = worker ? `<span class="piece worker santorini-worker ${worker.owner}" data-anim-id="${worker.id}"><span class="worker-head"></span><span class="worker-body"></span></span>` : '';
+        const piece = worker ? `<span class="piece worker santorini-worker ${worker.owner}" data-anim-id="${worker.id}" style="--height:${height}"><span class="worker-head"></span><span class="worker-body"></span></span>` : '';
         let classes = '';
         if (state.phase === 'move' && !ui.workerId && worker?.owner === state.turn && movableWorkers.has(worker.id)) classes = 'legal';
         if (ui.workerId && worker?.id === ui.workerId) classes = 'selected';
@@ -320,9 +320,9 @@
       }
       const outcome = this.outcome(state);
       let hint;
-      if (outcome) hint = `遊戲結束：${outcome === 'first' ? '藍方' : '橘方'}獲勝`;
-      else if (state.phase === 'placement') hint = `${state.turn === 'first' ? '藍方' : '橘方'}請放置工人`;
-      else if (!ui.workerId) hint = `${state.turn === 'first' ? '藍方' : '橘方'}請選擇工人`;
+      if (outcome) hint = `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝`;
+      else if (state.phase === 'placement') hint = `${state.turn === 'first' ? '紅方' : '藍方'}請放置工人`;
+      else if (!ui.workerId) hint = `${state.turn === 'first' ? '紅方' : '藍方'}請選擇工人`;
       else if (!ui.move) hint = '請選擇移動位置';
       else hint = '請選擇建築位置';
       const boardMode = state.phase === 'placement' ? 'placement' : ui.move ? 'build' : ui.workerId ? 'move' : 'worker';
@@ -425,19 +425,17 @@
     openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 90,
     animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
     animationOptions() { return { spring: true }; },
+    immediateAction(state, actions) {
+      return actions.find((action) => action.type === 'jump' && state.scores[state.turn] + (action.score || 0) >= 8);
+    },
     rolloutAction(state, actions) {
-      let winningJump = null;
-      let winningCount = 0;
-      let total = 0;
-      for (const action of actions) {
-        if (action.type === 'jump' && state.scores[state.turn] + (action.score || 0) >= 8) {
-          winningCount += 1;
-          if (Math.random() * winningCount < 1) winningJump = action;
-        }
-        total += zombieRolloutWeight(action);
-      }
+      const winningJump = this.immediateAction(state, actions);
       if (winningJump) return winningJump;
 
+      let total = 0;
+      for (const action of actions) {
+        total += zombieRolloutWeight(action);
+      }
       let target = Math.random() * total;
       for (const action of actions) {
         target -= zombieRolloutWeight(action);
@@ -454,10 +452,10 @@
       const board = Array.from({ length: 5 }, () => Array(5).fill(null));
       let nextId = 0;
       const piece = (owner, tier) => zombiePiece(owner, tier, `z${nextId++}`);
-      board[0][0] = piece('first', 2); board[0][2] = piece('first', 3); board[0][4] = piece('first', 2);
-      for (let c = 0; c < 5; c += 1) board[1][c] = piece('first', 1);
-      for (let c = 0; c < 5; c += 1) board[3][c] = piece('second', 1);
-      board[4][0] = piece('second', 2); board[4][2] = piece('second', 3); board[4][4] = piece('second', 2);
+      board[0][0] = piece('second', 2); board[0][2] = piece('second', 3); board[0][4] = piece('second', 2);
+      for (let c = 0; c < 5; c += 1) board[1][c] = piece('second', 1);
+      for (let c = 0; c < 5; c += 1) board[3][c] = piece('first', 1);
+      board[4][0] = piece('first', 2); board[4][2] = piece('first', 3); board[4][4] = piece('first', 2);
       return { turn: 'first', board, waiting: { first: [piece('first', 2), piece('first', 2)], second: [piece('second', 2), piece('second', 2)] }, scores: { first: 0, second: 0 }, continuing: null, path: [], winner: null, nextId };
     },
     actions(state) {
@@ -541,8 +539,9 @@
         const piece = state.board[r][c];
         const total = piece ? zombieTotal(piece) : '';
         const outActions = selected && samePos(selected, { r, c }) ? legal.filter((action) => action.type === 'jump' && action.to === 'out' && samePos(action.from, selected)) : [];
-        const outControls = outActions.map((action) => `<span class="zombie-out dr-${action.dir.dr} dc-${action.dir.dc}" role="button" tabindex="0" data-out data-dr="${action.dir.dr}" data-dc="${action.dir.dc}" aria-label="跳出棋盤">${action.dir.dr < 0 ? '↑' : action.dir.dr > 0 ? '↓' : action.dir.dc < 0 ? '←' : '→'}</span>`).join('');
-        const content = piece ? `<span class="piece zombie-piece ${piece.owner}" data-anim-id="${piece.id}">${piece.stack.map((tier, index) => `<i style="--stack:${index}">${index === piece.stack.length - 1 ? total : ''}</i>`).join('')}<span class="stack-list">${piece.stack.join('+')}</span></span>${outControls}` : '';
+        const outControls = outActions.map((action) => `<span class="zombie-out dr-${action.dir.dr} dc-${action.dir.dc}" role="button" tabindex="0" data-out data-from-r="${r}" data-from-c="${c}" data-dr="${action.dir.dr}" data-dc="${action.dir.dc}" aria-label="跳出棋盤">${action.dir.dr < 0 ? '↑' : action.dir.dr > 0 ? '↓' : action.dir.dc < 0 ? '←' : '→'}</span>`).join('');
+        const stopControl = state.continuing && samePos(selected, { r, c }) ? '<span class="zombie-stop" role="button" tabindex="0" data-stop aria-label="停止連跳">■</span>' : '';
+        const content = piece ? `<span class="piece zombie-piece ${piece.owner}" data-anim-id="${piece.id}">${piece.stack.map((tier, index) => `<i style="--stack:${index}">${index === piece.stack.length - 1 ? total : ''}</i>`).join('')}<span class="stack-list">${piece.stack.join('+')}</span>${stopControl}</span>${outControls}` : '';
         const classes = samePos(selected, { r, c }) ? 'selected' : targets.has(key(r, c)) ? 'legal' : '';
         board += cellButton(r, c, classes, content);
       }
@@ -553,18 +552,22 @@
         }).join('');
         return `<section class="choice-zone zombie-wait ${state.turn === owner ? 'active' : ''}" aria-label="${label}陰間"><div>${groups}</div></section>`;
       };
-      const stop = state.continuing ? '<button class="tray-btn selected" data-stop>停止連跳</button>' : '';
-      const tray = `<div class="dual-choice">${waitingZone('first', '紅方')}${waitingZone('second', '藍方')}</div>${stop}`;
+      const tray = `<div class="dual-choice">${waitingZone('first', '紅方')}${waitingZone('second', '藍方')}</div>`;
       const outcome = this.outcome(state);
       let hint = outcome ? `遊戲結束：${outcome === 'first' ? '紅方' : '藍方'}獲勝` : state.continuing ? '可繼續跳躍，或選擇停止連跳' : `${state.turn === 'first' ? '紅方' : '藍方'}請選擇復活、移動或跳躍`;
       return { cols: 5, rows: 5, boardClass: 'zombie-board', board, tray, hint, compactScores: true, firstScore: scoreInline(`${state.scores.first} / 8`, '分'), secondScore: scoreInline(`${state.scores.second} / 8`, '分') };
     },
     bind(state, ui, controller, board, tray) {
       tray.querySelectorAll(`[data-wait][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => controller.setUi({ waitTier: Number(button.dataset.wait), selectedPos: null })));
-      tray.querySelector('[data-stop]')?.addEventListener('click', () => controller.commit({ type: 'stop' }));
+      board.querySelector('[data-stop]')?.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (controller.isHumanTurn()) controller.commit({ type: 'stop' });
+      });
       board.querySelectorAll('[data-out]').forEach((button) => button.addEventListener('click', (event) => {
         event.stopPropagation();
-        const action = this.actions(state).find((item) => item.type === 'jump' && item.to === 'out' && item.dir.dr === Number(button.dataset.dr) && item.dir.dc === Number(button.dataset.dc));
+        if (!controller.isHumanTurn()) return;
+        const from = { r: Number(button.dataset.fromR), c: Number(button.dataset.fromC) };
+        const action = this.actions(state).find((item) => item.type === 'jump' && item.to === 'out' && samePos(item.from, from) && item.dir.dr === Number(button.dataset.dr) && item.dir.dc === Number(button.dataset.dc));
         if (action) controller.commit(action);
       }));
       board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
@@ -793,7 +796,7 @@
       for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
         const first = samePos(state.positions.first, { r, c });
         const second = samePos(state.positions.second, { r, c });
-        const piece = first ? '<span class="piece first" data-anim-id="fmg-first">R</span>' : second ? '<span class="piece second" data-anim-id="fmg-second">B</span>' : '';
+        const piece = first ? '<span class="piece fmg-piece first" data-anim-id="fmg-first" aria-label="紅方棋子"></span>' : second ? '<span class="piece fmg-piece second" data-anim-id="fmg-second" aria-label="藍方棋子"></span>' : '';
         const tile = state.tiles[r][c] === 'SR' || state.tiles[r][c] === 'SB' ? 'S' : state.tiles[r][c];
         const classes = `${state.covered[r][c] ? 'removed-space' : ''} ${legal.has(key(r, c)) ? 'legal' : ''}`;
         board += cellButton(r, c, classes, state.covered[r][c] ? '' : `<b>${tile}</b>${piece}`);

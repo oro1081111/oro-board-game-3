@@ -131,6 +131,19 @@
   }
 
   function runMcts(game, state, iterations, tokenIsCurrent) {
+    const immediate = game.immediateAction?.(state, game.actions(state));
+    if (immediate) {
+      const outcome = game.outcome(game.apply(state, immediate));
+      if (outcome === 'first' || outcome === 'second') return Promise.resolve({
+        action: clone(immediate),
+        firstRate: outcome === 'first' ? 1 : 0,
+        firstWinRate: outcome === 'first' ? 1 : 0,
+        secondWinRate: outcome === 'second' ? 1 : 0,
+        drawRate: 0,
+        visits: 1,
+        iterations: 1
+      });
+    }
     const search = new MctsSearch(game, state);
     const total = Math.max(1, Number(iterations) || 1);
     return new Promise((resolve) => {

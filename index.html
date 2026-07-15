@@ -31,7 +31,7 @@
     document.querySelectorAll('[data-preview]').forEach((board) => {
       const image = document.createElement('img');
       image.className = 'game-preview-image';
-      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || board.dataset.preview}.png`;
+      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || board.dataset.preview}.png?v=20260715a`;
       image.alt = `${board.dataset.preview} 實際遊戲中局棋盤`;
       board.replaceWith(image);
     });
