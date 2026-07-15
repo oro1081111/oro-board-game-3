@@ -2,7 +2,7 @@
 
 | 遊戲 | 主要來源 | 3.0 狀態 | 已採用的關鍵判定 |
 |---|---|---|---|
-| 花園棋 Mijnlieff | 2.0 `gameLogic.ts`、`MijnlieffGame.tsx`、使用者修正 | 完成 | 輪到玩家時手上無棋立即結束；有棋但無落點才跳過並清除限制。 |
+| 花園棋 Garden | 2.0 `gameLogic.ts`、`MijnlieffGame.tsx`、使用者修正 | 完成 | 輪到玩家時手上無棋立即結束；有棋但無落點才跳過並清除限制。 |
 | 蒐靈祭 Soulaween | 2.0 `soulaweenLogic.ts`、`SoulaweenGame.tsx`、使用者修正 | 完成 | 棋子為橘／綠雙面同一種棋；勝率使用 MCTS。 |
 | 聖托里尼 Santorini | 2.0 `SantoriniGame.tsx`、Roxley 基礎規則 | 完成 | 無神力版；完整 action 包含移動與建築；MCTS rollout 使用局面啟發式。 |
 | 殭屍棋 JUMP | 2.0 `ZombieJumpGame.tsx`、使用者修正 | 完成 | 總等級 3 堆疊指單枚 1 與單枚 2 的堆疊；支援復活、堆疊、連跳、停止與跳出。 |

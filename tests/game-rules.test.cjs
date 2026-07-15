@@ -13,8 +13,44 @@ const { BOARD_GAMES, GameCore } = window;
 
 (async () => {
   const basic = GameCore.runSelfTests(BOARD_GAMES);
-  assert.equal(basic.length, 6);
+  assert.equal(basic.length, 7);
   assert.deepEqual(basic.filter((item) => !item.ok), []);
+
+  const soulGame = BOARD_GAMES.soulaween;
+  const soul = soulGame.create('standard');
+  assert.equal(soulGame.actions(soul).length, 32, 'Soulaween starts with two colour choices for every empty cell');
+  const soulFlipProbe = structuredClone(soul);
+  soulFlipProbe.board[1][0] = 'orange';
+  soulFlipProbe.board[0][1] = 'green';
+  const flippedSoul = soulGame.apply(soulFlipProbe, { type: 'place', r: 0, c: 0, color: 'green' });
+  assert.equal(flippedSoul.board[1][0], 'green', 'Soulaween flips vertically adjacent souls');
+  assert.equal(flippedSoul.board[0][1], 'orange', 'Soulaween flips horizontally adjacent souls');
+  assert.equal(flippedSoul.turn, 'second', 'Soulaween completes a placement as one shared-core turn');
+
+  const soulLineProbe = soulGame.create('standard');
+  soulLineProbe.board[0] = [null, 'orange', 'green', 'green'];
+  soulLineProbe.board[1][0] = 'orange';
+  soulLineProbe.board[2][0] = 'green';
+  soulLineProbe.board[3][0] = 'green';
+  const soulLineActions = soulGame.actions(soulLineProbe).filter((action) => action.r === 0 && action.c === 0 && action.color === 'green');
+  assert.equal(soulLineActions.length, 2, 'Soulaween exposes every line when one placement creates multiple four-in-a-row lines');
+  assert.ok(soulLineActions.every((action) => action.collect?.positions.length === 4), 'Every Soulaween collection action identifies four souls');
+  const collectedSoul = soulGame.apply(soulLineProbe, soulLineActions[0]);
+  assert.equal(collectedSoul.scores.first, 1, 'Soulaween collection awards exactly one point');
+  assert.equal(collectedSoul.board.flat().filter(Boolean).length, 3, 'Soulaween removes only the selected line');
+
+  const soulWinningProbe = structuredClone(soulLineProbe);
+  soulWinningProbe.scores.first = 2;
+  const wonSoul = soulGame.apply(soulWinningProbe, soulGame.actions(soulWinningProbe).find((action) => action.r === 0 && action.c === 0 && action.color === 'green'));
+  assert.equal(soulGame.outcome(wonSoul), 'first', 'Soulaween ends immediately at three points');
+  const soulView = soulGame.view(soul, {}, {});
+  assert.match(soulView.boardClass, /soulaween-board/);
+  assert.match(soulView.tray, /data-soul-color="orange"/);
+  assert.match(soulView.firstScore, /score-pip/);
+  const pendingSoulView = soulGame.view(soulLineProbe, { color: 'green', pending: { type: 'place', r: 0, c: 0, color: 'green' } }, {});
+  assert.equal((pendingSoulView.tray.match(/data-line-choice/g) || []).length, 2, 'Soulaween renders every collection choice in the shared mobile tray');
+  assert.match(pendingSoulView.board, /cell collectable/, 'Soulaween highlights collectable lines on the shared board');
+  assert.deepEqual(soulGame.historyUi({ color: 'green', pending: { r: 0, c: 0, color: 'green' } }, soulLineActions[0]), { color: 'green' }, 'Soulaween Undo restores the colour choice without restoring an uncommitted preview');
 
   const mijn = BOARD_GAMES.mijnlieff.create('A');
   const mijnView = BOARD_GAMES.mijnlieff.view(mijn, {});
@@ -165,15 +201,10 @@ const { BOARD_GAMES, GameCore } = window;
   const toriiAfterOneStep = toriiGame.apply(toriiAfterTile, toriiOneStepActions[0]);
   assert.equal(toriiAfterOneStep.followers.flat().filter(Boolean).length, 1, 'Torii tile 1 places exactly one follower');
 
-  const soulaweenSource = fs.readFileSync(path.join(root, 'interface.html'), 'utf8');
-  assert.doesNotMatch(soulaweenSource, /cell === null\) classes\.push\('legal'\)/, 'Soulaween does not highlight every empty cell');
-  assert.doesNotMatch(soulaweenSource, /classList\.toggle\('current'/, 'Soulaween score cards do not glow for the current player');
-  assert.match(soulaweenSource, /class="score-pip/, 'Soulaween renders three circle score markers');
-  assert.match(soulaweenSource, /確認並開始新對局/, 'Soulaween settings start a new game');
-  assert.match(soulaweenSource, /隨機電腦/);
-  assert.match(soulaweenSource, /MCTS 電腦/);
-  assert.equal((soulaweenSource.match(/state\.aiStats = null/g) || []).length, 1, 'Soulaween only resets win rate for a new game');
-  assert.match(soulaweenSource, /if \(!isHumanTurn\(\)\) aiTimer = setTimeout\(doAI, 520\)/, 'Soulaween evaluates every player type before scheduling computer play');
+  const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
+  assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');
+  assert.match(soulaweenPage, /assets\/game-core\.js/, 'Soulaween loads the shared controller');
+  assert.match(soulaweenPage, /assets\/games\.js/, 'Soulaween loads the shared game registry');
   const shellCss = fs.readFileSync(path.join(root, 'assets', 'game-shell.css'), 'utf8');
   const lobbyHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(lobbyHtml, /assets\/lobby-boards\//, 'Lobby previews load captured game boards');
@@ -211,6 +242,14 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(coreSource, /this\.plannedActions = plan\.slice\(1\)/, 'Computer macro actions are played through the existing atomic animation flow');
   const gamesSource = fs.readFileSync(path.join(root, 'assets', 'games.js'), 'utf8');
   assert.match(gamesSource, /samePos\(item\.from, from\)[\s\S]{0,120}button\.dataset\.dr/, 'Zombie out clicks match both origin and direction');
+
+  for (const [id, game] of Object.entries(BOARD_GAMES)) {
+    assert.ok(game.nameZh && game.nameEn, `${id}: intro has separate Chinese and English names`);
+    assert.ok(game.publisherHtml && game.publisherLink?.href, `${id}: publisher section has detailed copy and an official/source link`);
+    assert.ok(game.ruleLink?.href, `${id}: rules tab has a rules document button`);
+    assert.equal(game.links?.length, 3, `${id}: intro uses the shared three-link layout`);
+  }
+  assert.equal(BOARD_GAMES.mijnlieff.title, '花園棋 Garden', 'Garden uses the requested English title');
 
   for (const [id, game] of Object.entries(BOARD_GAMES)) {
     const created = game.create(game.openings[0].value, null);

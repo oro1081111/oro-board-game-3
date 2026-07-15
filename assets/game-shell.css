@@ -27,7 +27,7 @@ body {
   overflow-x: hidden;
 }
 button, input { font: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
 .desktop-shell {
   min-height: 100vh;
@@ -158,6 +158,20 @@ button { cursor: pointer; }
 .piece.tiny { width: 40%; font-size: 11px; }
 .piece .stack-list { font-size: 10px; line-height: 1; }
 .piece-mark { font-size: clamp(20px, 5vw, 34px); line-height: 1; }
+
+/* Soulaween: shared score, colour selection and line collection controls. */
+.soulaween-board .cell { background: #fffdf6; }
+.soulaween-board .cell.collectable { z-index: 2; outline: 5px solid rgba(255,165,15,.78); outline-offset: -7px; }
+.soulaween-board .piece { width: 74%; }
+.score-pips { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2.4vw, 13px); color: inherit; }
+.score-pip { display: block; width: clamp(16px, 4vw, 22px); aspect-ratio: 1; border: 3px solid currentColor; border-radius: 50%; background: transparent; }
+.score-pip.filled { background: currentColor; }
+.soulaween-colors { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 88px)); justify-content: center; gap: 12px; }
+.soul-color { aspect-ratio: 1; }
+.soul-color .piece { position: static; width: 78%; }
+.soulaween-line-choices { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.soul-line-btn { min-height: 48px; padding: 6px 8px; background: #fff7df; border-color: var(--orange); color: #5e4214; font-size: 13px; line-height: 1.25; }
+.soul-cancel { min-height: 48px; color: #666; }
 
 .building { position: absolute; inset: 8%; display: grid; place-items: end center; border-radius: 10px; }
 .building.level-1 { background: #d8eef8; box-shadow: inset 0 0 0 6px #afcfdf; }
@@ -342,16 +356,23 @@ button { cursor: pointer; }
 .info-content { max-height: min(70vh, 650px); overflow: auto; padding: 18px; background: var(--paper); }
 .info-panel { display: none; }
 .info-panel.active { display: grid; gap: 14px; }
+.game-name-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.game-name-card { display: grid; min-width: 0; min-height: 92px; align-content: center; padding: 14px; border: 2px solid var(--line); border-radius: 14px; background: #fff; text-align: center; }
+.game-name-card span { color: #777; font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.game-name-card h2, .game-name-card p { margin: 5px 0 0; overflow-wrap: anywhere; font-size: clamp(19px, 5vw, 27px); font-weight: 950; line-height: 1.15; }
+.game-name-card p { font-size: clamp(17px, 4.6vw, 25px); }
 .info-box { min-height: 120px; padding: 18px; background: #fff; border-radius: 14px; font-size: 16px; line-height: 1.65; }
 .info-box h3 { margin: 0 0 8px; text-align: center; font-size: clamp(21px, 4.5vw, 28px); }
 .info-box ol, .info-box ul { margin: 7px 0 0; padding-left: 1.4em; }
 .info-box li { margin: 5px 0; }
+.publisher-box p { margin: 8px 0; }
+.publisher-actions, .rules-actions { display: grid; margin-top: 14px; }
 .game-cover { display: block; width: min(100%, 360px); max-height: 360px; margin: 0 auto; object-fit: contain; }
 .game-facts { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; margin: 14px 0 0; }
 .game-facts dt { color: #777; font-weight: 800; }
 .game-facts dd { margin: 0; }
-.info-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.info-link { display: grid; min-height: 46px; place-items: center; padding: 9px 12px; border: 2px solid var(--line); border-radius: 8px; background: #fff; color: #2e2a2f; font-weight: 900; text-align: center; text-decoration: none; }
+.info-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.info-link { display: grid; min-width: 0; min-height: 48px; place-items: center; padding: 9px 10px; border: 2px solid var(--line); border-radius: 8px; background: #fff; color: #2e2a2f; font-weight: 900; line-height: 1.25; overflow-wrap: anywhere; text-align: center; text-decoration: none; }
 .info-link:hover { background: #f3f1e8; }
 .log-list { margin: 0; padding-left: 1.2em; }
 .log-list li { margin: 6px 0; }
@@ -359,16 +380,33 @@ button { cursor: pointer; }
 @media (max-width: 900px) {
   .desktop-shell { display: block; background: var(--paper); }
   .game-layout { display: block; width: 100%; padding: 0; }
-  .phone-app { width: 100%; box-shadow: none; }
+  .phone-app { width: 100%; min-height: 100dvh; box-shadow: none; }
   .desktop-panel { display: none; }
+  .modal-layer { align-items: end; padding: 16px 10px max(16px, env(safe-area-inset-bottom)); }
+  .modal { width: min(100%, 520px); max-height: calc(100dvh - max(28px, env(safe-area-inset-top))); border-radius: 24px 24px 16px 16px; }
 }
 @media (min-width: 901px) {
   .phone-app { min-height: auto; margin-top: 24px; overflow: hidden; border-radius: 0 0 24px 24px; }
   .topbar { position: relative; }
 }
 @media (max-width: 420px) {
-  .topbar { height: 60px; grid-template-columns: 46px 1fr 46px; }
-  .play-area { padding-left: 12px; padding-right: 12px; }
-  .board { gap: 5px; padding: 10px; }
+  .topbar { height: calc(60px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); grid-template-columns: 46px 1fr 46px; }
+  .title-block h1 { font-size: clamp(18px, 5.4vw, 23px); }
+  .title-block p { font-size: 10px; }
+  .play-area { padding: 10px 10px max(16px, env(safe-area-inset-bottom)); }
+  .board-wrap { padding: 4px; }
+  .board { gap: 4px; padding: 8px; border-width: 5px; }
+  .choice-tray { min-height: 58px; padding: 5px; }
+  .turn-card { min-height: 44px; font-size: clamp(13px, 3.8vw, 17px); }
+  .action-row { gap: 6px; }
+  .game-btn { min-height: 48px; padding: 5px 3px; border-radius: 10px; font-size: clamp(12px, 3.5vw, 15px); }
   .score-card strong { font-size: 26px; }
+  .info-content { padding: 12px; }
+  .info-panel.active { gap: 10px; }
+  .game-name-row { gap: 8px; }
+  .game-name-card { min-height: 80px; padding: 10px 7px; }
+  .info-box { min-height: 0; padding: 15px; font-size: 15px; }
+  .info-links { gap: 6px; }
+  .info-link { min-height: 52px; padding: 7px 5px; font-size: 12px; }
+  .soulaween-line-choices { grid-template-columns: 1fr; }
 }

@@ -6,8 +6,8 @@
 
 | 遊戲 | 遊戲頁 | 規則頁 |
 |---|---|---|
-| 蒐靈祭 Soulaween | `interface.html` | `games/soulaween/rules.html` |
-| 花園棋 Mijnlieff | `games/mijnlieff/game.html` | `games/mijnlieff/rules.html` |
+| 蒐靈祭 Soulaween | `games/soulaween/game.html` | `games/soulaween/rules.html` |
+| 花園棋 Garden | `games/mijnlieff/game.html` | `games/mijnlieff/rules.html` |
 | 聖托里尼 Santorini | `games/santorini/game.html` | `games/santorini/rules.html` |
 | 殭屍棋 JUMP | `games/zombie-jump/game.html` | `games/zombie-jump/rules.html` |
 | 四色棋 Four Color Chess | `games/four-color-chess/game.html` | `games/four-color-chess/rules.html` |
@@ -18,9 +18,9 @@
 
 - `assets/game-shell.css`：手機與桌面共用遊戲介面。
 - `assets/game-core.js`：設定、日誌、Undo、勝率、AI 排程與共用 MCTS。
-- `assets/games.js`：六款遊戲的狀態、合法行動、狀態轉移與棋盤繪製。
-- `interface.html`：Soulaween 已完成的獨立垂直切片。
-- `tests/game-rules.test.cjs`：六款共用架構遊戲的規則與 MCTS smoke test。
+- `assets/games.js`：七款遊戲的狀態、合法行動、狀態轉移與棋盤繪製。
+- `interface.html`：舊網址相容轉址，實際遊戲頁為 `games/soulaween/game.html`。
+- `tests/game-rules.test.cjs`：七款共用架構遊戲的規則與 MCTS smoke test。
 - `GAME_IMPLEMENTATION_SOP.md`：未來新增遊戲的固定流程與驗收條件。
 
 ## AI
@@ -31,10 +31,13 @@
 
 ```powershell
 node tests\game-rules.test.cjs
+node tests\static-site.test.cjs
 python -m http.server 8875 --bind 127.0.0.1
 ```
 
 瀏覽 `http://127.0.0.1:8875/`。專案不需要建置步驟或第三方執行期套件。
+
+GitHub Actions 會在每次推送到 `main` 或建立 Pull Request 時，自動執行規則、MCTS、七款共用頁面與內部圖片／連結檢查。
 
 ## 規則來源
 

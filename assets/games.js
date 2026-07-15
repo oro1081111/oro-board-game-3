@@ -10,7 +10,180 @@
   const inBounds = (r, c, rows, cols) => r >= 0 && r < rows && c >= 0 && c < cols;
 
   // ---------------------------------------------------------------------------
-  // 花園棋 Mijnlieff
+  // 蒐靈祭 Soulaween
+  // ---------------------------------------------------------------------------
+  const SOUL_COLORS = ['orange', 'green'];
+  const SOUL_TARGET_SCORE = 3;
+  const soulColorName = (color) => color === 'green' ? '綠色' : '橘色';
+  const soulEmptyBoard = () => Array.from({ length: 4 }, () => Array(4).fill(null));
+
+  function soulFlip(color) { return color === 'green' ? 'orange' : 'green'; }
+
+  function soulPlace(board, action) {
+    const next = clone(board);
+    next[action.r][action.c] = action.color;
+    for (const [dr, dc] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+      const r = action.r + dr, c = action.c + dc;
+      if (inBounds(r, c, 4, 4) && next[r][c]) next[r][c] = soulFlip(next[r][c]);
+    }
+    return next;
+  }
+
+  function soulLines(board) {
+    const candidates = [];
+    for (let r = 0; r < 4; r += 1) candidates.push(Array.from({ length: 4 }, (_, c) => ({ r, c })));
+    for (let c = 0; c < 4; c += 1) candidates.push(Array.from({ length: 4 }, (_, r) => ({ r, c })));
+    candidates.push(Array.from({ length: 4 }, (_, i) => ({ r: i, c: i })));
+    candidates.push(Array.from({ length: 4 }, (_, i) => ({ r: i, c: 3 - i })));
+    return candidates.flatMap((positions) => {
+      const color = board[positions[0].r][positions[0].c];
+      return color && positions.every((pos) => board[pos.r][pos.c] === color) ? [{ color, positions }] : [];
+    });
+  }
+
+  function soulLineLabel(line) {
+    const first = line.positions[0], last = line.positions[line.positions.length - 1];
+    if (first.r === last.r) return `第 ${first.r + 1} 列${soulColorName(line.color)}連線`;
+    if (first.c === last.c) return `第 ${first.c + 1} 欄${soulColorName(line.color)}連線`;
+    return `${first.c < last.c ? '左上到右下' : '右上到左下'}${soulColorName(line.color)}斜線`;
+  }
+
+  function soulActions(state) {
+    if (state.winner) return [];
+    const actions = [];
+    for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
+      if (state.board[r][c] !== null) continue;
+      for (const color of SOUL_COLORS) {
+        const base = { type: 'place', r, c, color };
+        const lines = soulLines(soulPlace(state.board, base));
+        if (lines.length) lines.forEach((line) => actions.push({ ...base, collect: clone(line) }));
+        else actions.push(base);
+      }
+    }
+    return actions;
+  }
+
+  function soulScorePips(score) {
+    return `<span class="score-pips" aria-label="${score} 分">${Array.from({ length: SOUL_TARGET_SCORE }, (_, index) => `<i class="score-pip ${index < score ? 'filled' : ''}"></i>`).join('')}</span>`;
+  }
+
+  games.soulaween = {
+    title: '蒐靈祭 Soulaween',
+    nameZh: '蒐靈祭',
+    nameEn: 'Soulaween',
+    credit: '設計者：陳曦，出版社：玩聚設計',
+    firstName: '先手', secondName: '後手',
+    designer: '遊戲設計：陳曦 Shi Chen。美術：費子軒 Tzu-Hsuan Fei、張可靚 Ke-Ching Chang。',
+    publisher: '玩聚設計 Play With Us Design。遊戲曾獲 2019 臺灣原創桌遊博覽會最佳機制與最佳美術獎。',
+    publisherHtml: '<p>玩聚設計 Play With Us Design 成立於 2015 年，是以臺灣原創遊戲為核心的品牌，作品多以容易上手、便於攜帶與短時間也能反覆遊玩為方向。《蒐靈祭》曾獲 2019 臺灣原創桌遊博覽會最佳機制與最佳美術獎。</p><p><strong>代表作品：</strong>《蒐靈祭 Soulaween》、《羽 AVES》、《猜拆畫畫 Doodle Puzzle》。</p>',
+    publisherLink: { label: '前往玩聚設計官網', href: 'https://pwud.ga/' },
+    ruleLink: { label: '官方規則（英文 PDF）', href: 'https://pwud.ga/wp-content/uploads/2020/01/Soulaween_v2_rulebook_EN.pdf' },
+    introHtml: '<p>死神學園一年一度最熱鬧的「蒐靈祭」即將開始。玩家扮演死神的實習生，放出靈魂並讓彼此碰撞變色，設法排出四枚同色靈魂後一舉收取。棋盤只有 4×4，卻會因每次放置引發相鄰翻面而快速改變，是一款規則精簡、局勢多變的雙人抽象策略遊戲。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 15–30 分鐘</dd><dt>年齡</dt><dd>6 歲以上</dd><dt>出版年份</dt><dd>2019 年</dd></dl>',
+    cover: '../../assets/covers/soulaween.jpg',
+    links: [
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/269766/soulaween' },
+      { label: '官方介紹', href: 'https://pwud.ga/product/soulaween-v4/' },
+      { label: '中文規則', href: 'https://boardgamegeek.com/boardgame/269766/soulaween/files' }
+    ],
+    openings: [{ value: 'standard', label: '禿鷹老師簡易模式' }],
+    rolloutLimit: 70,
+    evaluationIterations: 80,
+    rules: [
+      { title: '本頁採用的模式', html: '<p>蒐靈祭正式規則包含角色能力；本頁採用「禿鷹老師」簡易模式，雙方沒有個別能力，專注於放置、翻面與四連線收取。</p>' },
+      { title: '配件與目標', html: '<ul><li>4×4 靈魂墊一面、16 枚橘／綠雙面靈魂棋，以及雙方計分標記。</li><li>兩位玩家共用同一批雙面棋；棋子不是分屬某位玩家。</li><li>每收取一組同色四連線得 1 分，先取得 3 分者獲勝。</li></ul>' },
+      { title: '初始設置', html: '<ol><li>將 4×4 靈魂墊放在中央，16 枚靈魂棋放在一旁作為共同供應。</li><li>雙方分數均為 0，決定先手玩家。</li><li>棋盤初始為空。</li></ol>' },
+      { title: '完整回合', html: '<ol><li><strong>選擇顏色：</strong>拿取一枚靈魂棋，選擇要讓橘色面或綠色面朝上。</li><li><strong>放置：</strong>將棋放在任一空格。</li><li><strong>翻轉：</strong>把新棋上、下、左、右正交相鄰的所有棋子翻到另一面；斜角相鄰不翻。</li><li><strong>檢查連線：</strong>檢查棋盤是否出現橫向、直向或斜向的同色四連線。</li></ol>' },
+      { title: '收取靈魂', html: '<ul><li>若形成一條或多條同色四連線，當回合玩家必須選擇其中一條收取。</li><li>移除該線的 4 枚棋並放回共同供應，當回合玩家獲得 1 分。</li><li>即使同時形成多條連線，每回合也只收取其中一條。</li></ul>' },
+      { title: '滿盤處理與勝利', html: '<ul><li>完成收取後若棋盤仍是全滿，移除所有與本回合新放棋正面顏色相同的棋，放回供應區。</li><li>任一玩家取得第 3 分時，遊戲立即結束並由該玩家獲勝。</li></ul>' }
+    ],
+    create() {
+      return { turn: 'first', board: soulEmptyBoard(), scores: { first: 0, second: 0 }, winner: null };
+    },
+    actions(state) { return soulActions(state); },
+    apply(source, action) {
+      const state = clone(source);
+      state.board = soulPlace(state.board, action);
+      if (action.collect) {
+        action.collect.positions.forEach((pos) => { state.board[pos.r][pos.c] = null; });
+        state.scores[state.turn] += 1;
+        if (state.scores[state.turn] >= SOUL_TARGET_SCORE) {
+          state.winner = state.turn;
+          return state;
+        }
+      }
+      if (state.board.every((row) => row.every(Boolean))) {
+        state.board = state.board.map((row) => row.map((cell) => cell === action.color ? null : cell));
+      }
+      state.turn = other(state.turn);
+      return state;
+    },
+    outcome(state) { return state.winner; },
+    immediateAction(state, actions) {
+      return actions.find((action) => this.apply(state, action).winner === state.turn);
+    },
+    describe(action, before) {
+      const actor = before.turn === 'first' ? '先手' : '後手';
+      const placement = `${actor}在${posText(action)}放置${soulColorName(action.color)}面並翻轉正交相鄰棋子`;
+      return action.collect ? `${placement}，收取${soulLineLabel(action.collect)}並取得 1 分。` : `${placement}。`;
+    },
+    historyUi(ui, action) { return { color: ui.color || action.color }; },
+    nextUi(action) { return { color: action.color }; },
+    view(state, ui, controller) {
+      const selectedColor = ui.color || 'green';
+      const pending = ui.pending && state.board[ui.pending.r]?.[ui.pending.c] === null ? ui.pending : null;
+      const pendingActions = pending ? this.actions(state).filter((action) => action.r === pending.r && action.c === pending.c && action.color === pending.color && action.collect) : [];
+      const displayBoard = pending ? soulPlace(state.board, pending) : state.board;
+      const lineByCell = new Map();
+      pendingActions.forEach((action, index) => action.collect.positions.forEach((pos) => {
+        if (!lineByCell.has(key(pos.r, pos.c))) lineByCell.set(key(pos.r, pos.c), index);
+      }));
+      let board = '';
+      for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
+        const color = displayBoard[r][c];
+        const lineIndex = lineByCell.get(key(r, c));
+        const classes = [];
+        if (lineIndex !== undefined) classes.push('collectable');
+        if (pending && pending.r === r && pending.c === c) classes.push('selected');
+        const piece = color ? `<span class="piece ${color}" data-anim-id="soul-${r}-${c}"></span>` : '';
+        const label = lineIndex !== undefined ? `${posText({ r, c })}，點選收取${soulLineLabel(pendingActions[lineIndex].collect)}` : `${posText({ r, c })}${color ? `，${soulColorName(color)}靈魂` : '，空格'}`;
+        board += `<button class="cell ${classes.join(' ')}" data-r="${r}" data-c="${c}" ${lineIndex !== undefined ? `data-line="${lineIndex}"` : ''} aria-label="${label}">${piece}</button>`;
+      }
+      const tray = pendingActions.length
+        ? `<div class="soulaween-line-choices">${pendingActions.map((action, index) => `<button class="tray-btn soul-line-btn" data-line-choice="${index}">${soulLineLabel(action.collect)}</button>`).join('')}<button class="tray-btn soul-cancel" data-cancel-collect>取消</button></div>`
+        : `<div class="soulaween-colors">${SOUL_COLORS.map((color) => `<button class="tray-btn soul-color ${selectedColor === color ? 'selected' : ''}" data-soul-color="${color}" aria-label="選擇${soulColorName(color)}面"><span class="piece ${color}"></span></button>`).join('')}</div>`;
+      const outcome = this.outcome(state);
+      const hint = outcome ? `遊戲結束：${outcome === 'first' ? '先手' : '後手'}獲勝` : pending ? '形成四連線，請選擇要收取的連線' : `現在是${state.turn === 'first' ? '先手' : '後手'}的回合，選擇顏色後放置靈魂`;
+      return {
+        cols: 4, board, tray, hint,
+        boardClass: 'soulaween-board',
+        winColors: { first: '#fb6a70', second: '#7188f4' },
+        turnColors: { first: '#fb6a70', second: '#7188f4' },
+        firstScore: soulScorePips(state.scores.first), secondScore: soulScorePips(state.scores.second)
+      };
+    },
+    bind(state, ui, controller, board, tray) {
+      tray.querySelectorAll('[data-soul-color]').forEach((button) => button.addEventListener('click', () => controller.setUi({ color: button.dataset.soulColor, pending: null })));
+      tray.querySelector('[data-cancel-collect]')?.addEventListener('click', () => controller.setUi({ pending: null }));
+      const commitLine = (index) => {
+        if (!controller.isHumanTurn() || !ui.pending) return;
+        const action = this.actions(state).filter((item) => item.r === ui.pending.r && item.c === ui.pending.c && item.color === ui.pending.color && item.collect)[index];
+        if (action) controller.commit(action);
+      };
+      tray.querySelectorAll('[data-line-choice]').forEach((button) => button.addEventListener('click', () => commitLine(Number(button.dataset.lineChoice))));
+      board.querySelectorAll('[data-line]').forEach((button) => button.addEventListener('click', () => commitLine(Number(button.dataset.line))));
+      board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
+        if (!controller.isHumanTurn() || ui.pending || button.dataset.line !== undefined) return;
+        const r = Number(button.dataset.r), c = Number(button.dataset.c), color = ui.color || 'green';
+        const choices = this.actions(state).filter((action) => action.r === r && action.c === c && action.color === color);
+        if (!choices.length) return;
+        if (choices.some((action) => action.collect)) controller.setUi({ color, pending: { type: 'place', r, c, color } });
+        else controller.commit(choices[0]);
+      }));
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // 花園棋 Garden（Mijnlieff 系統）
   // ---------------------------------------------------------------------------
   const MIJN_TYPES = ['straight', 'diagonal', 'push', 'pull'];
   const MIJN_MARKS = { straight: '＋', diagonal: '×', push: '●', pull: '○' };
@@ -99,12 +272,17 @@
   }
 
   games.mijnlieff = {
-    title: '花園棋 Mijnlieff',
+    title: '花園棋 Garden',
+    nameZh: '花園棋',
+    nameEn: 'Garden',
     credit: '設計者：Andy Hopwood，出版社：Taiwan Boardgame Design',
     firstName: '深色',
     secondName: '淺色',
     designer: '遊戲設計：Andy Hopwood。Garden 版本美術：Daisy Ching-Yi Chen。',
     publisher: '《花園棋 Garden》為 Mijnlieff 系統的新美術版本，由 TBD 台灣桌遊設計推出英中版本。',
+    publisherHtml: '<p>TBD 台灣桌遊設計成立於 2013 年，長期協助臺灣設計師測試、製作並把原創桌遊帶往海外展會。《花園棋 Garden》是 Andy Hopwood 的 Mijnlieff 系統重新美術設計後推出的英中版本。</p><p><strong>代表作品：</strong>《花園棋 Garden》、《臺灣夜市 Taiwan Night Market》、《福爾摩沙茶 Formosa Tea》。</p>',
+    publisherLink: { label: '前往 TBD 官方網站', href: 'https://www.tbd.com.tw/' },
+    ruleLink: { label: '官方中文規則', href: 'https://boardgamegeek.com/filepage/307349/garden-chinese-rules' },
     introHtml: '<p>風和日麗的午後，蝴蝶、瓢蟲、蜻蜓與蝸牛在花瓣上展開搶地盤比賽。玩家輪流放置四種昆蟲棋；每枚棋都會限制對手下一枚棋可以落下的位置，因此每一步既要延伸自己的連線，也要避免替對手留下好位置。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 15 分鐘</dd><dt>年齡</dt><dd>8 歲以上</dd><dt>類型</dt><dd>連線、落點限制、抽象策略</dd></dl>',
     cover: '../../assets/covers/mijnlieff.png',
     links: [
@@ -248,15 +426,20 @@
 
   games.santorini = {
     title: '聖托里尼 Santorini',
+    nameZh: '聖托里尼',
+    nameEn: 'Santorini',
     credit: '設計者：Gordon Hamilton，出版社：Roxley Games',
     firstName: '紅方', secondName: '藍方',
     designer: '遊戲設計：Gordon Hamilton。Roxley 版本美術與視覺設計由 Mr. Cuddington 團隊參與。', publisher: 'Roxley Games。此頁採用不含神力卡的雙人基本對戰。',
+    publisherHtml: '<p>Roxley Games 重視創新、完成度、耐玩性與視覺呈現；《聖托里尼》是其容易入門、同時保有策略深度的代表性抽象遊戲。本頁採用不含神力卡的雙人基本對戰。</p><p><strong>代表作品：</strong>《Santorini》、《Brass: Birmingham》、《Radlands》。</p>',
+    publisherLink: { label: '前往 Roxley 官網', href: 'https://roxley.com/' },
+    ruleLink: { label: '官方經典版規則（英文 PDF）', href: 'https://files.roxley.com/Santorini-Rulebook-Web-2016.08.14.pdf' },
     introHtml: '<p>在愛琴海的小島上，雙方各帶領兩名工人逐層建起白色村落。每回合先移動、再建築；玩家必須同時替自己鋪出登高路線，並用建築或圓頂阻斷對手。規則精簡，但位置、層高與行動順序會形成高度互動的立體策略。</p><dl class="game-facts"><dt>人數</dt><dd>2 人基本對戰</dd><dt>時間</dt><dd>約 20 分鐘</dd><dt>年齡</dt><dd>8 歲以上</dd><dt>類型</dt><dd>立體建築、位置控制、抽象策略</dd></dl>',
     cover: '../../assets/covers/santorini.png',
     links: [
       { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/194655/santorini' },
       { label: '官方介紹', href: 'https://roxley.com/products/santorini' },
-      { label: '官方規則', href: 'https://files.roxley.com/Santorini-Rulebook-Web-2016.08.14.pdf' }
+      { label: '中文規則', href: 'https://www.dropbox.com/scl/fi/2h8md0s2p30339jro39n4/Santorini_TC.pdf?rlkey=7wq3962lt7veqnrz5t58wxjd2&e=1&dl=0' }
     ],
     openings: [{ value: 'standard', label: '標準空盤' }], rolloutLimit: 70,
     animationDuration(action) { return action.type === 'place' ? 220 : action.previewed ? 240 : 420; },
@@ -441,14 +624,20 @@
   }
 
   games['zombie-jump'] = {
-    title: '殭屍棋 JUMP', credit: '設計者：Kevin Zhang，出版社：MAGICA',
+    title: '殭屍棋 JUMP',
+    nameZh: '殭屍棋',
+    nameEn: 'JUMP',
+    credit: '設計者：Kevin Zhang，出版社：MAGICA',
     firstName: '紅方', secondName: '藍方', designer: '遊戲設計與美術：Kevin Zhang。', publisher: 'MAGICA 瑪吉卡工作室；2025 年推出中文／英文版本。',
+    publisherHtml: '<p>MAGICA 瑪吉卡工作室以原創桌遊設計、試玩與群眾集資發行為主。《殭屍棋 JUMP》在 2025 年完成集資，使用簡潔的移動、堆疊與連跳規則形成雙人對戰。</p><p><strong>相關作品：</strong>《殭屍棋 JUMP》、《骰子貓與魚》、《狗骨頭爭霸戰》。</p>',
+    publisherLink: { label: '前往 MAGICA 粉專', href: 'https://www.instagram.com/magica_studiovo/' },
+    ruleLink: { label: '官方中文規則', href: 'https://drive.google.com/drive/folders/1v4JW7-4D5lLHNqgEyPc8M76hH-FL9CKO' },
     introHtml: '<p>陰陽兩界的殭屍在 5×5 棋盤上甦醒。玩家可以讓陰間棋子復活、移動並堆疊，也能以較高總等級的殭屍越過棋群，將對手送回陰間並取得分數。棋子的等級既是行動資源，也是跳躍力量，何時堆高、何時拆散會直接改變戰局。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 10–20 分鐘</dd><dt>年齡</dt><dd>6 歲以上</dd><dt>類型</dt><dd>跳躍、堆疊、組合移動</dd></dl>',
     cover: '../../assets/covers/zombie-jump.jpg',
     links: [
-      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgameversion/768073/chineseenglish-edition' },
-      { label: '官方介紹', href: 'https://gamemarket.jp/game/186886' },
-      { label: '繁中規則介紹', href: 'https://www.punchboardgame.com/zh-hant/blog/posts/%E6%AE%AD%E5%B1%8D%E6%A3%8B-jump-%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87%E7%89%88-%E9%96%8B%E7%AE%B1%E5%8F%8A%E8%A6%8F%E5%89%87%E4%BB%8B%E7%B4%B9-by-%E9%AB%98%E9%9B%84%E9%BE%90%E5%A5%87%E6%A1%8C%E9%81%8A-magica' }
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/451607/jump' },
+      { label: '官方介紹', href: 'https://www.zeczec.com/projects/Catandjump' },
+      { label: '中文規則', href: 'https://drive.google.com/drive/folders/1v4JW7-4D5lLHNqgEyPc8M76hH-FL9CKO' }
     ],
     openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 90,
     animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
@@ -678,10 +867,20 @@
   function fcgMobility(state, owner) { return FCG_COLORS.reduce((sum, color) => sum + fcgMoves(state, owner, color).length, 0); }
 
   games['four-color-chess'] = {
-    title: '四色棋 Four Color Chess', credit: '設計者：奧羅，出版社：奧羅桌遊設計工作室',
+    title: '四色棋 Four Color Chess',
+    nameZh: '四色棋',
+    nameEn: 'Four Color Chess',
+    credit: '設計者：奧羅，出版社：奧羅桌遊設計工作室',
     firstName: '黑方', secondName: '白方', designer: '遊戲設計：奧羅。這是設計者的第一款雙人抽象棋作品。', publisher: '獨立創作與非商業分享版本，目前沒有正式商業出版社。',
+    publisherHtml: '<p>本作由奧羅桌遊設計工作室獨立創作，目前以非商業形式公開玩法，尚未交由正式商業出版社發行。因沒有可核實的完整出版目錄，這裡不另列未確認的代表作品。</p>',
+    publisherLink: { label: '查看工作室創作來源', href: 'https://www.instagram.com/p/B5bsCvqla9f/?igsh=dGlyZndjbzR6ZGR3' },
+    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
     introHtml: '<p>四色棋把「下一步要動哪一枚棋」交給上一回合的落點決定。四種顏色同時存在於棋盤與棋子上；棋子停在哪一種顏色的格子，就會指定對手下一回合必須移動同色棋。玩家要在滑行、阻擋與指定焦點之間連續布局，迫使對手被指定的棋無路可走。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 10–20 分鐘</dd><dt>類型</dt><dd>滑行、指定行動、封鎖</dd><dt>版本</dt><dd>獨立創作</dd></dl>',
-    links: [{ label: '創作來源', href: 'https://www.instagram.com/p/B5bsCvqla9f/?igsh=dGlyZndjbzR6ZGR3' }],
+    links: [
+      { label: '創作來源', href: 'https://www.instagram.com/p/B5bsCvqla9f/?igsh=dGlyZndjbzR6ZGR3' },
+      { label: '完整規則', href: 'rules.html' },
+      { label: '遊戲大廳', href: '../../index.html' }
+    ],
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 80,
     animationDuration(action) { return action.type === 'move' ? 360 : 0; },
     rules: [
@@ -804,10 +1003,20 @@
     return tile === 'SR' || tile === 'SB' ? [1, 2, 3, 4] : [Number(tile)];
   }
   games['four-moves-chess'] = {
-    title: '四步棋 Four Moves Chess', credit: '設計者：來源未載，遊戲名稱：奧羅暫定',
+    title: '四步棋 Four Moves Chess',
+    nameZh: '四步棋',
+    nameEn: 'Four Moves Chess',
+    credit: '設計者：來源未載，遊戲名稱：奧羅暫定',
     firstName: '紅方', secondName: '藍方', designer: '原始短片未列出可核實的個人設計者；玩法來源為 Instagram 帳號 celine.et.sasha，中文與英文遊戲名稱由奧羅暫定。', publisher: '未查到正式出版版本或出版社；目前為依公開玩法整理的非商業版本。',
+    publisherHtml: '<p>目前未查到正式出版版本或出版社；本站依 Instagram 帳號 celine.et.sasha 公開的短片整理成可遊玩的非商業版本，中文與英文名稱皆為奧羅暫定。由於沒有出版目錄，因此不列代表作品。</p>',
+    publisherLink: { label: '前往玩法來源帳號', href: 'https://www.instagram.com/celine.et.sasha/' },
+    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
     introHtml: '<p>四步棋是一款以數字格控制移動長度的雙人封鎖遊戲。棋子所在格的數字決定本回合必須走幾步，每一步都沿直線跳到下一個仍存在的格子；棋子離開後，原本的格子會從棋盤上移除。棋盤因此逐回合縮減，玩家要安排路徑並留下退路，直到對手再也無法完成移動。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 10–15 分鐘</dd><dt>類型</dt><dd>路徑規劃、逐步移除、封鎖</dd><dt>名稱</dt><dd>暫定名稱</dd></dl>',
-    links: [{ label: '原始玩法短片', href: 'https://www.instagram.com/reel/DM0XE8Mo41a/?igsh=MXJic2dpODF4NndxdA==' }],
+    links: [
+      { label: '原始玩法短片', href: 'https://www.instagram.com/reel/DM0XE8Mo41a/?igsh=MXJic2dpODF4NndxdA==' },
+      { label: '完整規則', href: 'rules.html' },
+      { label: '遊戲大廳', href: '../../index.html' }
+    ],
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 50,
     animationDuration(action) { return action.type === 'move' ? action.path.length * 250 : 0; },
     rules: [
@@ -936,8 +1145,14 @@
   }
 
   games.torii = {
-    title: '跳躍森靈 Torii', credit: '設計者：陳致寬，出版社：桌遊愛樂事',
+    title: '跳躍森靈 Torii',
+    nameZh: '跳躍森靈',
+    nameEn: 'Torii',
+    credit: '設計者：陳致寬，出版社：桌遊愛樂事',
     firstName: '紅方', secondName: '藍方', designer: '遊戲設計：陳致寬 Kuan Chen。美術設計：Julia Reynaud。', publisher: '桌遊愛樂事 EmperorS4。',
+    publisherHtml: '<p>桌遊愛樂事 EmperorS4 成立於 2013 年，已推出數十款桌遊並發行至四十多個國家。《跳躍森靈 Torii》延續其重視主題、美術與易學策略的原創出版方向。</p><p><strong>代表作品：</strong>《花見小路》、《圓樓》、《神殿之謎》。</p>',
+    publisherLink: { label: '前往桌遊愛樂事官網', href: 'https://tw.emperors4.com/' },
+    ruleLink: { label: '官方中文規則（PDF）', href: 'https://tw.emperors4.com/files/rules/2024/08/Torii_Rulebook--Cn-.pdf' },
     introHtml: '<p>森靈在森林小徑間跳躍，引領信徒並建立鳥居。玩家每回合選擇一枚 1、2、3 行動板塊，讓森靈走足指定步數，並在沿途停留處散播自己的信徒。四名信徒連成一線便能建立鳥居；玩家必須在擴張信徒與保護既有成果之間掌握節奏。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 15–30 分鐘</dd><dt>年齡</dt><dd>10 歲以上</dd><dt>類型</dt><dd>行動點、連鎖移動、區域建立</dd></dl>',
     cover: '../../assets/covers/torii.png',
     links: [

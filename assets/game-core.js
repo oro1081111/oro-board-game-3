@@ -13,8 +13,8 @@
     { label: '專家', value: 5000 }
   ];
   const GAME_LINKS = [
-    ['mijnlieff', '花園棋 Mijnlieff'],
     ['soulaween', '蒐靈祭 Soulaween'],
+    ['mijnlieff', '花園棋 Garden'],
     ['santorini', '聖托里尼 Santorini'],
     ['zombie-jump', '殭屍棋 JUMP'],
     ['four-color-chess', '四色棋 Four Color Chess'],
@@ -283,9 +283,8 @@
         document.querySelectorAll('.tab-btn').forEach((item) => item.classList.toggle('active', item === button));
         document.querySelectorAll('.info-panel').forEach((panel) => panel.classList.toggle('active', panel.id === `tab-${button.dataset.tab}`));
       }));
-      this.$('gameList').innerHTML = GAME_LINKS.map(([id, label]) => id === 'soulaween'
-        ? `<a class="list-btn" href="../../interface.html">${label}</a>`
-        : `<a class="list-btn ${id === this.gameId ? 'active' : ''}" href="../${id}/game.html">${label}</a>`).join('');
+      this.$('gameList').innerHTML = GAME_LINKS.map(([id, label]) =>
+        `<a class="list-btn ${id === this.gameId ? 'active' : ''}" href="../${id}/game.html">${label}</a>`).join('');
       document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape') document.querySelectorAll('.modal-layer.open').forEach((layer) => this.close(layer.id));
       });
@@ -344,9 +343,11 @@
       this.token += 1;
       this.animationSequence += 1;
       const before = clone(this.state);
-      this.history.push({ state: before, ui: clone(this.ui), logLength: this.logs.length, firstRate: this.firstRate, firstWinRate: this.firstWinRate, secondWinRate: this.secondWinRate, drawRate: this.drawRate });
+      const previousUi = clone(this.ui);
+      const historyUi = this.game.historyUi?.(previousUi, action) || previousUi;
+      this.history.push({ state: before, ui: clone(historyUi), logLength: this.logs.length, firstRate: this.firstRate, firstWinRate: this.firstWinRate, secondWinRate: this.secondWinRate, drawRate: this.drawRate });
       this.state = this.game.apply(this.state, action);
-      this.ui = {};
+      this.ui = this.game.nextUi?.(action, before, this.state, previousUi) || {};
       this.logs.push(this.game.describe(action, before, this.state));
       const duration = this.game.animationDuration?.(action) || 0;
       this.animationAction = { ...action, ...this.game.animationOptions?.(action), duration };
@@ -565,10 +566,20 @@
     renderInfo() {
       if (!this.state) return;
       this.$('tab-log').innerHTML = `<section class="info-box"><h3>行動日誌</h3><ol class="log-list">${this.logs.map((line) => `<li>${line}</li>`).join('')}</ol></section>`;
-      this.$('tab-rules').innerHTML = this.game.rules.map((section) => `<section class="info-box"><h3>${section.title}</h3>${section.html}</section>`).join('');
+      const ruleLink = this.game.ruleLink
+        ? `<nav class="rules-actions" aria-label="規則文件"><a class="info-link" href="${this.game.ruleLink.href}" target="_blank" rel="noopener noreferrer">${this.game.ruleLink.label}</a></nav>`
+        : '';
+      this.$('tab-rules').innerHTML = `${this.game.rules.map((section) => `<section class="info-box"><h3>${section.title}</h3>${section.html}</section>`).join('')}${ruleLink}`;
+      const nameZh = this.game.nameZh || this.game.title;
+      const nameEn = this.game.nameEn || '';
+      const nameRow = `<header class="game-name-row"><div class="game-name-card"><span>中文名稱</span><h2>${nameZh}</h2></div><div class="game-name-card"><span>English name</span><p>${nameEn}</p></div></header>`;
       const cover = this.game.cover ? `<img class="game-cover" src="${this.game.cover}" alt="${this.game.title} 遊戲封面">` : '';
       const links = (this.game.links || []).map((link) => `<a class="info-link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.label}</a>`).join('');
-      this.$('tab-intro').innerHTML = `${cover}<section class="info-box"><h3>遊戲介紹</h3>${this.game.introHtml || `<p>${this.game.intro}</p>`}</section><section class="info-box"><h3>設計與美術</h3><p>${this.game.designer}</p></section><section class="info-box"><h3>出版資訊</h3><p>${this.game.publisher}</p></section>${links ? `<nav class="info-links" aria-label="外部遊戲資料">${links}</nav>` : ''}`;
+      const publisherLink = this.game.publisherLink
+        ? `<div class="publisher-actions"><a class="info-link" href="${this.game.publisherLink.href}" target="_blank" rel="noopener noreferrer">${this.game.publisherLink.label}</a></div>`
+        : '';
+      const publisher = this.game.publisherHtml || `<p>${this.game.publisher}</p>`;
+      this.$('tab-intro').innerHTML = `${nameRow}${cover}<section class="info-box"><h3>遊戲介紹</h3>${this.game.introHtml || `<p>${this.game.intro}</p>`}</section><section class="info-box"><h3>設計與美術</h3><p>${this.game.designer}</p></section><section class="info-box publisher-box"><h3>出版資訊</h3>${publisher}${publisherLink}</section>${links ? `<nav class="info-links" aria-label="遊戲相關連結">${links}</nav>` : ''}`;
     }
   }
 
