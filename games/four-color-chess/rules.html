@@ -1,17 +1,13 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-Hant">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>四色棋 Four Color Chess 規則</title><link rel="stylesheet" href="../../assets/manual.css"></head>
 <body><main class="page">
-<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回目錄</a></div>
+<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回首頁</a></div>
 <h1>四色棋 Four Color Chess</h1>
-<p class="lead">依 `棋類遊戲` 舊版 `FCG.html` 目前程式碼整理。玩家移動帶有紫色焦點的棋子，移動落點的格色會決定下一回合對手必須移動哪一枚棋。</p>
-<div class="meta"><span class="pill">2 人</span><span class="pill">4x4 棋盤</span><span class="pill">焦點棋</span><span class="pill">封鎖勝利</span></div>
-<section class="section"><h2>配件</h2><ul><li>4x4 四色棋盤 1 面，格色為紅、藍、黃、綠。</li><li>黑方棋子 4 枚：紅、藍、黃、綠各 1 枚。</li><li>白方棋子 4 枚：紅、藍、黃、綠各 1 枚。</li><li>紫色焦點棋 1 枚，用來標記本回合必須移動的棋子。</li></ul><div class="icon-row"><span class="icon red">紅</span><span class="icon blue">藍</span><span class="icon" style="background:#ffd166">黃</span><span class="icon green">綠</span><span class="icon" style="background:#5e0a86;color:white">焦</span></div></section>
-<section class="section"><h2>初始設置</h2><ol><li>棋盤為 4x4 四色格。</li><li>白方 4 枚棋放在最上列，每枚棋的顏色對應所在格色。</li><li>黑方 4 枚棋放在最下列，每枚棋的顏色對應所在格色。</li><li>黑方先手。</li><li>遊戲開始時尚未放置焦點棋。</li></ol><div class="board cols-4"><div class="cell red">W紅<br>紅格</div><div class="cell blue">W藍<br>藍格</div><div class="cell" style="background:#fff5c2">W黃<br>黃格</div><div class="cell green">W綠<br>綠格</div><div class="cell blue">藍格</div><div class="cell red">紅格</div><div class="cell green">綠格</div><div class="cell" style="background:#fff5c2">黃格</div><div class="cell" style="background:#fff5c2">黃格</div><div class="cell green">綠格</div><div class="cell red">紅格</div><div class="cell blue">藍格</div><div class="cell green">B綠<br>綠格</div><div class="cell" style="background:#fff5c2">B黃<br>黃格</div><div class="cell blue">B藍<br>藍格</div><div class="cell red">B紅<br>紅格</div></div></section>
-<section class="section"><h2>開局焦點</h2><p>黑方第一步不是移動，而是將紫色焦點棋放在任一黑方棋子上。被放上焦點的黑方棋子成為第一個必須移動的棋子。</p></section>
-<section class="section"><h2>回合流程</h2><ol><li>目前玩家只能移動自己帶有焦點的那枚棋。</li><li>該棋可往上下左右直線滑行到任一空格。</li><li>不能斜走。</li><li>不能跨越任何棋子。</li><li>不能停在已有棋子的格子。</li><li>移動後，查看落點格色。</li><li>紫色焦點移到對手同色棋子上，輪到對手行動。</li></ol></section>
-<section class="section"><h2>勝利條件</h2><p>輪到對手時，若對手被焦點指定的棋子沒有任何合法移動，則目前玩家獲勝。</p></section>
-<section class="section"><h2>模式與 AI</h2><ul><li>黑方與白方可分別設為玩家、隨機、AI。</li><li>棋盤設置支援經典、隨機、指定棋盤。經典棋盤格色依程式碼為：第一列紅藍黃綠、第二列藍紅綠黃、第三列黃綠紅藍、第四列綠黃藍紅。</li><li>AI 使用 MCTS 搜尋。</li></ul></section>
-<footer>規則來源：舊版 `FCG.html`。</footer>
+<p class="lead">棋子停在哪一種顏色的格子，就會指定對手下一回合必須移動同色棋。讓對手被指定的棋無路可走即可獲勝。</p>
+<div class="meta"><span class="pill">2 人</span><span class="pill">4×4 棋盤</span><span class="pill">直線滑行</span><span class="pill">封鎖勝利</span></div>
+<section class="section"><h2>配件與設置</h2><ul><li>4×4 四色棋盤一面；每一列各含紅、藍、黃、綠四種格色。</li><li>黑方與白方各有紅、藍、黃、綠棋各 1 枚。</li><li>白方放在最上列，黑方放在最下列，每枚棋的顏色與起始格相同。</li><li>黑方先手，先選一枚有合法移動的黑棋作為第一枚焦點棋。</li></ul></section>
+<section class="section"><h2>焦點與移動</h2><ol><li>回合開始時，只有焦點指定的棋子可以移動。</li><li>該棋可沿上下左右任一方向直線滑行，並停在路徑上的任一空格。</li><li>棋子不能斜走、不能跳過其他棋子，也不能停在有棋的格子。</li><li>完成移動後，落點格色會指定對手同色棋成為下一回合焦點。</li></ol></section>
+<section class="section"><h2>勝利條件</h2><p>若輪到玩家時，焦點指定的棋子沒有任何合法空格可到達，該玩家立即落敗，上一位玩家獲勝。</p></section>
+<footer><a href="https://www.instagram.com/p/B5bsCvqla9f/?igsh=dGlyZndjbzR6ZGR3">創作來源</a></footer>
 </main></body></html>
-

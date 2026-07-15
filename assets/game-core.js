@@ -566,7 +566,9 @@
       if (!this.state) return;
       this.$('tab-log').innerHTML = `<section class="info-box"><h3>行動日誌</h3><ol class="log-list">${this.logs.map((line) => `<li>${line}</li>`).join('')}</ol></section>`;
       this.$('tab-rules').innerHTML = this.game.rules.map((section) => `<section class="info-box"><h3>${section.title}</h3>${section.html}</section>`).join('');
-      this.$('tab-intro').innerHTML = `<section class="info-box"><h3>遊戲介紹</h3><p>${this.game.intro}</p></section><section class="info-box"><h3>設計者</h3><p>${this.game.designer}</p></section><section class="info-box"><h3>出版社</h3><p>${this.game.publisher}</p></section>`;
+      const cover = this.game.cover ? `<img class="game-cover" src="${this.game.cover}" alt="${this.game.title} 遊戲封面">` : '';
+      const links = (this.game.links || []).map((link) => `<a class="info-link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.label}</a>`).join('');
+      this.$('tab-intro').innerHTML = `${cover}<section class="info-box"><h3>遊戲介紹</h3>${this.game.introHtml || `<p>${this.game.intro}</p>`}</section><section class="info-box"><h3>設計與美術</h3><p>${this.game.designer}</p></section><section class="info-box"><h3>出版資訊</h3><p>${this.game.publisher}</p></section>${links ? `<nav class="info-links" aria-label="外部遊戲資料">${links}</nav>` : ''}`;
     }
   }
 

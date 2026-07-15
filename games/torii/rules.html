@@ -1,18 +1,16 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-Hant">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Torii 跳躍森靈 規則</title><link rel="stylesheet" href="../../assets/manual.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>跳躍森靈 Torii 規則</title><link rel="stylesheet" href="../../assets/manual.css"></head>
 <body><main class="page">
-<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回目錄</a></div>
-<h1>Torii 跳躍森靈</h1>
-<p class="lead">依 `棋類遊戲` 舊版 `Torii.html` 目前程式碼整理。這是沒有森靈能力的基礎版本。玩家選行動板塊移動森靈，沿路散播信徒，形成整列信徒後建造鳥居。</p>
-<div class="meta"><span class="pill">2 人</span><span class="pill">4x4 棋盤</span><span class="pill">行動板塊</span><span class="pill">信徒 / 鳥居</span></div>
-<section class="section"><h2>配件</h2><ul><li>4x4 棋盤 1 面。</li><li>紅方森靈 1 枚、藍方森靈 1 枚。</li><li>紅方信徒 9 枚、藍方信徒 9 枚。</li><li>紅方鳥居 4 座、藍方鳥居 4 座。</li><li>每位玩家有行動板塊 1、2、3 各 1 張。</li></ul><div class="icon-row"><span class="icon red">▲</span><span class="icon blue">▲</span><span class="icon red circle">信</span><span class="icon blue circle">信</span><span class="icon red circle">鳥</span><span class="icon blue circle">鳥</span><span class="icon">1</span><span class="icon">2</span><span class="icon">3</span></div></section>
-<section class="section"><h2>標準初始設置</h2><ol><li>紅森靈放在第 2 列第 2 欄。</li><li>藍森靈放在第 3 列第 3 欄。</li><li>紅方先手。</li><li>紅方行動板塊 2 初始為已使用面。</li><li>藍方行動板塊 1 初始為已使用面。</li></ol><div class="board cols-4"><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell red">紅靈</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell blue">藍靈</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div><div class="cell green">□</div></div></section>
-<section class="section"><h2>回合流程</h2><ol><li><strong>選行動板塊：</strong>從自己尚未使用的 1、2、3 板塊中選 1 張，數字代表本回合必須移動的步數。</li><li><strong>移動森靈：</strong>依選定步數移動森靈。</li><li><strong>放置信徒：</strong>在本回合停留過的格子放置或替換自己的信徒。</li><li><strong>建造鳥居：</strong>若形成橫列或直列 4 格己方信徒，立即選擇該線其中 1 格建立鳥居。</li><li><strong>重置板塊：</strong>若該玩家 3 張板塊都已使用，該玩家回合結束後重置為可用。</li></ol></section>
-<section class="section"><h2>森靈移動</h2><ul><li>森靈只能上下左右移動，不能斜走。</li><li>同一回合不可重訪格子，也不可回到起點。</li><li>若遇到對手森靈所在的同一行或同一列，必須整條跳過。</li><li>移動路徑長度必須等於所選行動板塊數字。</li></ul></section>
-<section class="section"><h2>放置信徒</h2><ul><li>本回合森靈停留過的格子會放置自己的信徒。</li><li>起點與被跳過的格子不放置信徒。</li><li>若格上已有對手信徒，會被替換為自己的信徒。</li><li>鳥居所在格不放置信徒。</li></ul></section>
-<section class="section"><h2>建造鳥居</h2><ul><li>若己方信徒形成橫列或直列 4 格，必須建造鳥居。</li><li>玩家從該線 4 格中選擇 1 格建立鳥居。</li><li>該線其他未受保護的信徒會放回供應區。</li><li>若同時形成多條直線，可依序選擇建造順序。</li></ul></section>
-<section class="section"><h2>勝利條件</h2><ul><li>場上同時有 9 枚己方信徒，立即獲勝。</li><li>已建成 4 座己方鳥居，立即獲勝。</li></ul></section>
-<section class="section"><h2>模式與 AI</h2><ul><li>紅方與藍方可分別設為玩家、隨機、AI。</li><li>開局可選標準、隨機、相同。</li><li>AI 使用 MCTS 搜尋並顯示勝率估計。</li></ul></section>
-<footer>規則來源：舊版 `Torii.html`。</footer>
+<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回首頁</a></div>
+<h1>跳躍森靈 Torii</h1>
+<p class="lead">本說明採用不含森靈能力的基礎對戰。玩家使用 1、2、3 行動板塊移動森靈，在沿途散播信徒，形成完整直線後建立鳥居。</p>
+<div class="meta"><span class="pill">2 人</span><span class="pill">15–30 分鐘</span><span class="pill">4×4 棋盤</span><span class="pill">行動板塊</span></div>
+<section class="section"><h2>配件與目標</h2><ul><li>4×4 棋盤、紅藍森靈各 1 枚、雙方信徒各 9 枚、鳥居各 4 座，以及每方 1、2、3 行動板塊各 1 枚。</li><li>在場上同時保有 9 名己方信徒，或先建立 4 座己方鳥居，即可獲勝。</li></ul></section>
+<section class="section"><h2>標準設置</h2><ol><li>紅方森靈放在第 2 列第 2 欄，藍方森靈放在第 3 列第 3 欄。</li><li>紅方的 2 號板塊與藍方的 1 號板塊先翻至已使用面。</li><li>其餘信徒與鳥居放在各自供應區，由紅方先手。</li></ol></section>
+<section class="section"><h2>完整回合</h2><ol><li>選擇自己一枚尚未使用的 1、2、3 板塊，並走足該數字的步數。</li><li>森靈逐步向上下左右相鄰格移動，不能斜走。</li><li>在每個實際停留的格子放置己方信徒；若有對手信徒則以己方信徒取代。</li><li>若形成橫向或直向四格己方信徒，必須在該線上建立鳥居。</li></ol></section>
+<section class="section"><h2>移動與跳躍</h2><ul><li>路徑必須剛好走足板塊數字；同一回合不能重訪格子，也不能回到起點。</li><li>森靈不能停在另一名森靈所在格。</li><li>遇到對手森靈阻隔所在路徑時，依跳躍規則越過該段；起點與被越過的格子不放置信徒。</li><li>鳥居所在格不放置信徒，也不會被一般信徒取代。</li></ul></section>
+<section class="section"><h2>建立鳥居</h2><ul><li>己方信徒填滿同一列或同一行四格時，立即從該線選一格放置己方鳥居。</li><li>鳥居所在格的信徒受到保護；該線其餘沒有鳥居保護的信徒移回供應區。</li><li>若一次行動同時形成多條完整直線，依序處理所有仍成立的建造。</li></ul></section>
+<section class="section"><h2>板塊重置與勝利</h2><ul><li>使用過的板塊翻至已使用面；當自己的三枚板塊都已使用，於回合結束時全部重置。</li><li>場上同時有 9 名己方信徒，或建成第 4 座己方鳥居時立即獲勝。</li></ul></section>
+<footer><a href="https://tw.emperors4.com/files/rules/2024/08/Torii_Rulebook--Cn-.pdf">官方中文規則</a> · <a href="https://boardgamegeek.com/boardgame/424808/torii">BoardGameGeek</a></footer>
 </main></body></html>

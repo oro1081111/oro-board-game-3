@@ -152,6 +152,13 @@
     .difficulty-btn.selected { border-color: #777; color: #000; box-shadow: 0 5px 10px rgba(0,0,0,.18); }
     .info-box ol, .info-box ul { margin: 8px 0 0; padding-left: 1.4em; }
     .info-box li { margin: 6px 0; }
+    .game-cover { display: block; width: min(100%, 360px); max-height: 360px; margin: 0 auto; object-fit: contain; }
+    .game-facts { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; margin: 14px 0 0; }
+    .game-facts dt { color: #777; font-weight: 800; }
+    .game-facts dd { margin: 0; }
+    .info-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+    .info-link { display: grid; min-height: 46px; place-items: center; padding: 9px 12px; border: 2px solid var(--line); border-radius: 8px; background: white; color: #2e2a2f; font-weight: 900; text-align: center; text-decoration: none; }
+    .info-link:hover { background: #f3f1e8; }
     .log-list { margin: 0; padding-left: 1.2em; }
     .log-list li { margin: 7px 0; }
     .desktop-card small { color: #777; display: block; line-height: 1.5; }
@@ -742,7 +749,7 @@ function render() {
     `後手：${state.second}`,
     `AI 迭代：${state.iterations}`,
     `可返回步數：${state.history.length}`,
-    '<small>規則依 2.0 程式碼：放置、翻轉相鄰、4 連線收取、先 3 分勝。</small>'
+    '<small>簡易模式：放置、翻轉相鄰棋、收取同色四連線，先得 3 分獲勝。</small>'
   ].join('<br>');
   $('undoMove').disabled = state.history.length === 0;
 }
@@ -826,16 +833,19 @@ function renderChoices() {
 function renderInfo() {
   $('tab-log').innerHTML = `<div class="info-box"><h3>行動日誌</h3><ol class="log-list">${state.logs.map((log) => `<li>${log}</li>`).join('')}</ol></div>`;
   $('tab-rules').innerHTML = [
-    infoBox('初始設置', '<ul><li>4x4 棋盤，初始全空。</li><li>雙方分數皆為 0。</li><li>先手先行，目標為先取得 3 分。</li><li>棋子只有一種，為橘/綠雙面棋。</li></ul>'),
-    infoBox('回合流程', '<ol><li>目前玩家選擇橘色面或綠色面。</li><li>在任一空格放置一枚靈魂棋。</li><li>放置後，翻轉上下左右相鄰且已有棋子的靈魂，斜角不翻。</li><li>若出現 4 格同色橫列、直行或對角線，進入收取階段。</li></ol>'),
-    infoBox('收取與滿盤', '<ul><li>形成一條或多條連線時，玩家選擇其中一條收取。</li><li>被收取的 4 格清空，目前玩家得 1 分。</li><li>若回合結束時棋盤全滿，移除所有與本回合放置顏色相同的棋子。</li></ul>'),
-    infoBox('勝利條件', '<p>任一玩家達到 3 分立即獲勝。</p>')
+    infoBox('本頁採用的模式', '<p>蒐靈祭正式規則包含角色能力；本頁採用「禿鷹老師」簡易模式，雙方沒有個別能力，專注於放置、翻面與四連線收取。</p>'),
+    infoBox('配件與目標', '<ul><li>4×4 靈魂墊一面、16 枚橘／綠雙面靈魂棋，以及雙方計分標記。</li><li>兩位玩家共用同一批雙面棋；棋子不是分屬某位玩家。</li><li>每收取一組同色四連線得 1 分，先取得 3 分者獲勝。</li></ul>'),
+    infoBox('初始設置', '<ol><li>將 4×4 靈魂墊放在中央，16 枚靈魂棋放在一旁作為共同供應。</li><li>雙方分數均為 0，決定先手玩家。</li><li>棋盤初始為空。</li></ol>'),
+    infoBox('完整回合', '<ol><li><strong>選擇顏色：</strong>拿取一枚靈魂棋，選擇要讓橘色面或綠色面朝上。</li><li><strong>放置：</strong>將棋放在任一空格。</li><li><strong>翻轉：</strong>把新棋上、下、左、右正交相鄰的所有棋子翻到另一面；斜角相鄰不翻。</li><li><strong>檢查連線：</strong>檢查棋盤是否出現橫向、直向或斜向的同色四連線。</li></ol>'),
+    infoBox('收取靈魂', '<ul><li>若形成一條或多條同色四連線，當回合玩家必須選擇其中一條收取。</li><li>移除該線的 4 枚棋並放回共同供應，當回合玩家獲得 1 分。</li><li>即使同時形成多條連線，每回合也只收取其中一條。</li></ul>'),
+    infoBox('滿盤處理與勝利', '<ul><li>完成收取後若棋盤仍是全滿，移除所有與本回合新放棋正面顏色相同的棋，放回供應區。</li><li>任一玩家取得第 3 分時，遊戲立即結束並由該玩家獲勝。</li></ul>')
   ].join('');
   $('tab-intro').innerHTML = [
-    infoBox('基本介紹', '<p>蒐靈祭 Soulaween 是以放置、翻面、製造同色 4 連線與收取為核心的 4x4 抽象棋。</p>'),
-    infoBox('設計師介紹', '<p>設計者：陳曦。</p>'),
-    infoBox('出版社介紹', '<p>出版社：玩聚設計。</p>'),
-    infoBox('此版本完成內容', '<ul><li>真實落子、翻轉、連線、收取與勝負判定。</li><li>人類、隨機 AI、MCTS AI。</li><li>返回上一步、行動日誌、設定與勝率條。</li></ul>')
+    '<img class="game-cover" src="assets/covers/soulaween.jpg" alt="蒐靈祭 Soulaween 遊戲封面">',
+    infoBox('遊戲介紹', '<p>死神學園一年一度最熱鬧的「蒐靈祭」即將開始。玩家扮演死神的實習生，放出靈魂並讓彼此碰撞變色，設法排出四枚同色靈魂後一舉收取。棋盤只有 4×4，卻會因每次放置引發相鄰翻面而快速改變，是一款規則精簡、局勢多變的雙人抽象策略遊戲。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 15–30 分鐘</dd><dt>年齡</dt><dd>6 歲以上</dd><dt>出版年份</dt><dd>2019 年</dd></dl>'),
+    infoBox('設計與美術', '<p>遊戲設計：陳曦 Shi Chen。美術：費子軒 Tzu-Hsuan Fei、張可靚 Ke-Ching Chang。</p>'),
+    infoBox('出版資訊', '<p>出版社：玩聚設計 Play With Us Design。遊戲曾獲 2019 臺灣原創桌遊博覽會最佳機制與最佳美術獎。</p>'),
+    '<nav class="info-links" aria-label="外部遊戲資料"><a class="info-link" href="https://boardgamegeek.com/boardgame/269766/soulaween" target="_blank" rel="noopener noreferrer">BGG 頁面</a><a class="info-link" href="https://pwud.ga/product/soulaween-v4/" target="_blank" rel="noopener noreferrer">官方介紹</a><a class="info-link" href="https://wobgames.net/download/soulaween-boardgame-rulebook-english.pdf" target="_blank" rel="noopener noreferrer">官方規則</a></nav>'
   ].join('');
 }
 

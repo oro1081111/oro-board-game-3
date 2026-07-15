@@ -1,18 +1,15 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-Hant">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>花園棋 Mijnlieff 規則</title><link rel="stylesheet" href="../../assets/manual.css"></head>
 <body><main class="page">
-<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回目錄</a></div>
+<div class="topbar"><div class="brand">Rules Manual</div><a class="back" href="../../index.html">返回首頁</a></div>
 <h1>花園棋 Mijnlieff</h1>
-<p class="lead">依 `棋類遊戲2.0` 目前程式碼整理。這是一款雙人花園抽象棋，玩家輪流放置棋子，每顆棋子會限制下一位玩家的合法落點；最後依直線連續棋子計分。</p>
-<div class="meta"><span class="pill">2 人</span><span class="pill">抽象策略</span><span class="pill">連線計分</span><span class="pill">支援隨機 AI / MCTS AI</span></div>
-<section class="section"><h2>配件</h2><ul><li>棋盤 1 面，可選 A/B/C 模式。</li><li>深色玩家棋子 8 枚，淺色玩家棋子 8 枚。</li><li>每位玩家各有 4 種棋子，每種 2 枚：十字棋、交叉棋、內圈棋、外圈棋。</li></ul><div class="icon-row"><span class="icon dark">＋</span><span class="icon dark">×</span><span class="icon dark circle">●</span><span class="icon dark circle">○</span><span class="icon light">＋</span><span class="icon light">×</span><span class="icon light circle">●</span><span class="icon light circle">○</span></div></section>
-<section class="section"><h2>棋盤模式</h2><table><tr><th>模式</th><th>棋盤</th><th>不可用格</th><th>先手第一步特例</th></tr><tr><td>A 模式</td><td>4x4 經典</td><td>無</td><td>第一步只能下在外圈。</td></tr><tr><td>B 模式</td><td>4x5 缺角</td><td>左上兩格、右下兩格</td><td>除外圈外，允許第 2 列第 2 格、第 3 列第 4 格。</td></tr><tr><td>C 模式</td><td>4x6 工字</td><td>第一列與第四列的左右兩端各兩格</td><td>除外圈外，允許第 2 列第 2/5 格、第 3 列第 2/5 格。</td></tr></table><h3>A 模式示意</h3><div class="board cols-4"><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div><div class="cell">□</div></div></section>
-<section class="section"><h2>棋子效果</h2><table><tr><th>棋子</th><th>對下一手的限制</th></tr><tr><td>十字棋 ＋</td><td>下一位玩家只能下在與此棋同一列或同一行的空格。</td></tr><tr><td>交叉棋 ×</td><td>下一位玩家只能下在與此棋同一斜線方向的空格。</td></tr><tr><td>內圈棋 ●</td><td>下一位玩家必須下在接觸此棋的位置，含 8 方向相鄰格。</td></tr><tr><td>外圈棋 ○</td><td>下一位玩家必須下在不接觸此棋的位置。</td></tr></table></section>
-<section class="section"><h2>設置</h2><ol><li>選擇棋盤模式。</li><li>每位玩家拿取 8 枚棋子：4 種各 2 枚。</li><li>深色玩家先手。</li><li>第一手不得下在棋盤內圈，除非該模式列有特例格。</li></ol></section>
-<section class="section"><h2>回合流程</h2><ol><li>目前玩家從自己尚未用完的棋子類型中選 1 枚。</li><li>依上一手棋子的效果，選擇一個合法空格放置。</li><li>若沒有上一手，或前一位玩家被跳過後限制被清空，則可下在任何合法空格。</li><li>放置後，換對手回合，且本手棋子的類型成為對手下一手限制。</li></ol></section>
-<section class="section"><h2>跳過與終局</h2><ul><li>若目前玩家沒有棋子，遊戲立即結束，不進入跳過判定。</li><li>若目前玩家仍有棋子，才檢查目前限制下是否有合法落點。</li><li>若有棋子但沒有合法落點，該玩家跳過。</li><li>跳過後限制會清空，下一位玩家可下任意合法空格。</li></ul></section>
-<section class="section"><h2>計分與勝利</h2><ul><li>檢查所有橫列、直行與斜線。</li><li>同一玩家連續 3 枚成線得 1 分。</li><li>同一玩家連續 4 枚或更多成線得 2 分。</li><li>分數高者勝；同分為和局。</li></ul></section>
-<footer>規則來源：`src/gameLogic.ts` 與 `src/MijnlieffGame.tsx`。</footer>
+<p class="lead">雙方輪流放置四種昆蟲棋；上一枚棋的圖案會限制下一位玩家的合法落點。遊戲結束後依橫、直、斜連線計分。</p>
+<div class="meta"><span class="pill">2 人</span><span class="pill">約 15 分鐘</span><span class="pill">落點限制</span><span class="pill">連線計分</span></div>
+<section class="section"><h2>配件與目標</h2><ul><li>每位玩家有 8 枚同色棋：十字、交叉、實心圓、空心圓各 2 枚。</li><li>以己方棋組成橫、直或斜線，取得比對手更高的分數。</li></ul></section>
+<section class="section"><h2>初始設置</h2><ol><li>選擇棋盤配置，雙方各拿取一組棋。</li><li>棋盤初始為空，由深色玩家先手。</li><li>第一枚棋必須放在棋盤外圍的可用格。</li></ol></section>
+<section class="section"><h2>四種落點限制</h2><ul><li><strong>十字：</strong>對手下一枚棋必須放在同一列或同一行。</li><li><strong>交叉：</strong>對手下一枚棋必須放在同一條斜線。</li><li><strong>實心圓：</strong>對手下一枚棋必須放在周圍相鄰八格之一。</li><li><strong>空心圓：</strong>對手下一枚棋必須放在相鄰八格以外的空格。</li></ul></section>
+<section class="section"><h2>無法落子與結束</h2><ul><li>輪到玩家時若手上已無棋子，遊戲立即結束。</li><li>仍有棋但沒有合法落點時，跳過該回合並清除落點限制。</li><li>若雙方連續都沒有合法落點，遊戲結束。</li></ul></section>
+<section class="section"><h2>計分</h2><ul><li>同色棋橫、直或斜向連續 3 枚得 1 分。</li><li>同色棋連續 4 枚以上得 2 分。</li><li>分數較高者獲勝，同分則為平手。</li></ul></section>
+<footer><a href="https://boardgamegeek.com/filepage/307349/garden-chinese-rules">Garden 中文規則</a> · <a href="https://boardgamegeek.com/boardgame/72667/mijnlieff">BoardGameGeek</a></footer>
 </main></body></html>
-

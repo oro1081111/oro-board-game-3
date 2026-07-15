@@ -103,15 +103,23 @@
     credit: '設計者：Andy Hopwood，出版社：Taiwan Boardgame Design',
     firstName: '深色',
     secondName: '淺色',
-    designer: 'Andy Hopwood。官方 Hopwood Games 頁面標示 Mijnlieff 為其設計，並以 Garden 推出新版。',
-    publisher: '花園棋（Garden）英中版本由 Taiwan Boardgame Design 推出；早期 Mijnlieff 另有其他出版版本。',
-    intro: '玩家放置四種效果棋，上一枚棋子的類型會限制對手下一枚棋的落點。遊戲結束後以三連線與四連線計分。',
+    designer: '遊戲設計：Andy Hopwood。Garden 版本美術：Daisy Ching-Yi Chen。',
+    publisher: '《花園棋 Garden》為 Mijnlieff 系統的新美術版本，由 TBD 台灣桌遊設計推出英中版本。',
+    introHtml: '<p>風和日麗的午後，蝴蝶、瓢蟲、蜻蜓與蝸牛在花瓣上展開搶地盤比賽。玩家輪流放置四種昆蟲棋；每枚棋都會限制對手下一枚棋可以落下的位置，因此每一步既要延伸自己的連線，也要避免替對手留下好位置。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 15 分鐘</dd><dt>年齡</dt><dd>8 歲以上</dd><dt>類型</dt><dd>連線、落點限制、抽象策略</dd></dl>',
+    cover: '../../assets/covers/mijnlieff.png',
+    links: [
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/72667/mijnlieff' },
+      { label: '官方介紹', href: 'https://www.tbd.com.tw/products/garden' },
+      { label: '中文規則', href: 'https://boardgamegeek.com/filepage/307349/garden-chinese-rules' }
+    ],
     openings: [{ value: 'A', label: '經典 A' }, { value: 'B', label: '缺角 B' }, { value: 'C', label: '工字 C' }],
     rolloutLimit: 40,
     rules: [
-      { title: '回合流程', html: '<ol><li>選擇手上仍有的棋子。</li><li>依上一枚棋子的效果放到合法空格。</li><li>十字限制同行或同列；交叉限制同斜線；內圈限制相鄰；外圈限制非相鄰。</li></ol>' },
-      { title: '跳過與結束', html: '<p>輪到玩家時若手上沒有棋，立即結束遊戲。若仍有棋但沒有合法落點才跳過，並清除落點限制。雙方連續無法落子時也結束。</p>' },
-      { title: '計分', html: '<p>橫、直、斜連續 3 枚得 1 分；連續 4 枚以上得 2 分。高分者勝，同分和局。</p>' }
+      { title: '配件與目標', html: '<ul><li>每位玩家使用同一顏色的 8 枚棋子：十字、交叉、實心圓、空心圓各 2 枚。</li><li>目標是在棋盤上組成橫向、直向或斜向的己方連線，取得比對手更高的分數。</li></ul>' },
+      { title: '初始設置', html: '<ol><li>選擇棋盤配置，雙方各拿取一組 8 枚棋子。</li><li>棋盤初始為空，由深色玩家先手。</li><li>第一枚棋必須放在棋盤外圍的可用格；之後的落點由上一枚棋的圖案決定。</li></ol>' },
+      { title: '四種落點限制', html: '<ul><li><strong>十字：</strong>對手下一枚棋必須放在同一列或同一行。</li><li><strong>交叉：</strong>對手下一枚棋必須放在同一條斜線。</li><li><strong>實心圓：</strong>對手下一枚棋必須放在周圍相鄰八格之一。</li><li><strong>空心圓：</strong>對手下一枚棋必須放在相鄰八格以外的空格。</li></ul><p>落點必須同時是棋盤上的可用空格；已放棋或不屬於棋盤的格子不能使用。</p>' },
+      { title: '無法落子與結束', html: '<ul><li>輪到玩家時若手上已沒有任何棋子，遊戲立即結束。</li><li>玩家仍有棋子、但依目前限制找不到合法落點時，跳過該回合並清除限制，讓對手可重新選擇任一合法空格。</li><li>若雙方連續都沒有合法落點，遊戲結束。</li></ul>' },
+      { title: '計分與勝負', html: '<ul><li>同色棋橫、直或斜向連續 3 枚，該線得 1 分。</li><li>同色棋連續 4 枚以上，該線得 2 分。</li><li>遊戲結束後加總所有連線；分數較高者獲勝，同分則為平手。</li></ul>' }
     ],
     create(mode) {
       return {
@@ -242,15 +250,24 @@
     title: '聖托里尼 Santorini',
     credit: '設計者：Gordon Hamilton，出版社：Roxley Games',
     firstName: '紅方', secondName: '藍方',
-    designer: 'Gordon Hamilton。', publisher: 'Roxley Games；本頁採用不含神力的基本規則。',
-    intro: '雙方各控制兩名工人，每回合移動一名工人並在相鄰格建築。登上第三層或封鎖對手即可獲勝。',
+    designer: '遊戲設計：Gordon Hamilton。Roxley 版本美術與視覺設計由 Mr. Cuddington 團隊參與。', publisher: 'Roxley Games。此頁採用不含神力卡的雙人基本對戰。',
+    introHtml: '<p>在愛琴海的小島上，雙方各帶領兩名工人逐層建起白色村落。每回合先移動、再建築；玩家必須同時替自己鋪出登高路線，並用建築或圓頂阻斷對手。規則精簡，但位置、層高與行動順序會形成高度互動的立體策略。</p><dl class="game-facts"><dt>人數</dt><dd>2 人基本對戰</dd><dt>時間</dt><dd>約 20 分鐘</dd><dt>年齡</dt><dd>8 歲以上</dd><dt>類型</dt><dd>立體建築、位置控制、抽象策略</dd></dl>',
+    cover: '../../assets/covers/santorini.png',
+    links: [
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/194655/santorini' },
+      { label: '官方介紹', href: 'https://roxley.com/products/santorini' },
+      { label: '官方規則', href: 'https://files.roxley.com/Santorini-Rulebook-Web-2016.08.14.pdf' }
+    ],
     openings: [{ value: 'standard', label: '標準空盤' }], rolloutLimit: 70,
     animationDuration(action) { return action.type === 'place' ? 220 : action.previewed ? 240 : 420; },
     animationOptions() { return { spring: true }; },
     rules: [
-      { title: '初始設置', html: '<p>紅方先放置兩名工人，接著藍方放置兩名工人，再由紅方開始第一回合。</p>' },
-      { title: '完整回合', html: '<ol><li>選自己一名工人。</li><li>往周圍八格移動一格，最多向上爬一層。</li><li>在移動後的工人周圍八格建築一層。</li></ol>' },
-      { title: '勝利', html: '<p>工人移動到第三層立即勝利；或完成建築後使對手沒有任何合法移動，也立即勝利。</p>' }
+      { title: '配件與目標', html: '<ul><li>使用 5×5 棋盤、雙方各 2 名工人，以及第一層、第二層、第三層與圓頂建築。</li><li>讓自己的工人由較低位置移動到第三層，即可立即獲勝。</li></ul>' },
+      { title: '初始設置', html: '<ol><li>棋盤初始沒有建築。</li><li>紅方在任意兩個不同空格放置兩名工人。</li><li>藍方再於其餘空格放置兩名工人。</li><li>四名工人放妥後，由紅方開始第一個完整回合。</li></ol>' },
+      { title: '完整回合', html: '<ol><li><strong>選擇：</strong>選擇自己一名仍可合法移動的工人。</li><li><strong>移動：</strong>移到周圍八格中的一格。</li><li><strong>建築：</strong>在移動後工人周圍八格中的一格加蓋一層。</li></ol><p>除非工人因登上第三層而立即獲勝，否則每回合必須依序完成移動與建築。</p>' },
+      { title: '移動規則', html: '<ul><li>目的地不能有其他工人，也不能有圓頂。</li><li>工人可以留在相同高度、向下移動任意層，或最多向上爬一層。</li><li>不可一次向上跨越兩層以上。</li></ul>' },
+      { title: '建築規則', html: '<ul><li>建築格不能有工人，也不能已有圓頂。</li><li>可在空地蓋第一層，或在既有建築上依序加蓋第二、第三層。</li><li>第三層上再建築時放置圓頂；有圓頂的格子之後不能再進入或建築。</li><li>工人剛離開的起始格若符合上述條件，也可以成為本回合的建築位置。</li></ul>' },
+      { title: '勝負判定', html: '<ul><li>自己的工人從較低層移動到第三層時，立即獲勝。</li><li>輪到玩家時若兩名工人都沒有任何合法移動，該玩家落敗。</li></ul>' }
     ],
     create() { return { turn: 'first', board: Array.from({ length: 5 }, () => Array(5).fill(0)), workers: [], phase: 'placement', winner: null }; },
     actions(state) {
@@ -424,9 +441,15 @@
   }
 
   games['zombie-jump'] = {
-    title: '殭屍棋 JUMP', credit: '設計者：來源未載，出版社：來源未載',
-    firstName: '紅方', secondName: '藍方', designer: '1.0 與 2.0 參考程式未記載設計者。', publisher: '1.0 與 2.0 參考程式未記載出版社。',
-    intro: '玩家讓殭屍復活、移動、堆疊與跳躍。跳過對手殭屍可依等級得分，先得到 8 分獲勝。',
+    title: '殭屍棋 JUMP', credit: '設計者：Kevin Zhang，出版社：MAGICA',
+    firstName: '紅方', secondName: '藍方', designer: '遊戲設計與美術：Kevin Zhang。', publisher: 'MAGICA 瑪吉卡工作室；2025 年推出中文／英文版本。',
+    introHtml: '<p>陰陽兩界的殭屍在 5×5 棋盤上甦醒。玩家可以讓陰間棋子復活、移動並堆疊，也能以較高總等級的殭屍越過棋群，將對手送回陰間並取得分數。棋子的等級既是行動資源，也是跳躍力量，何時堆高、何時拆散會直接改變戰局。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 10–20 分鐘</dd><dt>年齡</dt><dd>6 歲以上</dd><dt>類型</dt><dd>跳躍、堆疊、組合移動</dd></dl>',
+    cover: '../../assets/covers/zombie-jump.jpg',
+    links: [
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgameversion/768073/chineseenglish-edition' },
+      { label: '官方介紹', href: 'https://gamemarket.jp/game/186886' },
+      { label: '繁中規則介紹', href: 'https://www.punchboardgame.com/zh-hant/blog/posts/%E6%AE%AD%E5%B1%8D%E6%A3%8B-jump-%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87%E7%89%88-%E9%96%8B%E7%AE%B1%E5%8F%8A%E8%A6%8F%E5%89%87%E4%BB%8B%E7%B4%B9-by-%E9%AB%98%E9%9B%84%E9%BE%90%E5%A5%87%E6%A1%8C%E9%81%8A-magica' }
+    ],
     openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 90,
     animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
     animationOptions() { return { spring: true }; },
@@ -449,9 +472,12 @@
       return actions[actions.length - 1];
     },
     rules: [
-      { title: '三種行動', html: '<p>每回合可從陰間復活一枚棋、將棋往正交相鄰格移動，或沿正交方向跳過一串連續棋。</p>' },
-      { title: '堆疊', html: '<p>等級 1 可疊上單枚 2 或 3；等級 2 可疊上單枚 3；由單枚 1 與單枚 2 組成的總等級 3 堆疊可疊上單枚 3；等級 1 可疊上總等級 5 的堆疊。</p>' },
-      { title: '跳躍與勝利', html: '<p>被跳過棋的總等級不得超過跳躍棋。對手棋拆回對手陰間並計分；跳出盤外的己方棋拆回己方陰間。跳後可連跳或停止，先得 8 分勝。</p>' }
+      { title: '配件與目標', html: '<ul><li>使用 5×5 棋盤；雙方各有等級 1、2、3 的殭屍棋，並各有一個陰間區域。</li><li>跳過對手棋可依被跳過棋的等級得分；先取得 8 分的玩家立即獲勝。</li></ul>' },
+      { title: '初始設置', html: '<ul><li>藍方位於棋盤上側：第二排放滿 5 枚等級 1，最外排依序放置等級 2、空格、等級 3、空格、等級 2。</li><li>紅方以相同配置放在棋盤下側，並由紅方先手。</li><li>雙方陰間各另放 2 枚等級 2 棋，等待復活。</li></ul>' },
+      { title: '回合行動', html: '<p>輪到玩家時選擇下列一種行動：</p><ol><li><strong>復活：</strong>從自己的陰間選一枚棋，放到棋盤任一空格。</li><li><strong>移動：</strong>將自己一枚棋移到上下左右相鄰的空格。</li><li><strong>堆疊：</strong>依堆疊規則，將自己的棋移到上下左右相鄰的己方棋上。</li><li><strong>跳躍：</strong>沿上下左右直線越過一串連續棋子，落在其後空格或直接跳出棋盤。</li></ol>' },
+      { title: '堆疊規則', html: '<ul><li>等級 1 單棋可疊到己方等級 2 或等級 3 單棋上。</li><li>等級 2 單棋可疊到己方等級 3 單棋上。</li><li>由等級 1 單棋疊上等級 2 單棋形成的「總等級 3 堆疊」，可再疊到己方等級 3 單棋上。</li><li>等級 1 單棋可疊到己方總等級 5 的堆疊上。</li><li>堆疊棋的總等級等於其中所有單棋等級的總和。</li></ul>' },
+      { title: '跳躍、吃子與陰間', html: '<ul><li>跳躍方向的相鄰格必須有棋，且其後為可落腳的空格或棋盤外。</li><li>一次跳躍可越過同一直線上一串連續棋；被越過棋的總等級不得高於跳躍棋的總等級。</li><li>被跳過的對手棋會拆成單枚送回對手陰間，跳躍玩家依其總等級得分。</li><li>跳過己方棋不會得分，也不會移除己方棋。</li><li>若跳出棋盤，跳躍棋拆成單枚回到自己的陰間，並結束回合。</li></ul>' },
+      { title: '連跳與勝利', html: '<ul><li>跳躍落地後若仍有合法跳躍，可以用同一枚棋繼續跳；同一串連跳不能回到已走過的位置。</li><li>有後續跳躍時，玩家也可選擇停止，立即結束回合。</li><li>任一玩家累積 8 分，遊戲立即結束並由該玩家獲勝。</li></ul>' }
     ],
     create() {
       const board = Array.from({ length: 5 }, () => Array(5).fill(null));
@@ -653,14 +679,16 @@
 
   games['four-color-chess'] = {
     title: '四色棋 Four Color Chess', credit: '設計者：奧羅，出版社：奧羅桌遊設計工作室',
-    firstName: '黑方', secondName: '白方', designer: '奧羅。1.0 遊戲介紹記載此作為其第一款雙人抽象棋。', publisher: '奧羅桌遊設計工作室；目前為程式練習與非商業分享版本。',
-    intro: '落點的格色會指定對手下一回合必須移動的棋子。玩家持續改變焦點，直到被指定的棋無路可走。',
+    firstName: '黑方', secondName: '白方', designer: '遊戲設計：奧羅。這是設計者的第一款雙人抽象棋作品。', publisher: '獨立創作與非商業分享版本，目前沒有正式商業出版社。',
+    introHtml: '<p>四色棋把「下一步要動哪一枚棋」交給上一回合的落點決定。四種顏色同時存在於棋盤與棋子上；棋子停在哪一種顏色的格子，就會指定對手下一回合必須移動同色棋。玩家要在滑行、阻擋與指定焦點之間連續布局，迫使對手被指定的棋無路可走。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 10–20 分鐘</dd><dt>類型</dt><dd>滑行、指定行動、封鎖</dd><dt>版本</dt><dd>獨立創作</dd></dl>',
+    links: [{ label: '創作來源', href: 'https://www.instagram.com/p/B5bsCvqla9f/?igsh=dGlyZndjbzR6ZGR3' }],
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 80,
     animationDuration(action) { return action.type === 'move' ? 360 : 0; },
     rules: [
-      { title: '初始設置', html: '<p>白方棋放在最上列，黑方棋放在最下列，棋子顏色對應所在格色。黑方先手並先選一枚有合法移動的黑棋作為焦點。</p>' },
-      { title: '移動焦點棋', html: '<p>焦點棋可沿正交直線滑行到任一空格，不能跳過棋子。落點格色會把焦點移到對手同色棋上。</p>' },
-      { title: '勝利', html: '<p>輪到玩家時，被焦點指定的棋子沒有任何合法移動，對手立即獲勝。</p>' }
+      { title: '配件與目標', html: '<ul><li>4×4 四色棋盤一面；每一列各含紅、藍、黃、綠四種格色。</li><li>黑方與白方各有紅、藍、黃、綠棋各 1 枚。</li><li>讓對手回合中被指定的棋子沒有合法移動，即可獲勝。</li></ul>' },
+      { title: '初始設置', html: '<ol><li>白方四枚棋放在最上列，黑方四枚棋放在最下列；每枚棋的顏色與起始格顏色相同。</li><li>黑方先手，先從有合法移動的黑棋中選擇一枚作為第一枚焦點棋。</li><li>若選擇隨機棋盤，四種格色仍會在每列各出現一次。</li></ol>' },
+      { title: '焦點與移動', html: '<ol><li>回合開始時，只有焦點指定的棋子可以移動。</li><li>該棋可沿上下左右任一方向直線滑行，並停在路徑上的任一空格。</li><li>棋子不能斜走、不能跳過其他棋子，也不能停在有棋的格子。</li><li>完成移動後，查看落點的格色；對手同色棋成為下一回合的焦點棋。</li></ol>' },
+      { title: '勝利條件', html: '<p>若輪到玩家時，焦點指定的棋子在四個方向都沒有任何合法空格可到達，該玩家立即落敗，上一位玩家獲勝。</p>' }
     ],
     create(mode, previous) {
       let pattern;
@@ -777,14 +805,17 @@
   }
   games['four-moves-chess'] = {
     title: '四步棋 Four Moves Chess', credit: '設計者：來源未載，遊戲名稱：奧羅暫定',
-    firstName: '紅方', secondName: '藍方', designer: '具體設計者不可考。1.0 記載此玩法來自 IG 帳號 celine.et.sasha 的短片，網頁名稱由奧羅暫定。', publisher: '沒有查到正式出版社；目前為非商業網頁實作。',
-    intro: '棋子所在格的數字決定本回合步數。每一步沿正交方向跳到下一個可停留格，離開後原格封閉；讓對手無路可走即可獲勝。',
+    firstName: '紅方', secondName: '藍方', designer: '原始短片未列出可核實的個人設計者；玩法來源為 Instagram 帳號 celine.et.sasha，中文與英文遊戲名稱由奧羅暫定。', publisher: '未查到正式出版版本或出版社；目前為依公開玩法整理的非商業版本。',
+    introHtml: '<p>四步棋是一款以數字格控制移動長度的雙人封鎖遊戲。棋子所在格的數字決定本回合必須走幾步，每一步都沿直線跳到下一個仍存在的格子；棋子離開後，原本的格子會從棋盤上移除。棋盤因此逐回合縮減，玩家要安排路徑並留下退路，直到對手再也無法完成移動。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 10–15 分鐘</dd><dt>類型</dt><dd>路徑規劃、逐步移除、封鎖</dd><dt>名稱</dt><dd>暫定名稱</dd></dl>',
+    links: [{ label: '原始玩法短片', href: 'https://www.instagram.com/reel/DM0XE8Mo41a/?igsh=MXJic2dpODF4NndxdA==' }],
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 50,
     animationDuration(action) { return action.type === 'move' ? action.path.length * 250 : 0; },
     rules: [
-      { title: '步數', html: '<p>所在格為數字 n 時必須移動 n 步；所在格為 S 時可選 1 到 4 步。</p>' },
-      { title: '每一步', html: '<p>只能往上下左右，並跳過已封閉格與棋子，停在該方向下一個可停留格。同一回合不能重訪格子。</p>' },
-      { title: '勝利', html: '<p>完成移動後起始格封閉。若輪到對手時對手沒有任何合法目的地，剛完成回合的玩家獲勝。</p>' }
+      { title: '配件與目標', html: '<ul><li>使用 4×4 數字棋盤，格子標示 1、2、3、4 或起點 S。</li><li>紅、藍雙方各有 1 枚空心棋子，讓玩家仍能看見棋子下方的格子數字。</li><li>讓對手在自己的回合無法完成任何合法路徑，即可獲勝。</li></ul>' },
+      { title: '初始設置', html: '<ol><li>依所選配置排列 16 個格子。</li><li>紅、藍棋分別放在兩個 S 格上，由紅方先手。</li><li>經典配置固定；隨機配置會重新排列數字與起點；相同配置沿用上一盤的排列。</li></ol>' },
+      { title: '決定本回合步數', html: '<ul><li>棋子位於數字格時，本回合必須走足該數字所示的步數。</li><li>棋子位於 S 格時，可選擇走 1、2、3 或 4 步。</li><li>玩家直接選擇最終可到達的高亮格，棋子會依合法路徑逐步移動。</li></ul>' },
+      { title: '每一步的走法', html: '<ul><li>每一步只能選擇上、下、左、右其中一個方向，不能斜走。</li><li>沿所選方向略過已移除的格子與另一枚棋子，停在該方向遇到的下一個仍存在且未被占用的格子。</li><li>同一回合不能再次停在已經過的格子，也不能停到對手棋所在格。</li><li>整條路徑必須剛好完成指定步數；少走或多走都不合法。</li></ul>' },
+      { title: '移除格子與勝利', html: '<ul><li>完整移動結束後，該回合的起始格會從棋盤上移除，之後只能被跳過，不能再停留。</li><li>換對手回合後，若對手找不到任何能走足指定步數的完整路徑，上一位玩家立即獲勝。</li></ul>' }
     ],
     create(mode, previous) {
       let tiles;
@@ -906,14 +937,23 @@
 
   games.torii = {
     title: '跳躍森靈 Torii', credit: '設計者：陳致寬，出版社：桌遊愛樂事',
-    firstName: '紅方', secondName: '藍方', designer: '陳致寬；1.0 介紹記載其為臺灣原創抽象棋設計團隊作品。', publisher: '桌遊愛樂事。1.0 頁面記載已取得原出版社與設計師同意製作與分享。',
-    intro: '玩家使用 1、2、3 行動板塊移動森靈，在停留格放置或替換信徒；四名信徒連線可建立鳥居。',
+    firstName: '紅方', secondName: '藍方', designer: '遊戲設計：陳致寬 Kuan Chen。美術設計：Julia Reynaud。', publisher: '桌遊愛樂事 EmperorS4。',
+    introHtml: '<p>森靈在森林小徑間跳躍，引領信徒並建立鳥居。玩家每回合選擇一枚 1、2、3 行動板塊，讓森靈走足指定步數，並在沿途停留處散播自己的信徒。四名信徒連成一線便能建立鳥居；玩家必須在擴張信徒與保護既有成果之間掌握節奏。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 15–30 分鐘</dd><dt>年齡</dt><dd>10 歲以上</dd><dt>類型</dt><dd>行動點、連鎖移動、區域建立</dd></dl>',
+    cover: '../../assets/covers/torii.png',
+    links: [
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/424808/torii' },
+      { label: '官方介紹', href: 'https://tw.emperors4.com/game/Torii' },
+      { label: '中文說明書', href: 'https://tw.emperors4.com/files/rules/2024/08/Torii_Rulebook--Cn-.pdf' }
+    ],
     openings: [{ value: 'standard', label: '標準' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }], rolloutLimit: 80,
     animationDuration(action) { return action.type === 'path' && !action.previewed ? action.path.length * 200 : action.type === 'build' ? 200 : 0; },
     rules: [
-      { title: '回合流程', html: '<ol><li>選一張尚未使用的 1、2、3 行動板塊。</li><li>森靈依數字走足步數，不能重訪或回起點。</li><li>在每個實際停留格放置或替換己方信徒。</li></ol>' },
-      { title: '跳躍與鳥居', html: '<p>移動遇到對手森靈所在行列時依 1.0 程式整段跳過，被跳過格不放信徒。四格己方信徒成橫列或直列時，在其中一格建立鳥居並移除該線其他未受鳥居保護的信徒。</p>' },
-      { title: '勝利', html: '<p>場上同時有 9 名己方信徒，或建成 4 座己方鳥居，立即獲勝。</p>' }
+      { title: '配件與目標', html: '<ul><li>使用 4×4 棋盤、紅藍森靈各 1 枚、雙方信徒各 9 枚、鳥居各 4 座，以及每方 1、2、3 行動板塊各 1 枚。</li><li>在場上同時保有 9 名己方信徒，或先建立 4 座己方鳥居，即可獲勝。</li></ul>' },
+      { title: '標準設置', html: '<ol><li>紅方森靈放在第 2 列第 2 欄，藍方森靈放在第 3 列第 3 欄。</li><li>紅方的 2 號板塊與藍方的 1 號板塊先翻至已使用面。</li><li>其餘信徒與鳥居放在各自供應區，由紅方先手。</li></ol>' },
+      { title: '完整回合', html: '<ol><li><strong>選板塊：</strong>選擇自己一枚尚未使用的 1、2、3 板塊；數字就是本回合必須走足的步數。</li><li><strong>移動：</strong>森靈逐步向上下左右相鄰格移動，不能斜走。</li><li><strong>散播信徒：</strong>在每個實際停留的格子放置己方信徒；若有對手信徒則以己方信徒取代。</li><li><strong>建立鳥居：</strong>若形成橫向或直向四格己方信徒，必須在該線上選一格建立鳥居。</li></ol>' },
+      { title: '移動與跳躍', html: '<ul><li>路徑必須剛好走足板塊數字；同一回合不能重訪格子，也不能回到起點。</li><li>森靈不能停在另一名森靈所在格。</li><li>遇到對手森靈阻隔所在路徑時，依跳躍規則越過該段；起點與被越過的格子不放置信徒。</li><li>鳥居所在格不放置信徒，既有鳥居不會被一般信徒取代。</li></ul>' },
+      { title: '建立鳥居', html: '<ul><li>己方信徒填滿同一列或同一行四格時，立即從該線選一格放置己方鳥居。</li><li>鳥居所在格的信徒受到保護；該線其餘沒有鳥居保護的信徒移回供應區。</li><li>若一次行動同時形成多條完整直線，依序處理所有仍成立的建造。</li></ul>' },
+      { title: '板塊重置與勝利', html: '<ul><li>使用過的行動板塊翻至已使用面；當自己的三枚板塊都已使用，於回合結束時全部重置。</li><li>場上同時有 9 名己方信徒，或建成第 4 座己方鳥居時，立即獲勝。</li></ul>' }
     ],
     create(mode, previous) {
       let spirits;
