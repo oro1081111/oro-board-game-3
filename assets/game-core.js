@@ -477,6 +477,7 @@
       phone.style.setProperty('--win-first', winColors.first || 'var(--first)');
       phone.style.setProperty('--win-second', winColors.second || 'var(--second)');
       phone.style.setProperty('--win-draw', winColors.draw || '#d9a441');
+      phone.style.setProperty('--win-draw-text', winColors.drawText || '#a86f16');
       phone.style.setProperty('--win-first-text', winColors.firstText || winColors.first || 'var(--first)');
       phone.style.setProperty('--win-second-text', winColors.secondText || winColors.second || 'var(--second)');
       phone.style.setProperty('--turn-first', turnColors.first || 'var(--first)');

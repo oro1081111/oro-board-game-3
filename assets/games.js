@@ -1483,17 +1483,16 @@
         const label = `${posText({ r, c })}${isCenter ? '，中央格' : ''}${item ? `，${icePlayerName(item.owner)}${iceKindName(item.kind)}` : '，空格'}`;
         board += cellButton(r, c, classes.join(' '), piece, label);
       }
-      const { counts } = iceCounts(state.board);
       const outcome = this.outcome(state);
       const hint = outcome
         ? outcome === 'draw' ? '遊戲結束：雙方和局' : `遊戲結束：${icePlayerName(outcome)}獲勝`
         : selected ? '請選擇目的地，棋子會滑到該方向最遠的空格' : `現在是${icePlayerName(state.turn)}的回合，請選擇要滑行的棋子`;
       return {
         cols: 5, rows: 5, boardClass: 'ice-board', board, hideTray: true, hint,
-        compactScores: true, threeWayWin: true,
-        winColors: { first: '#3e7ede', second: '#ee8a34' },
+        hideScores: true, threeWayWin: true,
+        winColors: { first: '#3e7ede', second: '#ee8a34', draw: '#2fa98e', drawText: '#1f7a66' },
         turnColors: { first: '#3e7ede', second: '#ee8a34' },
-        firstScore: scoreInline(counts.first, '枚'), secondScore: scoreInline(counts.second, '枚')
+        firstScore: '', secondScore: ''
       };
     },
     bind(state, ui, controller, board) {
