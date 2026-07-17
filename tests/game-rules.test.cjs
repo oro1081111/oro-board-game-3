@@ -13,7 +13,7 @@ const { BOARD_GAMES, GameCore } = window;
 
 (async () => {
   const basic = GameCore.runSelfTests(BOARD_GAMES);
-  assert.equal(basic.length, 7);
+  assert.equal(basic.length, 8);
   assert.deepEqual(basic.filter((item) => !item.ok), []);
 
   const soulGame = BOARD_GAMES.soulaween;
@@ -206,6 +206,99 @@ const { BOARD_GAMES, GameCore } = window;
   const toriiStepLandings = new Set(toriiOneStepActions.map((action) => `${action.path[0].r},${action.path[0].c}`));
   assert.deepEqual([...toriiStepLandings].sort(), ['0,1', '1,0', '1,3', '3,1'], 'Torii jumps over any cell in the opponent spirit row or column');
 
+  const iceGame = BOARD_GAMES['ice-stage'];
+  assert.equal(iceGame.firstName, '藍方');
+  assert.equal(iceGame.secondName, '橙方');
+  const icePiece = (owner, kind, id) => ({ owner, kind, id });
+  const iceEmptyBoard = () => Array.from({ length: 5 }, () => Array(5).fill(null));
+  const iceState = (turn, pieces) => {
+    const board = iceEmptyBoard();
+    pieces.forEach(([r, c, owner, kind], index) => { board[r][c] = icePiece(owner, kind, `t${index}`); });
+    return { turn, board, passed: false, winner: null };
+  };
+  const ice = iceGame.create('standard').state;
+  assert.equal(ice.turn, 'first', 'Ice Stage blue moves first');
+  assert.ok(ice.board[0].every((item) => item?.owner === 'second') && ice.board[4].every((item) => item?.owner === 'first'), 'Ice Stage standard rows face each other');
+  assert.equal(ice.board[0][2].kind, 'circle');
+  assert.equal(ice.board[4][2].kind, 'circle');
+  const iceOpening = iceGame.actions(ice);
+  assert.equal(iceOpening.length, 5, 'Ice Stage standard opening: full rows only slide toward the middle');
+  assert.ok(iceOpening.every((action) => action.type === 'move' && action.to.r === 1), 'Ice Stage slides stop in the last empty cell before the orange row');
+  const iceSlid = iceGame.apply(ice, iceOpening.find((action) => action.from.c === 0));
+  assert.equal(iceSlid.board[1][0].owner, 'first', 'Ice Stage piece lands at the far end of the slide');
+  assert.equal(iceSlid.board[4][0], null, 'Ice Stage origin cell is vacated');
+  assert.equal(iceSlid.turn, 'second');
+
+  const iceCenterProbe = iceState('first', [[4, 2, 'first', 'circle'], [1, 2, 'second', 'square'], [0, 0, 'second', 'circle']]);
+  const iceCenterMove = iceGame.actions(iceCenterProbe).find((action) => action.from.r === 4 && action.from.c === 2 && action.dir.dr === -1);
+  assert.deepEqual(iceCenterMove.to, { r: 2, c: 2 }, 'Ice Stage circle stops at the center only because a piece blocks the cell beyond');
+  assert.equal(iceGame.apply(iceCenterProbe, iceCenterMove).winner, 'first', 'Ice Stage circle on the center wins immediately');
+  const iceOverCenter = iceState('first', [
+    [4, 2, 'first', 'circle'], [0, 0, 'second', 'circle'],
+    [4, 0, 'first', 'square'], [4, 4, 'first', 'square'], [0, 4, 'second', 'square'], [2, 0, 'second', 'square']
+  ]);
+  const iceOverMove = iceGame.actions(iceOverCenter).find((action) => action.from.r === 4 && action.from.c === 2 && action.dir.dr === -1);
+  assert.deepEqual(iceOverMove.to, { r: 0, c: 2 }, 'Ice Stage circle cannot voluntarily stop on the center and slides past it');
+  assert.equal(iceGame.apply(iceOverCenter, iceOverMove).winner, null);
+
+  const iceCaptureProbe = iceState('first', [
+    [0, 0, 'second', 'square'], [0, 1, 'first', 'square'], [3, 0, 'first', 'square'],
+    [4, 4, 'first', 'circle'], [4, 3, 'first', 'square'],
+    [2, 4, 'second', 'circle'], [0, 4, 'second', 'square'], [1, 4, 'second', 'square']
+  ]);
+  const iceCaptureMove = iceGame.actions(iceCaptureProbe).find((action) => action.from.r === 3 && action.from.c === 0 && action.dir.dr === -1);
+  assert.deepEqual(iceCaptureMove.to, { r: 1, c: 0 }, 'Ice Stage slide stops before the occupied corner');
+  const iceCaptured = iceGame.apply(iceCaptureProbe, iceCaptureMove);
+  assert.equal(iceCaptured.board[0][0], null, 'Ice Stage surrounded group is removed');
+  assert.equal(iceCaptured.board[1][4].owner, 'second', 'Ice Stage group with a liberty survives');
+  assert.equal(iceCaptured.winner, null, 'Ice Stage game continues while both circles live and more than five pieces remain');
+  assert.equal(iceCaptured.turn, 'second');
+
+  const iceCircleCapture = iceState('second', [
+    [0, 0, 'first', 'circle'], [0, 1, 'second', 'square'], [3, 0, 'second', 'square'],
+    [4, 4, 'second', 'circle'], [2, 2, 'first', 'square'], [4, 0, 'first', 'square'], [2, 4, 'first', 'square']
+  ]);
+  const iceCircleMove = iceGame.actions(iceCircleCapture).find((action) => action.from.r === 3 && action.from.c === 0 && action.dir.dr === -1);
+  assert.equal(iceGame.apply(iceCircleCapture, iceCircleMove).winner, 'second', 'Removing the opponent circle wins immediately');
+
+  const iceCountProbe = iceState('first', [
+    [0, 0, 'second', 'square'], [0, 1, 'first', 'square'], [3, 0, 'first', 'square'],
+    [4, 4, 'first', 'circle'], [2, 4, 'second', 'circle'], [1, 3, 'second', 'square']
+  ]);
+  const iceCountMove = iceGame.actions(iceCountProbe).find((action) => action.from.r === 3 && action.from.c === 0 && action.dir.dr === -1);
+  assert.equal(iceGame.apply(iceCountProbe, iceCountMove).winner, 'first', 'At five or fewer total pieces the larger side wins');
+
+  const iceStuck = iceState('first', [[0, 0, 'first', 'circle'], [0, 1, 'second', 'square'], [1, 0, 'second', 'square'], [4, 4, 'second', 'circle']]);
+  assert.deepEqual(iceGame.actions(iceStuck), [{ type: 'skip' }], 'A player with no legal slide skips the turn');
+  const iceSkipped = iceGame.apply(iceStuck, { type: 'skip' });
+  assert.equal(iceSkipped.turn, 'second');
+  assert.equal(iceGame.apply({ ...iceSkipped, turn: 'first' }, { type: 'skip' }).winner, 'draw', 'Two consecutive skips end the game as a draw');
+
+  const iceRandom = iceGame.create('random');
+  const iceRandomState = iceRandom.state;
+  const icePlaced = [];
+  for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) if (iceRandomState.board[r][c]) icePlaced.push({ r, c, ...iceRandomState.board[r][c] });
+  assert.equal(icePlaced.length, 10, 'Ice Stage random setup places all ten pieces');
+  assert.ok(icePlaced.every((item) => Math.abs(item.r - 2) + Math.abs(item.c - 2) > 1), 'Ice Stage random setup keeps the center region empty');
+  assert.ok(icePlaced.every((item) => {
+    const mirror = iceRandomState.board[4 - item.r][4 - item.c];
+    return mirror && mirror.owner !== item.owner && mirror.kind === item.kind;
+  }), 'Ice Stage random setup is 180-degree symmetric with matching piece kinds');
+  assert.equal(icePlaced.filter((item) => item.kind === 'circle').length, 2, 'Ice Stage random setup places exactly one circle per side');
+  assert.ok(icePlaced.every((item) => iceGame.actions({ ...iceRandomState, turn: item.owner }).some((action) => action.type === 'move' && action.from.r === item.r && action.from.c === item.c)), 'Every randomly placed piece can move');
+  const iceSame = iceGame.create('same', iceRandom.snapshot).state;
+  assert.deepEqual(iceSame.board, iceRandomState.board, 'Ice Stage same opening replays the previous layout');
+  const iceView = iceGame.view(ice, {});
+  assert.match(iceView.boardClass, /ice-board/);
+  assert.match(iceView.board, /ice-center/, 'Ice Stage marks the center cell');
+  assert.match(iceView.board, /ice-circle/);
+  assert.equal(iceView.threeWayWin, true, 'Ice Stage exposes draw probability as a third win-bar segment');
+  assert.equal(iceView.hideTray, true, 'Ice Stage keeps a single instruction panel');
+  assert.equal((iceView.board.match(/cell ice-center legal/g) || []).length, 0, 'Ice Stage center highlight and legal highlight do not conflict at rest');
+  const iceSelectedView = iceGame.view(ice, { selectedPos: { r: 4, c: 0 } });
+  assert.match(iceSelectedView.board, /selected/, 'Ice Stage marks the selected piece');
+  assert.equal((iceSelectedView.board.match(/cell legal| legal"/g) || []).length, 1, 'Ice Stage highlights only the selected piece destinations');
+
   const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
   assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');
   assert.match(soulaweenPage, /assets\/game-core\.js/, 'Soulaween loads the shared controller');
@@ -214,7 +307,7 @@ const { BOARD_GAMES, GameCore } = window;
   const lobbyHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(lobbyHtml, /assets\/lobby-boards\//, 'Lobby previews load captured game boards');
   assert.match(lobbyHtml, /board\.replaceWith\(image\)/, 'Lobby replaces synthetic previews with real board images');
-  for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii']) {
+  for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage']) {
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
@@ -229,7 +322,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.doesNotMatch(shellCss, /(?:^|\n)\.santorini-worker \{/, 'Santorini board and worker piece classes cannot collide');
   assert.match(shellCss, /\.mijn-piece \.piece-mark \{ position: absolute; inset: 19%;/, 'Garden board marks use a centered drawing box');
   assert.match(shellCss, /\.mijn-token \.mark-push, \.mijn-token \.mark-pull \{ width: 24px; height: 24px;/, 'Garden supply circles stay smaller than their board counterparts');
-  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 7, 'Every lobby board image links to its game');
+  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 8, 'Every lobby board image links to its game');
   assert.doesNotMatch(lobbyHtml, /詳細規則|其他遊戲|統一介面與純 MCTS AI/, 'Lobby omits redundant catalog text and rule buttons');
   assert.match(shellCss, /\.mijn-piece \.mark-pull \{ border: clamp\(/, 'Garden hollow circles use the centered element box instead of an oversized pseudo-element');
   assert.match(shellCss, /\.mijn-piece \.mark-push, \.mijn-piece \.mark-pull/);

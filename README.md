@@ -1,6 +1,6 @@
 # 棋類遊戲 3.0
 
-七款雙人棋類遊戲的純靜態網頁版。首頁、遊戲畫面、設定、勝率條、行動日誌、規則分頁與返回上一步採用統一介面，可直接部署到 GitHub Pages。
+八款雙人棋類遊戲的純靜態網頁版。首頁、遊戲畫面、設定、勝率條、行動日誌、規則分頁與返回上一步採用統一介面，可直接部署到 GitHub Pages。
 
 ## 已完成遊戲
 
@@ -13,14 +13,15 @@
 | 四色棋 Four Color Chess | `games/four-color-chess/game.html` | `games/four-color-chess/rules.html` |
 | 四步棋 Four Moves Chess | `games/four-moves-chess/game.html` | `games/four-moves-chess/rules.html` |
 | 跳躍森靈 Torii | `games/torii/game.html` | `games/torii/rules.html` |
+| 冰塊棋 ICE STAGE | `games/ice-stage/game.html` | `games/ice-stage/rules.html` |
 
 ## 共用架構
 
 - `assets/game-shell.css`：手機與桌面共用遊戲介面。
 - `assets/game-core.js`：設定、日誌、Undo、勝率、AI 排程與共用 MCTS。
-- `assets/games.js`：七款遊戲的狀態、合法行動、狀態轉移與棋盤繪製。
+- `assets/games.js`：八款遊戲的狀態、合法行動、狀態轉移與棋盤繪製。
 - `interface.html`：舊網址相容轉址，實際遊戲頁為 `games/soulaween/game.html`。
-- `tests/game-rules.test.cjs`：七款共用架構遊戲的規則與 MCTS smoke test。
+- `tests/game-rules.test.cjs`：八款共用架構遊戲的規則與 MCTS smoke test。
 - `GAME_IMPLEMENTATION_SOP.md`：未來新增遊戲的固定流程與驗收條件。
 
 ## AI
@@ -37,7 +38,7 @@ python -m http.server 8875 --bind 127.0.0.1
 
 瀏覽 `http://127.0.0.1:8875/`。專案不需要建置步驟或第三方執行期套件。
 
-GitHub Actions 會在每次推送到 `main` 或建立 Pull Request 時，自動執行規則、MCTS、七款共用頁面與內部圖片／連結檢查。
+GitHub Actions 會在每次推送到 `main` 或建立 Pull Request 時，自動執行規則、MCTS、八款共用頁面與內部圖片／連結檢查。
 
 ## 規則來源
 

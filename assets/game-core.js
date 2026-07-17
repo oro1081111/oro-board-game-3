@@ -19,7 +19,8 @@
     ['zombie-jump', '殭屍棋 JUMP'],
     ['four-color-chess', '四色棋 Four Color Chess'],
     ['four-moves-chess', '四步棋 Four Moves Chess'],
-    ['torii', '跳躍森靈 Torii']
+    ['torii', '跳躍森靈 Torii'],
+    ['ice-stage', '冰塊棋 ICE STAGE']
   ];
 
   const clone = (value) => JSON.parse(JSON.stringify(value));

@@ -1284,5 +1284,237 @@
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // 冰塊棋 ICE STAGE
+  // ---------------------------------------------------------------------------
+  const ICE_DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  const ICE_CENTER = { r: 2, c: 2 };
+  const iceCenterRegion = (r, c) => Math.abs(r - 2) + Math.abs(c - 2) <= 1;
+  const icePlayerName = (player) => player === 'first' ? '藍方' : '橙方';
+  const iceKindName = (kind) => kind === 'circle' ? '圓形棋' : '方塊棋';
+
+  function iceSlide(board, from, dr, dc) {
+    let r = from.r, c = from.c;
+    while (inBounds(r + dr, c + dc, 5, 5) && !board[r + dr][c + dc]) { r += dr; c += dc; }
+    return r === from.r && c === from.c ? null : { r, c };
+  }
+  function iceMovesFrom(board, from) {
+    const moves = [];
+    for (const [dr, dc] of ICE_DIRS) {
+      const to = iceSlide(board, from, dr, dc);
+      if (to) moves.push({ type: 'move', from: clone(from), to, dir: { dr, dc } });
+    }
+    return moves;
+  }
+  function iceGroups(board) {
+    const seen = Array.from({ length: 5 }, () => Array(5).fill(false));
+    const groups = [];
+    for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
+      if (!board[r][c] || seen[r][c]) continue;
+      const owner = board[r][c].owner;
+      const cells = [];
+      const stack = [{ r, c }];
+      seen[r][c] = true;
+      let liberties = 0;
+      while (stack.length) {
+        const pos = stack.pop();
+        cells.push(pos);
+        for (const [dr, dc] of ICE_DIRS) {
+          const rr = pos.r + dr, cc = pos.c + dc;
+          if (!inBounds(rr, cc, 5, 5)) continue;
+          const item = board[rr][cc];
+          if (!item) liberties += 1;
+          else if (item.owner === owner && !seen[rr][cc]) { seen[rr][cc] = true; stack.push({ r: rr, c: cc }); }
+        }
+      }
+      groups.push({ owner, cells, liberties });
+    }
+    return groups;
+  }
+  function iceCounts(board) {
+    const counts = { first: 0, second: 0 };
+    const circles = { first: false, second: false };
+    for (const row of board) for (const item of row) if (item) {
+      counts[item.owner] += 1;
+      if (item.kind === 'circle') circles[item.owner] = true;
+    }
+    return { counts, circles };
+  }
+  function iceStandardLayout() {
+    const layout = [];
+    for (let c = 0; c < 5; c += 1) {
+      layout.push({ r: 0, c, owner: 'second', kind: c === 2 ? 'circle' : 'square' });
+      layout.push({ r: 4, c, owner: 'first', kind: c === 2 ? 'circle' : 'square' });
+    }
+    return layout;
+  }
+  function iceRandomLayout() {
+    const pairs = [];
+    for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
+      if (iceCenterRegion(r, c)) continue;
+      if (r * 5 + c < (4 - r) * 5 + (4 - c)) pairs.push([{ r, c }, { r: 4 - r, c: 4 - c }]);
+    }
+    for (let attempt = 0; attempt < 200; attempt += 1) {
+      const shuffled = [...pairs].sort(() => Math.random() - .5).slice(0, 5);
+      const circleIndex = Math.floor(Math.random() * 5);
+      const layout = [];
+      shuffled.forEach((pair, index) => {
+        const flip = Math.random() < .5;
+        const kind = index === circleIndex ? 'circle' : 'square';
+        layout.push({ ...pair[flip ? 1 : 0], owner: 'first', kind });
+        layout.push({ ...pair[flip ? 0 : 1], owner: 'second', kind });
+      });
+      const board = iceBoardFromLayout(layout);
+      if (layout.every((item) => iceMovesFrom(board, item).length)) return layout;
+    }
+    return iceStandardLayout();
+  }
+  function iceBoardFromLayout(layout) {
+    const board = Array.from({ length: 5 }, () => Array(5).fill(null));
+    layout.forEach((item, index) => { board[item.r][item.c] = { owner: item.owner, kind: item.kind, id: `ice-${index}` }; });
+    return board;
+  }
+
+  games['ice-stage'] = {
+    title: '冰塊棋 ICE STAGE',
+    nameZh: '冰塊棋',
+    nameEn: 'ICE STAGE',
+    credit: '設計者：來源未載，規則依本站說明書',
+    firstName: '藍方', secondName: '橙方',
+    designer: '說明書未載明可核實的設計者與美術；本頁依使用者提供的《ICE STAGE 冰塊棋》完整說明書實作。',
+    publisher: '未載明出版資訊；目前為依說明書整理的網頁版本。',
+    publisherHtml: '<p>說明書未載明出版社或發行資訊；本頁依使用者提供的完整說明書整理成可遊玩的網頁版本。因沒有可核實的出版目錄，這裡不另列代表作品。</p>',
+    publisherLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    introHtml: '<p>在冰封的舞臺上，每一枚棋子都會一路滑行，直到碰上阻礙才停下。玩家運用棋子的位置封鎖對手、包圍敵方棋群，同時保護自己的核心棋子；設法讓自己的圓形棋抵達棋盤中央，或將對手逼入無法逃脫的局面。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>棋盤</dt><dd>5×5</dd><dt>類型</dt><dd>滑行、包圍、封鎖</dd><dt>先手</dt><dd>藍方</dd></dl>',
+    links: [
+      { label: '完整規則', href: 'rules.html' },
+      { label: '規則摘要', href: 'rules.html#summary' },
+      { label: '遊戲大廳', href: '../../index.html' }
+    ],
+    openings: [{ value: 'standard', label: '標準' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }],
+    rolloutLimit: 80,
+    animationDuration(action) { return action.type === 'move' ? 380 : 0; },
+    animationOptions() { return { spring: true }; },
+    immediateAction(state, actions) {
+      return actions.find((action) => this.apply(state, action).winner === state.turn);
+    },
+    rules: [
+      { title: '配件與目標', html: '<ul><li>5×5 棋盤；藍、橙雙方各有圓形棋 1 枚與方塊棋 4 枚，藍方先手。</li><li>棋盤正中央的格子稱為「中央格」。</li><li>讓自己的圓形棋抵達中央格、包圍移除對手的圓形棋，或在棋子總數不超過 5 枚時擁有較多棋子，即可獲勝。</li></ul>' },
+      { title: '初始設置', html: '<ol><li><strong>標準：</strong>橙方 5 枚棋放在最上排、藍方 5 枚棋放在最下排，圓形棋位於該排中央。</li><li><strong>隨機：</strong>中央格與其上下左右 4 格保持空置；其餘格子中隨機選 5 組旋轉 180 度的對稱格，每組放置藍、橙棋各一枚，其中隨機一組放置雙方圓形棋。</li><li>設置完成後每一枚棋子必須至少能向一個方向移動，否則重新設置。</li></ol>' },
+      { title: '滑行移動', html: '<ul><li>每回合選擇自己一枚棋子，沿上、下、左、右其中一個方向滑行，不能斜走。</li><li>棋子會持續滑行，停在棋盤邊界或其他棋子之前的最後一個空格；不能自行選擇距離或停在中途。</li><li>不能跳過或重疊任何棋子；所選方向的相鄰格已被占據時，該方向不能移動。</li><li>圓形棋與方塊棋的移動方式相同。</li></ul>' },
+      { title: '中央格', html: '<ul><li>中央格不會主動使棋子停下；圓形棋仍依一般滑行規則移動。</li><li>只有當中央格剛好是該方向上最遠的合法位置時，圓形棋才能停在中央格。</li></ul>' },
+      { title: '包圍與移除', html: '<ul><li>透過上、下、左、右相連的同色棋子組成棋群；圓形棋與方塊棋同色即可相連。</li><li>每次移動完成後檢查雙方所有棋群；整個棋群周圍沒有任何正交相鄰空格時，該棋群被完全包圍。</li><li>被完全包圍的棋群整群移除；所有被包圍的棋群先全部確認，再同時移除。</li><li>棋盤外不算空格；玩家可以進行使自己棋群被包圍的移動（自我包圍），移動後仍依正常規則移除。</li></ul>' },
+      { title: '勝負與和局', html: '<ul><li>每次移除結算後依序檢查：圓形棋仍位於中央格者獲勝；只有一方圓形棋被移除時，另一方獲勝；棋子總數不超過 5 枚時，棋子較多者獲勝。</li><li>雙方圓形棋同時被移除、數量結算時雙方相同，或雙方都沒有合法行動時，遊戲和局。</li><li>輪到玩家時若所有棋子都無法移動，跳過該回合；只要有合法行動就必須移動。</li></ul>' }
+    ],
+    create(mode, previous) {
+      let layout;
+      if (mode === 'random') layout = iceRandomLayout();
+      else if (mode === 'same' && previous?.layout) layout = clone(previous.layout);
+      else layout = iceStandardLayout();
+      return {
+        state: { turn: 'first', board: iceBoardFromLayout(layout), passed: false, winner: null },
+        snapshot: { layout }
+      };
+    },
+    actions(state) {
+      if (state.winner) return [];
+      const result = [];
+      for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
+        if (state.board[r][c]?.owner !== state.turn) continue;
+        result.push(...iceMovesFrom(state.board, { r, c }));
+      }
+      return result.length ? result : [{ type: 'skip' }];
+    },
+    apply(source, action) {
+      const state = clone(source);
+      if (action.type === 'skip') {
+        if (state.passed) { state.winner = 'draw'; return state; }
+        state.passed = true;
+        state.turn = other(state.turn);
+        return state;
+      }
+      const actor = state.turn;
+      const piece = state.board[action.from.r][action.from.c];
+      state.board[action.from.r][action.from.c] = null;
+      state.board[action.to.r][action.to.c] = piece;
+      const surrounded = iceGroups(state.board).filter((group) => group.liberties === 0);
+      for (const group of surrounded) for (const pos of group.cells) state.board[pos.r][pos.c] = null;
+      const centerPiece = state.board[ICE_CENTER.r][ICE_CENTER.c];
+      if (centerPiece?.kind === 'circle') { state.winner = centerPiece.owner; return state; }
+      const { counts, circles } = iceCounts(state.board);
+      if (!circles.first && !circles.second) { state.winner = 'draw'; return state; }
+      if (!circles.first) { state.winner = 'second'; return state; }
+      if (!circles.second) { state.winner = 'first'; return state; }
+      if (counts.first + counts.second <= 5) {
+        state.winner = counts.first === counts.second ? 'draw' : counts.first > counts.second ? 'first' : 'second';
+        return state;
+      }
+      state.passed = false;
+      state.turn = other(actor);
+      return state;
+    },
+    outcome(state) { return state.winner; },
+    describe(action, before, after) {
+      const actor = icePlayerName(before.turn);
+      if (action.type === 'skip') return `${actor}沒有合法行動，跳過回合。`;
+      const piece = before.board[action.from.r][action.from.c];
+      const removed = before.board.flat().filter(Boolean).length - after.board.flat().filter(Boolean).length;
+      const base = `${actor}將${iceKindName(piece.kind)}滑到${posText(action.to)}`;
+      const capture = removed > 0 ? `，包圍移除 ${removed} 枚棋子` : '';
+      const result = after.winner === 'draw' ? '，雙方和局' : after.winner ? `，${icePlayerName(after.winner)}獲勝` : '';
+      return `${base}${capture}${result}。`;
+    },
+    view(state, ui) {
+      const actions = this.actions(state);
+      const selected = ui.selectedPos && state.board[ui.selectedPos.r]?.[ui.selectedPos.c]?.owner === state.turn ? ui.selectedPos : null;
+      const movable = new Set(actions.filter((action) => action.type === 'move').map((action) => key(action.from.r, action.from.c)));
+      const targets = new Set(selected ? actions.filter((action) => action.type === 'move' && samePos(action.from, selected)).map((action) => key(action.to.r, action.to.c)) : []);
+      let board = '';
+      for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
+        const item = state.board[r][c];
+        const isCenter = r === ICE_CENTER.r && c === ICE_CENTER.c;
+        const classes = [];
+        if (isCenter) classes.push('ice-center');
+        if (selected && samePos(selected, { r, c })) classes.push('selected');
+        else if (targets.has(key(r, c))) classes.push('legal');
+        else if (!selected && item?.owner === state.turn && movable.has(key(r, c))) classes.push('legal');
+        const piece = item ? `<span class="piece ice-piece ice-${item.kind} ${item.owner}" data-anim-id="${item.id}"></span>` : '';
+        const label = `${posText({ r, c })}${isCenter ? '，中央格' : ''}${item ? `，${icePlayerName(item.owner)}${iceKindName(item.kind)}` : '，空格'}`;
+        board += cellButton(r, c, classes.join(' '), piece, label);
+      }
+      const { counts } = iceCounts(state.board);
+      const outcome = this.outcome(state);
+      const hint = outcome
+        ? outcome === 'draw' ? '遊戲結束：雙方和局' : `遊戲結束：${icePlayerName(outcome)}獲勝`
+        : selected ? '請選擇目的地，棋子會滑到該方向最遠的空格' : `現在是${icePlayerName(state.turn)}的回合，請選擇要滑行的棋子`;
+      return {
+        cols: 5, rows: 5, boardClass: 'ice-board', board, hideTray: true, hint,
+        compactScores: true, threeWayWin: true,
+        winColors: { first: '#3e7ede', second: '#ee8a34' },
+        turnColors: { first: '#3e7ede', second: '#ee8a34' },
+        firstScore: scoreInline(counts.first, '枚'), secondScore: scoreInline(counts.second, '枚')
+      };
+    },
+    bind(state, ui, controller, board) {
+      board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
+        if (!controller.isHumanTurn()) return;
+        const pos = { r: Number(button.dataset.r), c: Number(button.dataset.c) };
+        const piece = state.board[pos.r][pos.c];
+        const selected = ui.selectedPos && state.board[ui.selectedPos.r]?.[ui.selectedPos.c]?.owner === state.turn ? ui.selectedPos : null;
+        if (selected) {
+          const action = this.actions(state).find((item) => item.type === 'move' && samePos(item.from, selected) && samePos(item.to, pos));
+          if (action) { controller.commit(action); return; }
+          if (samePos(selected, pos)) { controller.setUi({ selectedPos: null }); return; }
+        }
+        if (piece?.owner === state.turn && this.actions(state).some((item) => item.type === 'move' && samePos(item.from, pos))) {
+          controller.setUi({ selectedPos: pos });
+        }
+      }));
+      const only = this.actions(state);
+      if (controller.isHumanTurn() && only.length === 1 && only[0].type === 'skip') setTimeout(() => controller.commit(only[0]), 250);
+    }
+  };
+
   window.BOARD_GAMES = games;
 }());
