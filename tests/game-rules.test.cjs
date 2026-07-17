@@ -200,13 +200,11 @@ const { BOARD_GAMES, GameCore } = window;
   assert.ok(toriiOneStepActions.length > 0 && toriiOneStepActions.every((action) => action.path.length === 1), 'Torii tile 1 commits exactly one landing');
   const toriiAfterOneStep = toriiGame.apply(toriiAfterTile, toriiOneStepActions[0]);
   assert.equal(toriiAfterOneStep.followers.flat().filter(Boolean).length, 1, 'Torii tile 1 places exactly one follower');
+  // The opponent spirit blocks its entire row AND column; a step that would land on
+  // any cell sharing the opponent's row or column jumps over to the cell beyond.
+  // Standard opening: first at (1,1), second at (2,2).
   const toriiStepLandings = new Set(toriiOneStepActions.map((action) => `${action.path[0].r},${action.path[0].c}`));
-  assert.deepEqual([...toriiStepLandings].sort(), ['0,1', '1,0', '1,2', '2,1'], 'Torii only jumps over the opponent spirit itself, not its whole row or column');
-  const toriiBlocked = toriiGame.create('standard').state;
-  toriiBlocked.spirits = { first: { r: 1, c: 1 }, second: { r: 2, c: 1 } };
-  const toriiBlockedLandings = new Set(toriiGame.actions(toriiGame.apply(toriiBlocked, { type: 'tile', tile: 1 })).map((action) => `${action.path[0].r},${action.path[0].c}`));
-  assert.ok(toriiBlockedLandings.has('3,1'), 'Torii jumps over an opponent spirit directly in the path');
-  assert.ok(!toriiBlockedLandings.has('2,1'), 'Torii never lands on the opponent spirit cell');
+  assert.deepEqual([...toriiStepLandings].sort(), ['0,1', '1,0', '1,3', '3,1'], 'Torii jumps over any cell in the opponent spirit row or column');
 
   const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
   assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');

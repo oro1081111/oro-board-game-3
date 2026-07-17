@@ -1105,7 +1105,7 @@
     for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
       let r = current.r + dr, c = current.c + dc;
       if (!inBounds(r, c, 4, 4)) continue;
-      if (r === opponent.r && c === opponent.c) { r += dr; c += dc; }
+      if (r === opponent.r || c === opponent.c) { r += dr; c += dc; }
       if (!inBounds(r, c, 4, 4) || samePos({ r, c }, start) || visited.has(key(r, c))) continue;
       result.push({ r, c });
     }
