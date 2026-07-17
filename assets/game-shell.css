@@ -315,7 +315,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 
 .ice-board { background: #dde9f4; border-color: #47719c; box-shadow: inset 0 0 0 3px rgba(255,255,255,.7), 0 0 0 2px rgba(47,79,110,.4); }
 .ice-board .cell { background: #f3f8fc; box-shadow: inset 0 2px 7px rgba(52,88,124,.16), 0 1px 2px rgba(255,255,255,.9); }
-.ice-board .cell.ice-center::before { content: ''; position: absolute; inset: 14%; border: 3px dashed rgba(71,113,156,.6); border-radius: 50%; }
+.ice-board .cell.ice-center::before { content: ''; position: absolute; inset: 16%; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%236f9cc6' stroke-width='6' stroke-linecap='round'%3E%3Cg%3E%3Cpath d='M50 6v88M50 24 38 13M50 24l12-11M50 76 38 87M50 76l12 11'/%3E%3C/g%3E%3Cg transform='rotate(60 50 50)'%3E%3Cpath d='M50 6v88M50 24 38 13M50 24l12-11M50 76 38 87M50 76l12 11'/%3E%3C/g%3E%3Cg transform='rotate(120 50 50)'%3E%3Cpath d='M50 6v88M50 24 38 13M50 24l12-11M50 76 38 87M50 76l12 11'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat; opacity: .6; }
 .ice-board .cell.legal { outline: 3px solid rgba(18,189,134,.45); outline-offset: -5px; }
 .piece.ice-piece.first { background: #3e7ede; }
 .piece.ice-piece.second { background: #ee8a34; }
