@@ -162,6 +162,10 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 /* Soulaween: shared score, colour selection and line collection controls. */
 .soulaween-board .cell { background: #fffdf6; }
 .soulaween-board .cell.collectable { z-index: 2; outline: 5px solid rgba(255,165,15,.78); outline-offset: -7px; }
+.soulaween-board .cell.collecting { z-index: 2; outline: 5px solid rgba(255,165,15,.9); outline-offset: -7px; background: #fff4d6; }
+.soulaween-board .cell.collecting .piece { animation: soul-collect-pulse .9s ease; }
+@keyframes soul-collect-pulse { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.14); } }
+@media (prefers-reduced-motion: reduce) { .soulaween-board .cell.collecting .piece { animation: none; } }
 .soulaween-board .piece { width: 74%; }
 .score-pips { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2.4vw, 13px); color: inherit; }
 .score-pip { display: block; width: clamp(16px, 4vw, 22px); aspect-ratio: 1; border: 3px solid currentColor; border-radius: 50%; background: transparent; }

@@ -112,6 +112,7 @@
     openings: [{ value: 'standard', label: '禿鷹老師簡易模式' }],
     rolloutLimit: 70,
     evaluationIterations: 80,
+    animationDuration(action) { return action.collect ? 900 : 0; },
     rules: [
       { title: '本頁採用的模式', html: '<p>蒐靈祭正式規則包含角色能力；本頁採用「禿鷹老師」簡易模式，雙方沒有個別能力，專注於放置、翻面與四連線收取。</p>' },
       { title: '配件與目標', html: '<ul><li>4×4 靈魂墊一面、16 枚橘／綠雙面靈魂棋，以及雙方計分標記。</li><li>兩位玩家共用同一批雙面棋；棋子不是分屬某位玩家。</li><li>每收取一組同色四連線得 1 分，先取得 3 分者獲勝。</li></ul>' },
@@ -154,16 +155,20 @@
       const pending = ui.pending && state.board[ui.pending.r]?.[ui.pending.c] === null ? ui.pending : null;
       const pendingActions = pending ? this.actions(state).filter((action) => action.r === pending.r && action.c === pending.c && action.color === pending.color && action.collect) : [];
       const displayBoard = pending ? soulPlace(state.board, pending) : state.board;
+      // 收取行動的動畫窗口：被收的連線先停留並高亮，窗口結束的重繪才讓棋子淡出。
+      const collecting = controller?.animating && controller.animationAction?.collect ? controller.animationAction.collect : null;
       const lineByCell = new Map();
       pendingActions.forEach((action, index) => action.collect.positions.forEach((pos) => {
         if (!lineByCell.has(key(pos.r, pos.c))) lineByCell.set(key(pos.r, pos.c), index);
       }));
       let board = '';
       for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
-        const color = displayBoard[r][c];
+        const collectingHere = collecting?.positions.some((pos) => pos.r === r && pos.c === c);
+        const color = collectingHere ? collecting.color : displayBoard[r][c];
         const lineIndex = lineByCell.get(key(r, c));
         const classes = [];
         if (lineIndex !== undefined) classes.push('collectable');
+        if (collectingHere) classes.push('collecting');
         if (pending && pending.r === r && pending.c === c) classes.push('selected');
         const piece = color ? `<span class="piece ${color}" data-anim-id="soul-${r}-${c}"></span>` : '';
         const label = lineIndex !== undefined ? `${posText({ r, c })}，點選收取${soulLineLabel(pendingActions[lineIndex].collect)}` : `${posText({ r, c })}${color ? `，${soulColorName(color)}靈魂` : '，空格'}`;

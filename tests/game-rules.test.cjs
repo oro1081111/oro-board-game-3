@@ -51,6 +51,12 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal((pendingSoulView.tray.match(/data-line-choice/g) || []).length, 2, 'Soulaween renders every collection choice in the shared mobile tray');
   assert.match(pendingSoulView.board, /cell collectable/, 'Soulaween highlights collectable lines on the shared board');
   assert.deepEqual(soulGame.historyUi({ color: 'green', pending: { r: 0, c: 0, color: 'green' } }, soulLineActions[0]), { color: 'green' }, 'Soulaween Undo restores the colour choice without restoring an uncommitted preview');
+  assert.equal(soulGame.animationDuration(soulLineActions[0]), 900, 'Soulaween collections pause so the finished line stays visible');
+  assert.equal(soulGame.animationDuration({ type: 'place', r: 0, c: 0, color: 'green' }), 0, 'Soulaween plain placements stay immediate');
+  const collectingView = soulGame.view(collectedSoul, {}, { animating: true, animationAction: { ...soulLineActions[0], duration: 900 } });
+  assert.equal((collectingView.board.match(/cell collecting/g) || []).length, 4, 'Soulaween keeps all four collected souls on the board during the pause');
+  assert.match(collectingView.board, /cell collecting[^>]*>\s*<span class="piece green"/, 'Soulaween collected souls stay visible in their line colour');
+  assert.equal((soulGame.view(collectedSoul, {}, {}).board.match(/cell collecting/g) || []).length, 0, 'Soulaween collection flash only renders during the animation window');
 
   const mijn = BOARD_GAMES.mijnlieff.create('A');
   const mijnView = BOARD_GAMES.mijnlieff.view(mijn, {});
