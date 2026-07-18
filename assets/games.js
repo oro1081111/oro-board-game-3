@@ -118,9 +118,6 @@
       return state;
     },
     outcome(state) { return state.winner; },
-    immediateAction(state, actions) {
-      return actions.find((action) => this.apply(state, action).winner === state.turn);
-    },
     describe(action, before) {
       const actor = before.turn === 'first' ? '先手' : '後手';
       const placement = `${actor}在${posText(action)}放置${soulColorName(action.color)}面並翻轉正交相鄰棋子`;
@@ -1396,9 +1393,6 @@
     rolloutLimit: 80,
     animationDuration(action) { return action.type === 'move' ? 380 : 0; },
     animationOptions() { return { spring: true }; },
-    immediateAction(state, actions) {
-      return actions.find((action) => this.apply(state, action).winner === state.turn);
-    },
     rules: [
       { title: '配件與目標', html: '<ul><li>5×5 棋盤；藍、橙雙方各有圓形棋 1 枚與方塊棋 4 枚，藍方先手。</li><li>棋盤正中央的格子稱為「中央格」。</li><li>讓自己的圓形棋抵達中央格、包圍移除對手的圓形棋，或在棋子總數不超過 5 枚時擁有較多棋子，即可獲勝。</li></ul>' },
       { title: '初始設置', html: '<ol><li><strong>標準：</strong>橙方 5 枚棋放在最上排、藍方 5 枚棋放在最下排，圓形棋位於該排中央。</li><li><strong>隨機：</strong>中央格與其上下左右 4 格保持空置；其餘格子中隨機選 5 組旋轉 180 度的對稱格，每組放置藍、橙棋各一枚，其中隨機一組放置雙方圓形棋。</li><li>設置完成後每一枚棋子必須至少能向一個方向移動，否則重新設置。</li></ol>' },

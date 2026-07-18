@@ -136,9 +136,12 @@
 
   function runMcts(game, state, iterations, tokenIsCurrent) {
     const searchActions = game.searchActions?.(state) || game.actions(state);
-    const immediate = game.immediateAction?.(state, searchActions);
+    const applySearch = (action) => game.searchApply?.(state, action) || game.apply(state, action);
+    const immediate = game.immediateAction
+      ? game.immediateAction(state, searchActions)
+      : searchActions.find((action) => game.outcome(applySearch(action)) === state.turn);
     if (immediate) {
-      const next = game.searchApply?.(state, immediate) || game.apply(state, immediate);
+      const next = applySearch(immediate);
       const outcome = game.outcome(next);
       if (outcome === 'first' || outcome === 'second') return Promise.resolve({
         action: clone(immediate),
