@@ -384,6 +384,17 @@
     return result;
   };
   const workerAt = (state, pos) => state.workers.find((worker) => samePos(worker.pos, pos));
+
+  // apply 會就地修改 worker.pos，因此淺拷貝必須為每個工人建立新物件。
+  function santoriniCloneState(state) {
+    return {
+      turn: state.turn,
+      board: state.board.map((row) => row.slice()),
+      workers: state.workers.map((worker) => ({ id: worker.id, owner: worker.owner, pos: { r: worker.pos.r, c: worker.pos.c } })),
+      phase: state.phase,
+      winner: state.winner
+    };
+  }
   function santoriniMoves(state, worker) {
     return around(worker.pos).filter((pos) => !workerAt(state, pos) && state.board[pos.r][pos.c] < 4 && state.board[pos.r][pos.c] - state.board[worker.pos.r][worker.pos.c] <= 1);
   }
@@ -473,7 +484,7 @@
     },
     cutoffReward(state, rootPlayer) { return santoriniHeuristic(state, rootPlayer); },
     apply(source, action) {
-      const state = clone(source);
+      const state = santoriniCloneState(source);
       if (action.type === 'place') {
         state.workers.push({ id: `w${state.workers.length}`, owner: state.turn, pos: { r: action.r, c: action.c } });
         if (state.workers.length === 2) state.turn = 'second';
@@ -1154,6 +1165,21 @@
     if (state.buildChoices.length) state.building = true;
     else toriiEndTurn(state, owner);
   }
+  // 格子內容為純字串、板塊狀態為布林；tilesUsed 會被就地修改，需逐層展開複製。
+  function toriiCloneState(state) {
+    return {
+      turn: state.turn,
+      spirits: { first: { r: state.spirits.first.r, c: state.spirits.first.c }, second: { r: state.spirits.second.r, c: state.spirits.second.c } },
+      followers: state.followers.map((row) => row.slice()),
+      torii: state.torii.map((row) => row.slice()),
+      tilesUsed: { first: { ...state.tilesUsed.first }, second: { ...state.tilesUsed.second } },
+      pendingTile: state.pendingTile,
+      building: state.building,
+      buildChoices: state.buildChoices.slice(),
+      winner: state.winner
+    };
+  }
+
   function toriiRandomSpirits() {
     const first = { r: Math.floor(Math.random() * 4), c: Math.floor(Math.random() * 4) };
     const candidates = [];
@@ -1220,7 +1246,7 @@
     },
     expandSearchAction(action) { return action.type === 'torii-plan' ? action.steps : [action]; },
     apply(source, action) {
-      const state = clone(source);
+      const state = toriiCloneState(source);
       if (action.type === 'tile') { state.pendingTile = action.tile; return state; }
       if (action.type === 'path') {
         const owner = state.turn;
@@ -1386,6 +1412,16 @@
     }
     return iceStandardLayout();
   }
+  // 棋子物件不可就地修改（滑行只搬移參考、移除只清格），狀態可用淺結構拷貝。
+  function iceCloneState(state) {
+    return {
+      turn: state.turn,
+      board: state.board.map((row) => row.slice()),
+      passed: state.passed,
+      winner: state.winner
+    };
+  }
+
   function iceBoardFromLayout(layout) {
     const board = Array.from({ length: 5 }, () => Array(5).fill(null));
     layout.forEach((item, index) => { board[item.r][item.c] = { owner: item.owner, kind: item.kind, id: `ice-${index}` }; });
@@ -1441,7 +1477,7 @@
       return result.length ? result : [{ type: 'skip' }];
     },
     apply(source, action) {
-      const state = clone(source);
+      const state = iceCloneState(source);
       if (action.type === 'skip') {
         if (state.passed) { state.winner = 'draw'; return state; }
         state.passed = true;

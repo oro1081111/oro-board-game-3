@@ -373,7 +373,10 @@ const { BOARD_GAMES, GameCore } = window;
     for (let turn = 0; turn < 24 && game.outcome(state) === null; turn += 1) {
       const actions = game.actions(state);
       assert.ok(actions.length > 0, `${id}: ongoing state must have an action`);
-      state = game.apply(state, actions[Math.floor(Math.random() * actions.length)]);
+      const snapshot = JSON.stringify(state);
+      const next = game.apply(state, actions[Math.floor(Math.random() * actions.length)]);
+      assert.equal(JSON.stringify(state), snapshot, `${id}: apply must never mutate the source state (required by shallow state copies)`);
+      state = next;
     }
     const initial = created.state || created;
     const result = await GameCore.runMcts(game, initial, 40, () => true);
