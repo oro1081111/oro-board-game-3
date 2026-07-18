@@ -1489,8 +1489,8 @@
         : selected ? '請選擇目的地，棋子會滑到該方向最遠的空格' : `現在是${icePlayerName(state.turn)}的回合，請選擇要滑行的棋子`;
       return {
         cols: 5, rows: 5, boardClass: 'ice-board', board, hideTray: true, hint,
-        hideScores: true, threeWayWin: true,
-        winColors: { first: '#3e7ede', second: '#ee8a34', draw: '#2fa98e', drawText: '#1f7a66' },
+        hideScores: true,
+        winColors: { first: '#3e7ede', second: '#ee8a34' },
         turnColors: { first: '#3e7ede', second: '#ee8a34' },
         firstScore: '', secondScore: ''
       };
