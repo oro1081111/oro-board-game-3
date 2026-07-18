@@ -20,7 +20,7 @@
   function soulFlip(color) { return color === 'green' ? 'orange' : 'green'; }
 
   function soulPlace(board, action) {
-    const next = clone(board);
+    const next = board.map((row) => row.slice());
     next[action.r][action.c] = action.color;
     for (const [dr, dc] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
       const r = action.r + dr, c = action.c + dc;
@@ -29,16 +29,22 @@
     return next;
   }
 
+  // 10 條連線座標為模組常數（橫、直、兩斜的順序決定行動列表順序，不可變更）。
+  const SOUL_LINE_TABLE = (() => {
+    const lines = [];
+    for (let r = 0; r < 4; r += 1) lines.push(Array.from({ length: 4 }, (_, c) => ({ r, c })));
+    for (let c = 0; c < 4; c += 1) lines.push(Array.from({ length: 4 }, (_, r) => ({ r, c })));
+    lines.push(Array.from({ length: 4 }, (_, i) => ({ r: i, c: i })));
+    lines.push(Array.from({ length: 4 }, (_, i) => ({ r: i, c: 3 - i })));
+    return lines;
+  })();
   function soulLines(board) {
-    const candidates = [];
-    for (let r = 0; r < 4; r += 1) candidates.push(Array.from({ length: 4 }, (_, c) => ({ r, c })));
-    for (let c = 0; c < 4; c += 1) candidates.push(Array.from({ length: 4 }, (_, r) => ({ r, c })));
-    candidates.push(Array.from({ length: 4 }, (_, i) => ({ r: i, c: i })));
-    candidates.push(Array.from({ length: 4 }, (_, i) => ({ r: i, c: 3 - i })));
-    return candidates.flatMap((positions) => {
+    const result = [];
+    for (const positions of SOUL_LINE_TABLE) {
       const color = board[positions[0].r][positions[0].c];
-      return color && positions.every((pos) => board[pos.r][pos.c] === color) ? [{ color, positions }] : [];
-    });
+      if (color && positions.every((pos) => board[pos.r][pos.c] === color)) result.push({ color, positions });
+    }
+    return result;
   }
 
   function soulLineLabel(line) {
@@ -48,16 +54,34 @@
     return `${first.c < last.c ? '左上到右下' : '右上到左下'}${soulColorName(line.color)}斜線`;
   }
 
+  // 候選檢查不複製盤面：落點取新色、正交相鄰翻面、其餘沿用原色，直接掃 10 條靜態連線。
   function soulActions(state) {
     if (state.winner) return [];
     const actions = [];
+    const board = state.board;
     for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
-      if (state.board[r][c] !== null) continue;
+      if (board[r][c] !== null) continue;
       for (const color of SOUL_COLORS) {
-        const base = { type: 'place', r, c, color };
-        const lines = soulLines(soulPlace(state.board, base));
-        if (lines.length) lines.forEach((line) => actions.push({ ...base, collect: clone(line) }));
-        else actions.push(base);
+        const effective = (pos) => {
+          if (pos.r === r && pos.c === c) return color;
+          const cell = board[pos.r][pos.c];
+          if (!cell) return null;
+          return Math.abs(pos.r - r) + Math.abs(pos.c - c) === 1 ? soulFlip(cell) : cell;
+        };
+        let collected = false;
+        for (const positions of SOUL_LINE_TABLE) {
+          const lineColor = effective(positions[0]);
+          if (!lineColor) continue;
+          let full = true;
+          for (let index = 1; index < 4; index += 1) {
+            if (effective(positions[index]) !== lineColor) { full = false; break; }
+          }
+          if (full) {
+            actions.push({ type: 'place', r, c, color, collect: { color: lineColor, positions: positions.map((pos) => ({ r: pos.r, c: pos.c })) } });
+            collected = true;
+          }
+        }
+        if (!collected) actions.push({ type: 'place', r, c, color });
       }
     }
     return actions;
@@ -101,8 +125,8 @@
     },
     actions(state) { return soulActions(state); },
     apply(source, action) {
-      const state = clone(source);
-      state.board = soulPlace(state.board, action);
+      // soulPlace 已回傳全新盤面，其餘欄位為純值淺拷貝。
+      const state = { turn: source.turn, board: soulPlace(source.board, action), scores: { first: source.scores.first, second: source.scores.second }, winner: source.winner };
       if (action.collect) {
         action.collect.positions.forEach((pos) => { state.board[pos.r][pos.c] = null; });
         state.scores[state.turn] += 1;
@@ -374,7 +398,7 @@
   // ---------------------------------------------------------------------------
   // 聖托里尼 Santorini
   // ---------------------------------------------------------------------------
-  const around = (pos, size = 5) => {
+  const aroundOf = (pos, size = 5) => {
     const result = [];
     for (let dr = -1; dr <= 1; dr += 1) for (let dc = -1; dc <= 1; dc += 1) {
       if (dr === 0 && dc === 0) continue;
@@ -383,6 +407,9 @@
     }
     return result;
   };
+  // 鄰格清單預先建表（順序與 aroundOf 相同）；回傳的共用陣列與座標物件一律唯讀。
+  const SANTORINI_NEIGHBORS = Array.from({ length: 5 }, (_, r) => Array.from({ length: 5 }, (_, c) => aroundOf({ r, c })));
+  const around = (pos) => SANTORINI_NEIGHBORS[pos.r][pos.c];
   const workerAt = (state, pos) => state.workers.find((worker) => samePos(worker.pos, pos));
 
   // apply 會就地修改 worker.pos，因此淺拷貝必須為每個工人建立新物件。
@@ -414,14 +441,17 @@
     }
     return result;
   }
+  const SANTORINI_HEIGHT_SCORE = [1, 18, 70, 10000];
   function santoriniPositionScore(state, owner) {
     let score = 0;
-    for (const worker of state.workers.filter((item) => item.owner === owner)) {
+    for (const worker of state.workers) {
+      if (worker.owner !== owner) continue;
       const height = state.board[worker.pos.r][worker.pos.c];
-      score += [1, 18, 70, 10000][height] || 0;
-      score += santoriniMoves(state, worker).length * 2;
+      score += SANTORINI_HEIGHT_SCORE[height] || 0;
+      const moves = santoriniMoves(state, worker);
+      score += moves.length * 2;
       score += 4 - (Math.abs(worker.pos.r - 2) + Math.abs(worker.pos.c - 2)) * .4;
-      for (const next of santoriniMoves(state, worker)) if (state.board[next.r][next.c] === 3) score += 500;
+      for (const next of moves) if (state.board[next.r][next.c] === 3) score += 500;
     }
     return score;
   }
@@ -480,7 +510,13 @@
         if (!sample.includes(action)) sample.push(action);
       }
       const actor = state.turn;
-      return sample.reduce((best, action) => santoriniHeuristic(this.apply(state, action), actor) > santoriniHeuristic(this.apply(state, best), actor) ? action : best);
+      let best = sample[0];
+      let bestValue = santoriniHeuristic(this.apply(state, best), actor);
+      for (let index = 1; index < sample.length; index += 1) {
+        const value = santoriniHeuristic(this.apply(state, sample[index]), actor);
+        if (value > bestValue) { best = sample[index]; bestValue = value; }
+      }
+      return best;
     },
     cutoffReward(state, rootPlayer) { return santoriniHeuristic(state, rootPlayer); },
     apply(source, action) {
@@ -497,7 +533,9 @@
       state.board[action.build.r][action.build.c] += 1;
       const actor = state.turn;
       state.turn = other(state.turn);
-      if (!santoriniAllMoves(state).length) state.winner = actor;
+      // 任何合法移動必有建築位（剛騰出的原格無工人、無圓頂），登三層則直接獲勝，
+      // 因此「對手無完整回合」等價於「對手無任何合法移動」，不需枚舉移動×建築組合。
+      if (!state.workers.some((worker) => worker.owner === state.turn && santoriniMoves(state, worker).length)) state.winner = actor;
       return state;
     },
     outcome(state) { return state.winner; },
@@ -1144,13 +1182,32 @@
     const gates = toriiCount(state.torii, owner);
     return `<span class="torii-resource-score"><span aria-label="信徒 ${followers} / 9"><i class="torii-resource-follower"></i><strong>${followers}</strong><small>/9</small></span><span aria-label="鳥居 ${gates} / 4"><i class="torii-resource-gate"><b></b><b></b></i><strong>${gates}</strong><small>/4</small></span></span>`;
   }
-  function toriiPaths(state, steps) {
+  // DFS 以單一 visited 集合回溯，路徑陣列建立一次；firstOnly 供「是否存在路徑」early-exit。
+  // 探索順序與逐步版 toriiNextSteps 相同，維持行動列表順序不變。
+  function toriiPaths(state, steps, firstOnly = false) {
     const results = [];
-    const walk = (path) => {
-      if (path.length === steps) { results.push(clone(path)); return; }
-      for (const next of toriiNextSteps(state, path)) walk([...path, next]);
+    const start = state.spirits[state.turn];
+    const opponent = state.spirits[other(state.turn)];
+    const visited = new Set([key(start.r, start.c)]);
+    const path = [];
+    const walk = () => {
+      if (path.length === steps) { results.push(path.slice()); return firstOnly; }
+      const current = path.length ? path[path.length - 1] : start;
+      for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        let r = current.r + dr, c = current.c + dc;
+        if (!inBounds(r, c, 4, 4)) continue;
+        if (r === opponent.r || c === opponent.c) { r += dr; c += dc; }
+        if (!inBounds(r, c, 4, 4) || visited.has(key(r, c))) continue;
+        path.push({ r, c });
+        visited.add(key(r, c));
+        const found = walk();
+        path.pop();
+        visited.delete(key(r, c));
+        if (found) return true;
+      }
+      return false;
     };
-    walk([]);
+    walk();
     return results;
   }
   function toriiEndTurn(state, owner) {
@@ -1226,16 +1283,15 @@
     actions(state) {
       if (state.winner) return [];
       if (state.building) return state.buildChoices.map((pos) => ({ type: 'build', pos }));
-      if (state.pendingTile === null) return [1,2,3].filter((tile) => !state.tilesUsed[state.turn][tile] && toriiPaths(state, tile).length).map((tile) => ({ type: 'tile', tile }));
+      if (state.pendingTile === null) return [1,2,3].filter((tile) => !state.tilesUsed[state.turn][tile] && toriiPaths(state, tile, true).length).map((tile) => ({ type: 'tile', tile }));
       return toriiPaths(state, state.pendingTile).map((path) => ({ type: 'path', path }));
     },
     searchActions(state) {
       if (state.building || state.pendingTile !== null) return this.actions(state);
       const plans = [];
       for (const tileAction of this.actions(state)) {
-        const afterTile = this.apply(state, tileAction);
-        for (const pathAction of this.actions(afterTile)) {
-          plans.push({ type: 'torii-plan', tile: tileAction.tile, path: clone(pathAction.path), steps: [tileAction, pathAction] });
+        for (const path of toriiPaths(state, tileAction.tile)) {
+          plans.push({ type: 'torii-plan', tile: tileAction.tile, path, steps: [tileAction, { type: 'path', path }] });
         }
       }
       return plans;
@@ -1250,7 +1306,8 @@
       if (action.type === 'tile') { state.pendingTile = action.tile; return state; }
       if (action.type === 'path') {
         const owner = state.turn;
-        state.spirits[owner] = clone(action.path[action.path.length - 1]);
+        const landing = action.path[action.path.length - 1];
+        state.spirits[owner] = { r: landing.r, c: landing.c };
         for (const pos of action.path) if (!state.torii[pos.r][pos.c]) state.followers[pos.r][pos.c] = owner;
         toriiFinishPath(state, owner);
         return state;

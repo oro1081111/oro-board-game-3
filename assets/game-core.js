@@ -156,10 +156,16 @@
     const search = new MctsSearch(game, state);
     const total = Math.max(1, Number(iterations) || 1);
     return new Promise((resolve) => {
+      let batch = 12;
       const work = () => {
         if (!tokenIsCurrent()) return resolve(null);
-        const until = Math.min(total, search.root.visits + 12);
+        const started = Date.now();
+        const until = Math.min(total, search.root.visits + batch);
         while (search.root.visits < until) search.iterate();
+        // 自適應批次：每批目標約 10-16ms，讓快的遊戲少付固定的讓出開銷，仍保持 UI 回應。
+        const elapsed = Date.now() - started;
+        if (elapsed < 8) batch = Math.min(batch * 2, 4000);
+        else if (elapsed > 20) batch = Math.max(12, Math.floor(batch / 2));
         if (search.root.visits < total) setTimeout(work, 4);
         else resolve(search.result());
       };
