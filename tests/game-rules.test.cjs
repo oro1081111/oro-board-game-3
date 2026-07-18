@@ -123,7 +123,14 @@ const { BOARD_GAMES, GameCore } = window;
   } finally {
     Math.random = originalRandom;
   }
-  assert.equal(zombieGame.cutoffReward, undefined, 'Zombie MCTS remains terminal-result based without cutoff scoring');
+  assert.equal(zombieGame.cutoffReward({ scores: { first: 7, second: 3 } }, 'first'), .7, 'Zombie cutoff reward follows the score ratio');
+  assert.equal(zombieGame.cutoffReward({ scores: { first: 7, second: 3 } }, 'second'), .3, 'Zombie cutoff reward is symmetric for the other player');
+  assert.equal(zombieGame.cutoffReward({ scores: { first: 0, second: 0 } }, 'first'), .5, 'Zombie cutoff reward stays even at zero-zero');
+  assert.ok(zombieGame.rolloutActions(zombie).length > 0 && zombieGame.rolloutActions(zombie).every((action) => action.type !== 'zombie-turn'), 'Zombie rollouts sample cheap atomic actions instead of enumerating whole turns');
+  const zombieMutationProbe = zombieGame.create();
+  const zombieSnapshot = JSON.stringify(zombieMutationProbe);
+  zombieGame.apply(zombieMutationProbe, zombieGame.actions(zombieMutationProbe).find((action) => action.type === 'jump') || zombieGame.actions(zombieMutationProbe)[0]);
+  assert.equal(JSON.stringify(zombieMutationProbe), zombieSnapshot, 'Zombie apply never mutates the source state (required by the shallow state copy)');
   const winningBoard = Array.from({ length: 5 }, () => Array(5).fill(null));
   winningBoard[2][0] = { id: 'winning-zombie', owner: 'first', stack: [2] };
   winningBoard[2][1] = { id: 'scoring-zombie', owner: 'second', stack: [1] };
@@ -346,6 +353,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(coreSource, /game\.immediateAction\s*\n?\s*\? game\.immediateAction\(state, searchActions\)/, 'MCTS lets games override the immediate-win check');
   assert.match(coreSource, /: searchActions\.find\(\(action\) => game\.outcome\(applySearch\(action\)\) === state\.turn\)/, 'MCTS checks every game for a one-move win by default before searching');
   assert.match(coreSource, /this\.game\.searchActions\?\.\(state\) \|\| this\.game\.actions\(state\)/, 'MCTS supports game-specific search actions');
+  assert.match(coreSource, /this\.game\.rolloutActions\?\.\(state\) \|\| this\.actions\(state\)/, 'Rollouts may use cheaper per-step actions than the search tree');
   assert.match(coreSource, /this\.plannedActions = plan\.slice\(1\)/, 'Computer macro actions are played through the existing atomic animation flow');
   const gamesSource = fs.readFileSync(path.join(root, 'assets', 'games.js'), 'utf8');
   assert.match(gamesSource, /samePos\(item\.from, from\)[\s\S]{0,120}button\.dataset\.dr/, 'Zombie out clicks match both origin and direction');

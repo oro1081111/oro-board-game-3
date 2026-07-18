@@ -608,6 +608,20 @@
   }
   function zombieCombine(moving, target) { return { id: moving.id, owner: moving.owner, stack: [...target.stack, ...moving.stack] }; }
 
+  // 棋子物件不可就地修改（合併、復活、入陰間都建立新物件），因此狀態可用淺結構拷貝。
+  function zombieCloneState(state) {
+    return {
+      turn: state.turn,
+      board: state.board.map((row) => row.slice()),
+      waiting: { first: state.waiting.first.slice(), second: state.waiting.second.slice() },
+      scores: { first: state.scores.first, second: state.scores.second },
+      continuing: state.continuing ? { r: state.continuing.r, c: state.continuing.c } : null,
+      path: state.path.map((pos) => ({ r: pos.r, c: pos.c })),
+      winner: state.winner,
+      nextId: state.nextId
+    };
+  }
+
   function zombieRolloutWeight(action) {
     if (action.type === 'zombie-turn') {
       if (action.score > 0) return 1.5 + action.score * 4;
@@ -636,11 +650,18 @@
       { label: '官方介紹', href: 'https://www.zeczec.com/projects/Catandjump' },
       { label: '中文規則', href: 'https://drive.google.com/drive/folders/1v4JW7-4D5lLHNqgEyPc8M76hH-FL9CKO' }
     ],
-    openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 90,
+    openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 120,
     animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
     animationOptions() { return { spring: true }; },
     immediateAction(state, actions) {
       return actions.find((action) => state.scores[state.turn] + (action.score || 0) >= 8);
+    },
+    rolloutActions(state) { return this.actions(state); },
+    cutoffReward(state, rootPlayer) {
+      const mine = state.scores[rootPlayer];
+      const theirs = state.scores[other(rootPlayer)];
+      const total = mine + theirs;
+      return total ? mine / total : .5;
     },
     rolloutAction(state, actions) {
       const winningJump = this.immediateAction(state, actions);
@@ -710,7 +731,7 @@
     },
     expandSearchAction(action) { return action.type === 'zombie-turn' ? action.steps : [action]; },
     apply(source, action) {
-      const state = clone(source);
+      const state = zombieCloneState(source);
       if (action.type === 'stop') { state.turn = other(state.turn); state.continuing = null; state.path = []; return state; }
       if (action.type === 'revive') {
         const index = state.waiting[state.turn].findIndex((piece) => piece.stack[0] === action.tier);

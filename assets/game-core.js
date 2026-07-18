@@ -90,7 +90,7 @@
       for (let depth = 0; depth < limit; depth += 1) {
         const outcome = this.game.outcome(state);
         if (outcome !== null) return outcome;
-        const actions = this.actions(state);
+        const actions = this.game.rolloutActions?.(state) || this.actions(state);
         if (!actions.length) return 'draw';
         const action = this.game.rolloutAction ? this.game.rolloutAction(state, actions) : pick(actions);
         state = this.apply(state, action);

@@ -148,11 +148,14 @@ state.turn
 searchActions(state)
 searchApply(state, action)
 expandSearchAction(action)
+rolloutActions(state)
 rolloutAction(state, actions)
 cutoffReward(state, rootPlayer)
 ```
 
-只有規則／產品決策明確允許時才加入啟發式。聖托里尼使用高度、移動性、中央控制與立即勝利 rollout policy。殭屍棋只在 rollout 行動抽樣中優先立即勝利，並提高得分跳躍與續跳的權重；不使用 cutoff 靜態分差，UCT、正式合法行動與畫面勝率仍維持共用 MCTS 流程。其他共用遊戲維持隨機 rollout。
+`rolloutActions` 只影響 rollout 模擬的每一步要從哪組行動抽樣；提供它可以讓使用巨集搜尋行動的遊戲在模擬中改用便宜的原子行動，避免每一步都重新枚舉完整回合。UCT 樹節點與最終選步仍使用 `searchActions`。
+
+只有規則／產品決策明確允許時才加入啟發式。聖托里尼使用高度、移動性、中央控制與立即勝利 rollout policy。殭屍棋在 rollout 中以原子行動逐步抽樣（`rolloutActions`），優先立即勝利並提高得分跳躍與續跳的權重；rollout 超過深度上限時依雙方分數比例給分（`我方分 ÷ 雙方總分`，0:0 為 0.5）。UCT、正式合法行動與畫面勝率仍維持共用 MCTS 流程。其他共用遊戲維持隨機 rollout。
 
 ## 7. Undo 與日誌
 
