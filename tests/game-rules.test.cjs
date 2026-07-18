@@ -127,7 +127,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal(zombieGame.cutoffReward({ scores: { first: 7, second: 3 } }, 'second'), .25, 'Zombie cutoff reward is symmetric for the other player');
   assert.equal(zombieGame.cutoffReward({ scores: { first: 0, second: 0 } }, 'first'), .5, 'Zombie cutoff reward stays even at zero-zero');
   assert.equal(zombieGame.cutoffReward({ scores: { first: 1, second: 0 } }, 'first'), .5625, 'Zombie cutoff never treats a small lead as a certain win');
-  assert.ok(zombieGame.rolloutActions(zombie).length > 0 && zombieGame.rolloutActions(zombie).every((action) => action.type !== 'zombie-turn'), 'Zombie rollouts sample cheap atomic actions instead of enumerating whole turns');
+  assert.equal(zombieGame.rolloutActions, undefined, 'Zombie rollouts keep whole-turn macros so playouts see full chain scores');
   const zombieMutationProbe = zombieGame.create();
   const zombieSnapshot = JSON.stringify(zombieMutationProbe);
   zombieGame.apply(zombieMutationProbe, zombieGame.actions(zombieMutationProbe).find((action) => action.type === 'jump') || zombieGame.actions(zombieMutationProbe)[0]);

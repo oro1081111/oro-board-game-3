@@ -633,6 +633,20 @@
     return actions[actions.length - 1];
   }
 
+  // 模擬抽樣必須看得到完整連跳鏈的總分（zombie-turn 巨集），
+  // 改用只看單段分數的原子抽樣會大幅弱化 playout 品質（實測 1:19）。
+  function zombieRolloutWeight(action) {
+    if (action.type === 'zombie-turn') {
+      if (action.score > 0) return 1.5 + action.score * 4;
+      if (action.steps.some((step) => step.type === 'jump')) return 1.5 + action.steps.length * .25;
+      return zombieRolloutWeight(action.steps[0]);
+    }
+    if (action.type === 'jump') return 1.5 + (action.score || 0) * 4;
+    if (action.type === 'stop') return 0.25;
+    if (action.type === 'revive') return 0.8;
+    return 1;
+  }
+
   games['zombie-jump'] = {
     title: '殭屍棋 JUMP',
     nameZh: '殭屍棋',
@@ -649,35 +663,19 @@
       { label: '官方介紹', href: 'https://www.zeczec.com/projects/Catandjump' },
       { label: '中文規則', href: 'https://drive.google.com/drive/folders/1v4JW7-4D5lLHNqgEyPc8M76hH-FL9CKO' }
     ],
-    openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 240,
+    openings: [{ value: 'standard', label: '標準設置' }], rolloutLimit: 140,
     animationDuration(action) { return action.type === 'stop' ? 0 : action.to === 'out' ? 520 : 380; },
     animationOptions() { return { spring: true }; },
     immediateAction(state, actions) {
       return actions.find((action) => state.scores[state.turn] + (action.score || 0) >= 8);
     },
-    rolloutActions(state) { return this.actions(state); },
     cutoffReward(state, rootPlayer) {
       return .5 + (state.scores[rootPlayer] - state.scores[other(rootPlayer)]) / 16;
     },
-    // 分層抽樣：跳躍以固定高機率優先（組內依得分加權），不受移動／復活候選數量稀釋，
-    // 對應舊版把每條完整連跳鏈都列為獨立候選時的高攻擊性。
     rolloutAction(state, actions) {
       const winningJump = this.immediateAction(state, actions);
       if (winningJump) return winningJump;
-      let stop = null;
-      const jumps = [];
-      const quiet = [];
-      for (const action of actions) {
-        if (action.type === 'stop') stop = action;
-        else if (action.type === 'jump') jumps.push(action);
-        else quiet.push(action);
-      }
-      if (stop && Math.random() < .12) return stop;
-      if (jumps.length && (!quiet.length || Math.random() < .65)) {
-        return zombieWeightedPick(jumps, (action) => 1.5 + (action.score || 0) * 4);
-      }
-      if (!quiet.length) return stop || jumps[0];
-      return zombieWeightedPick(quiet, (action) => action.type === 'revive' ? .8 : 1);
+      return zombieWeightedPick(actions, zombieRolloutWeight);
     },
     rules: [
       { title: '配件與目標', html: '<ul><li>使用 5×5 棋盤；雙方各有等級 1、2、3 的殭屍棋，並各有一個陰間區域。</li><li>跳過對手棋可依被跳過棋的等級得分；先取得 8 分的玩家立即獲勝。</li></ul>' },
