@@ -112,7 +112,7 @@
     openings: [{ value: 'standard', label: '禿鷹老師簡易模式' }],
     rolloutLimit: 70,
     evaluationIterations: 80,
-    animationDuration(action) { return action.collect ? 900 : 0; },
+    animationDuration(action) { return action.collect ? 900 : action.previewed ? 0 : 450; },
     rules: [
       { title: '本頁採用的模式', html: '<p>蒐靈祭正式規則包含角色能力；本頁採用「禿鷹老師」簡易模式，雙方沒有個別能力，專注於放置、翻面與四連線收取。</p>' },
       { title: '配件與目標', html: '<ul><li>4×4 靈魂墊一面、16 枚橘／綠雙面靈魂棋，以及雙方計分標記。</li><li>兩位玩家共用同一批雙面棋；棋子不是分屬某位玩家。</li><li>每收取一組同色四連線得 1 分，先取得 3 分者獲勝。</li></ul>' },
@@ -157,6 +157,8 @@
       const displayBoard = pending ? soulPlace(state.board, pending) : state.board;
       // 收取行動的動畫窗口：被收的連線先停留並高亮，窗口結束的重繪才讓棋子淡出。
       const collecting = controller?.animating && controller.animationAction?.collect ? controller.animationAction.collect : null;
+      // 剛提交的放置行動：正交相鄰的棋子播放翻面動畫（預覽已顯示過的提交不重播）。
+      const placing = controller?.animationAction?.type === 'place' && !controller.animationAction.previewed ? controller.animationAction : null;
       const lineByCell = new Map();
       pendingActions.forEach((action, index) => action.collect.positions.forEach((pos) => {
         if (!lineByCell.has(key(pos.r, pos.c))) lineByCell.set(key(pos.r, pos.c), index);
@@ -170,7 +172,8 @@
         if (lineIndex !== undefined) classes.push('collectable');
         if (collectingHere) classes.push('collecting');
         if (pending && pending.r === r && pending.c === c) classes.push('selected');
-        const piece = color ? `<span class="piece ${color}" data-anim-id="soul-${r}-${c}"></span>` : '';
+        const flipping = color && placing && Math.abs(placing.r - r) + Math.abs(placing.c - c) === 1;
+        const piece = color ? `<span class="piece ${color}${flipping ? ` flipping flip-from-${soulFlip(color)}` : ''}" data-anim-id="soul-${r}-${c}"${flipping ? ' data-anim-hold' : ''}></span>` : '';
         const label = lineIndex !== undefined ? `${posText({ r, c })}，點選收取${soulLineLabel(pendingActions[lineIndex].collect)}` : `${posText({ r, c })}${color ? `，${soulColorName(color)}靈魂` : '，空格'}`;
         board += `<button class="cell ${classes.join(' ')}" data-r="${r}" data-c="${c}" ${lineIndex !== undefined ? `data-line="${lineIndex}"` : ''} aria-label="${label}">${piece}</button>`;
       }
@@ -193,7 +196,7 @@
       const commitLine = (index) => {
         if (!controller.isHumanTurn() || !ui.pending) return;
         const action = this.actions(state).filter((item) => item.r === ui.pending.r && item.c === ui.pending.c && item.color === ui.pending.color && item.collect)[index];
-        if (action) controller.commit(action);
+        if (action) controller.commit({ ...action, previewed: true });
       };
       tray.querySelectorAll('[data-line-choice]').forEach((button) => button.addEventListener('click', () => commitLine(Number(button.dataset.lineChoice))));
       board.querySelectorAll('[data-line]').forEach((button) => button.addEventListener('click', () => commitLine(Number(button.dataset.line))));

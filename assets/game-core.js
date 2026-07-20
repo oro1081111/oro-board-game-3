@@ -543,6 +543,7 @@
           element.animate([{ opacity: 0, transform: 'scale(.72)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 220, easing: 'ease-out' });
           return;
         }
+        if (element.hasAttribute('data-anim-hold')) return;
         const next = element.getBoundingClientRect();
         const dx = old.rect.left - next.left;
         const dy = old.rect.top - next.top;

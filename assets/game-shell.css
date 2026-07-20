@@ -165,7 +165,17 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .soulaween-board .cell.collecting { z-index: 2; outline: 5px solid rgba(255,165,15,.9); outline-offset: -7px; background: #fff4d6; }
 .soulaween-board .cell.collecting .piece { animation: soul-collect-pulse .9s ease; }
 @keyframes soul-collect-pulse { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.14); } }
-@media (prefers-reduced-motion: reduce) { .soulaween-board .cell.collecting .piece { animation: none; } }
+.soulaween-board .piece.flip-from-green { --flip-from: var(--green); --flip-to: var(--orange); }
+.soulaween-board .piece.flip-from-orange { --flip-from: var(--orange); --flip-to: var(--green); }
+.soulaween-board .piece.flipping { animation: soul-flip .45s ease; }
+.soulaween-board .cell.collecting .piece.flipping { animation: soul-flip .45s ease; }
+@keyframes soul-flip {
+  0% { transform: rotateY(0deg); background: var(--flip-from); }
+  49.9% { transform: rotateY(88deg); background: var(--flip-from); }
+  50% { transform: rotateY(92deg); background: var(--flip-to); }
+  100% { transform: rotateY(180deg); background: var(--flip-to); }
+}
+@media (prefers-reduced-motion: reduce) { .soulaween-board .cell.collecting .piece, .soulaween-board .piece.flipping { animation: none; } }
 .soulaween-board .piece { width: 74%; }
 .score-pips { display: flex; align-items: center; justify-content: center; gap: clamp(8px, 2.4vw, 13px); color: inherit; }
 .score-pip { display: block; width: clamp(16px, 4vw, 22px); aspect-ratio: 1; border: 3px solid currentColor; border-radius: 50%; background: transparent; }
