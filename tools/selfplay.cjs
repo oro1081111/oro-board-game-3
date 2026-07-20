@@ -13,6 +13,22 @@ const totalGames = Number(gamesArg);
 const iterations = Number(itersArg);
 const MAX_PLIES = 400;
 
+// 各遊戲的「勝利方式」分類器（可選）：回傳字串標籤，統計會依先後手分開列出。
+const WIN_CLASSIFIERS = {
+  torii(state, winner) {
+    const gates = state.torii.flat().filter((cell) => cell === winner).length;
+    return gates >= 4 ? '鳥居勝利' : '信徒勝利';
+  },
+  'ice-stage'(state, winner) {
+    const center = state.board[2][2];
+    if (center && center.kind === 'circle' && center.owner === winner) return '抵達中央';
+    const circles = { first: false, second: false };
+    for (const row of state.board) for (const item of row) if (item?.kind === 'circle') circles[item.owner] = true;
+    if (!circles.first || !circles.second) return '圓形棋被移除';
+    return '數量結算';
+  }
+};
+
 function loadEngine() {
   const root = path.resolve(__dirname, '..');
   global.window = { addEventListener() {} };
@@ -32,21 +48,26 @@ async function playGame(engine) {
     state = game.searchApply ? game.searchApply(state, result.action) : game.apply(state, result.action);
     plies += 1;
   }
-  return { outcome: game.outcome(state), plies };
+  return { outcome: game.outcome(state), plies, state };
 }
 
 async function workerMain() {
   const count = Number(process.env.SELFPLAY_COUNT);
   const engine = loadEngine();
   if (!engine.game) { process.exit(2); }
-  const tally = { first: 0, second: 0, draw: 0, unfinished: 0, plies: 0, ms: 0 };
+  const classify = WIN_CLASSIFIERS[gameId];
+  const tally = { first: 0, second: 0, draw: 0, unfinished: 0, plies: 0, ms: 0, types: {} };
   for (let i = 0; i < count; i += 1) {
     const t0 = Date.now();
-    const { outcome, plies } = await playGame(engine);
+    const { outcome, plies, state } = await playGame(engine);
     tally.ms += Date.now() - t0;
     tally.plies += plies;
     if (outcome === 'first' || outcome === 'second' || outcome === 'draw') tally[outcome] += 1;
     else tally.unfinished += 1;
+    if (classify && (outcome === 'first' || outcome === 'second')) {
+      const key = `${outcome}:${classify(state, outcome)}`;
+      tally.types[key] = (tally.types[key] || 0) + 1;
+    }
     process.send({ type: 'progress', done: i + 1 });
   }
   process.send({ type: 'result', tally }, () => process.exit(0));
@@ -80,14 +101,27 @@ async function main() {
     child.on('exit', (code) => code === 0 ? resolve() : reject(new Error(`worker exited ${code}`)));
   })));
   const total = tallies.reduce((acc, t) => {
-    for (const k of Object.keys(acc)) acc[k] += t[k];
+    for (const k of ['first', 'second', 'draw', 'unfinished', 'plies', 'ms']) acc[k] += t[k];
+    for (const [key, value] of Object.entries(t.types || {})) acc.types[key] = (acc.types[key] || 0) + value;
     return acc;
-  }, { first: 0, second: 0, draw: 0, unfinished: 0, plies: 0, ms: 0 });
+  }, { first: 0, second: 0, draw: 0, unfinished: 0, plies: 0, ms: 0, types: {} });
   console.log(`\n總耗時 ${((Date.now() - started) / 1000).toFixed(0)}s（單場平均 ${(total.ms / totalGames / 1000).toFixed(1)}s、平均 ${(total.plies / totalGames).toFixed(1)} 步）`);
   console.log(`先手勝 ${total.first} 場（${(total.first / totalGames * 100).toFixed(1)}%）`);
   console.log(`後手勝 ${total.second} 場（${(total.second / totalGames * 100).toFixed(1)}%）`);
   if (total.draw) console.log(`和局 ${total.draw} 場（${(total.draw / totalGames * 100).toFixed(1)}%）`);
   if (total.unfinished) console.log(`未在 ${MAX_PLIES} 步內結束 ${total.unfinished} 場`);
+  const typeKeys = Object.keys(total.types).sort();
+  if (typeKeys.length) {
+    console.log('勝利方式：');
+    for (const seat of ['first', 'second']) {
+      const seatKeys = typeKeys.filter((key) => key.startsWith(`${seat}:`));
+      const wins = total[seat];
+      for (const key of seatKeys) {
+        const label = key.slice(seat.length + 1);
+        console.log(`  ${seat === 'first' ? '先手' : '後手'}：${label} ${total.types[key]} 場（佔其勝場 ${(total.types[key] / Math.max(1, wins) * 100).toFixed(1)}%）`);
+      }
+    }
+  }
 }
 
 main().catch((error) => { console.error(error); process.exit(1); });
