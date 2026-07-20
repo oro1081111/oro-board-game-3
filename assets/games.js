@@ -217,7 +217,8 @@
         const r = Number(button.dataset.r), c = Number(button.dataset.c), color = ui.color || 'green';
         const choices = this.actions(state).filter((action) => action.r === r && action.c === c && action.color === color);
         if (!choices.length) return;
-        if (choices.some((action) => action.collect)) controller.setUi({ color, pending: { type: 'place', r, c, color } });
+        // 只形成一條連線時自動收取（仍走完整的翻面與收取停留動畫）；多條才要求玩家選擇。
+        if (choices.length > 1 && choices.some((action) => action.collect)) controller.setUi({ color, pending: { type: 'place', r, c, color } });
         else controller.commit(choices[0]);
       }));
     }
