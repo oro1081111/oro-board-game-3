@@ -33,8 +33,10 @@
     constructor(game, state) {
       this.game = game;
       this.rootPlayer = state.turn;
-      this.root = this.node(clone(state), null, null);
+      this.root = this.node(this.copy(state), null, null);
     }
+
+    copy(state) { return this.game.cloneState ? this.game.cloneState(state) : clone(state); }
 
     actions(state) { return this.game.searchActions?.(state) || this.game.actions(state); }
     apply(state, action) { return this.game.searchApply?.(state, action) || this.game.apply(state, action); }
@@ -85,14 +87,20 @@
     }
 
     rollout(start) {
-      let state = clone(start);
+      let state = this.copy(start);
       const limit = this.game.rolloutLimit || 100;
       for (let depth = 0; depth < limit; depth += 1) {
         const outcome = this.game.outcome(state);
         if (outcome !== null) return outcome;
-        const actions = this.game.rolloutActions?.(state) || this.actions(state);
-        if (!actions.length) return 'draw';
-        const action = this.game.rolloutAction ? this.game.rolloutAction(state, actions) : pick(actions);
+        let action;
+        if (this.game.rolloutStep) {
+          action = this.game.rolloutStep(state);
+        } else {
+          const actions = this.game.rolloutActions?.(state) || this.actions(state);
+          if (!actions.length) return 'draw';
+          action = this.game.rolloutAction ? this.game.rolloutAction(state, actions) : pick(actions);
+        }
+        if (!action) return 'draw';
         state = this.apply(state, action);
       }
       return this.game.cutoffReward ? this.game.cutoffReward(state, this.rootPlayer) : 'draw';
@@ -157,8 +165,14 @@
     const total = Math.max(1, Number(iterations) || 1);
     return new Promise((resolve) => {
       let batch = 12;
+      // MessageChannel 讓出沒有 setTimeout 的 4ms 下限，批次之間仍會回到事件迴圈維持 UI 回應。
+      const channel = typeof MessageChannel === 'function' ? new MessageChannel() : null;
+      const finish = (value) => {
+        if (channel) { channel.port1.close(); channel.port2.close(); }
+        resolve(value);
+      };
       const work = () => {
-        if (!tokenIsCurrent()) return resolve(null);
+        if (!tokenIsCurrent()) return finish(null);
         const started = Date.now();
         const until = Math.min(total, search.root.visits + batch);
         while (search.root.visits < until) search.iterate();
@@ -166,9 +180,11 @@
         const elapsed = Date.now() - started;
         if (elapsed < 8) batch = Math.min(batch * 2, 4000);
         else if (elapsed > 20) batch = Math.max(12, Math.floor(batch / 2));
-        if (search.root.visits < total) setTimeout(work, 4);
-        else resolve(search.result());
+        if (search.root.visits >= total) return finish(search.result());
+        if (channel) channel.port2.postMessage(0);
+        else setTimeout(work, 4);
       };
+      if (channel) channel.port1.onmessage = work;
       work();
     });
   }

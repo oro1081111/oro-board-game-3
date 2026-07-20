@@ -54,32 +54,41 @@
     return `${first.c < last.c ? '左上到右下' : '右上到左下'}${soulColorName(line.color)}斜線`;
   }
 
-  // 候選檢查不複製盤面：落點取新色、正交相鄰翻面、其餘沿用原色，直接掃 10 條靜態連線。
+  // 候選檢查以 16-bit 位元遮罩進行：兩色各一個遮罩，放置＋翻面＋連線檢查都是整數運算。
+  // 連線遮罩順序沿用 SOUL_LINE_TABLE（橫、直、兩斜），行動列表順序不變。
+  const SOUL_LINE_MASKS = SOUL_LINE_TABLE.map((positions) => positions.reduce((mask, pos) => mask | (1 << (pos.r * 4 + pos.c)), 0));
+  const SOUL_NEIGHBOR_MASKS = Array.from({ length: 16 }, (_, index) => {
+    const r = Math.floor(index / 4), c = index % 4;
+    let mask = 0;
+    for (const [dr, dc] of [[0, 1], [0, -1], [1, 0], [-1, 0]]) {
+      if (inBounds(r + dr, c + dc, 4, 4)) mask |= 1 << ((r + dr) * 4 + c + dc);
+    }
+    return mask;
+  });
   function soulActions(state) {
     if (state.winner) return [];
     const actions = [];
     const board = state.board;
+    let greenMask = 0, orangeMask = 0;
     for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
-      if (board[r][c] !== null) continue;
+      if (board[r][c] === 'green') greenMask |= 1 << (r * 4 + c);
+      else if (board[r][c] === 'orange') orangeMask |= 1 << (r * 4 + c);
+    }
+    const occupied = greenMask | orangeMask;
+    for (let r = 0; r < 4; r += 1) for (let c = 0; c < 4; c += 1) {
+      const bit = 1 << (r * 4 + c);
+      if (occupied & bit) continue;
+      const flips = SOUL_NEIGHBOR_MASKS[r * 4 + c] & occupied;
       for (const color of SOUL_COLORS) {
-        const effective = (pos) => {
-          if (pos.r === r && pos.c === c) return color;
-          const cell = board[pos.r][pos.c];
-          if (!cell) return null;
-          return Math.abs(pos.r - r) + Math.abs(pos.c - c) === 1 ? soulFlip(cell) : cell;
-        };
+        const nextGreen = (greenMask & ~flips) | (orangeMask & flips) | (color === 'green' ? bit : 0);
+        const nextOrange = (orangeMask & ~flips) | (greenMask & flips) | (color === 'orange' ? bit : 0);
         let collected = false;
-        for (const positions of SOUL_LINE_TABLE) {
-          const lineColor = effective(positions[0]);
+        for (let line = 0; line < SOUL_LINE_MASKS.length; line += 1) {
+          const mask = SOUL_LINE_MASKS[line];
+          const lineColor = (nextGreen & mask) === mask ? 'green' : (nextOrange & mask) === mask ? 'orange' : null;
           if (!lineColor) continue;
-          let full = true;
-          for (let index = 1; index < 4; index += 1) {
-            if (effective(positions[index]) !== lineColor) { full = false; break; }
-          }
-          if (full) {
-            actions.push({ type: 'place', r, c, color, collect: { color: lineColor, positions: positions.map((pos) => ({ r: pos.r, c: pos.c })) } });
-            collected = true;
-          }
+          actions.push({ type: 'place', r, c, color, collect: { color: lineColor, positions: SOUL_LINE_TABLE[line].map((pos) => ({ r: pos.r, c: pos.c })) } });
+          collected = true;
         }
         if (!collected) actions.push({ type: 'place', r, c, color });
       }
@@ -112,7 +121,7 @@
     openings: [{ value: 'standard', label: '禿鷹老師簡易模式' }],
     rolloutLimit: 70,
     evaluationIterations: 80,
-    animationDuration(action) { return action.collect ? 900 : action.previewed ? 0 : 450; },
+    animationDuration(action) { return action.collect ? 900 : action.previewed ? 0 : 650; },
     rules: [
       { title: '本頁採用的模式', html: '<p>蒐靈祭正式規則包含角色能力；本頁採用「禿鷹老師」簡易模式，雙方沒有個別能力，專注於放置、翻面與四連線收取。</p>' },
       { title: '配件與目標', html: '<ul><li>4×4 靈魂墊一面、16 枚橘／綠雙面靈魂棋，以及雙方計分標記。</li><li>兩位玩家共用同一批雙面棋；棋子不是分屬某位玩家。</li><li>每收取一組同色四連線得 1 分，先取得 3 分者獲勝。</li></ul>' },
@@ -125,6 +134,9 @@
       return { turn: 'first', board: soulEmptyBoard(), scores: { first: 0, second: 0 }, winner: null };
     },
     actions(state) { return soulActions(state); },
+    cloneState(state) {
+      return { turn: state.turn, board: state.board.map((row) => row.slice()), scores: { first: state.scores.first, second: state.scores.second }, winner: state.winner };
+    },
     apply(source, action) {
       // soulPlace 已回傳全新盤面，其餘欄位為純值淺拷貝。
       const state = { turn: source.turn, board: soulPlace(source.board, action), scores: { first: source.scores.first, second: source.scores.second }, winner: source.winner };
@@ -439,6 +451,15 @@
       return !state.workers.some((worker) => worker.id !== workerId ? samePos(worker.pos, pos) : samePos(move, pos));
     });
   }
+  function santoriniBuildCount(state, workerId, move) {
+    let count = 0;
+    for (const pos of around(move)) {
+      if (state.board[pos.r][pos.c] >= 4) continue;
+      if (state.workers.some((worker) => worker.id !== workerId ? samePos(worker.pos, pos) : samePos(move, pos))) continue;
+      count += 1;
+    }
+    return count;
+  }
   function santoriniAllMoves(state, player = state.turn) {
     const result = [];
     for (const worker of state.workers.filter((item) => item.owner === player)) {
@@ -527,6 +548,51 @@
       return best;
     },
     cutoffReward(state, rootPlayer) { return santoriniHeuristic(state, rootPlayer); },
+    cloneState(state) { return santoriniCloneState(state); },
+    // rollout 每步只需抽 3 個樣本：先數各移動的建築「數量」，抽中的索引才展開成行動，
+    // 亂數消耗與均勻分佈跟完整枚舉逐位元相同。
+    rolloutStep(state) {
+      if (state.winner) return null;
+      if (state.phase === 'placement') {
+        const actions = this.actions(state);
+        return actions.length ? this.rolloutAction(state, actions) : null;
+      }
+      const entries = [];
+      let total = 0;
+      for (const worker of state.workers) {
+        if (worker.owner !== state.turn) continue;
+        for (const move of santoriniMoves(state, worker)) {
+          const level3 = state.board[move.r][move.c] === 3;
+          const size = level3 ? 1 : santoriniBuildCount(state, worker.id, move);
+          if (!size) continue;
+          entries.push({ workerId: worker.id, move, level3, size, start: total });
+          total += size;
+        }
+      }
+      if (!total) return null;
+      const immediate = entries.find((entry) => entry.level3);
+      if (immediate) return { type: 'turn', workerId: immediate.workerId, move: immediate.move, build: null };
+      const actionOf = (index) => {
+        const entry = entries.find((item) => index >= item.start && index < item.start + item.size);
+        if (entry.level3) return { type: 'turn', workerId: entry.workerId, move: entry.move, build: null };
+        return { type: 'turn', workerId: entry.workerId, move: entry.move, build: santoriniBuilds(state, entry.workerId, entry.move)[index - entry.start] };
+      };
+      const picks = [];
+      const count = Math.min(3, total);
+      while (picks.length < count) {
+        const index = Math.floor(Math.random() * total);
+        if (!picks.includes(index)) picks.push(index);
+      }
+      const actor = state.turn;
+      let best = actionOf(picks[0]);
+      let bestValue = santoriniHeuristic(this.apply(state, best), actor);
+      for (let i = 1; i < picks.length; i += 1) {
+        const action = actionOf(picks[i]);
+        const value = santoriniHeuristic(this.apply(state, action), actor);
+        if (value > bestValue) { best = action; bestValue = value; }
+      }
+      return best;
+    },
     apply(source, action) {
       const state = santoriniCloneState(source);
       if (action.type === 'place') {
@@ -650,7 +716,7 @@
       while (inBounds(r, c, 5, 5) && state.board[r][c]) {
         const over = state.board[r][c];
         if (jumped.length && total <= zombieTotal(piece) && over.owner === piece.owner && zombieCanStack(piece, over) && !excluded.some((pos) => pos.r === r && pos.c === c)) {
-          result.push({ type: 'jump', from: clone(from), to: { r, c }, jumped: clone(jumped), score, dir: { dr, dc } });
+          result.push({ type: 'jump', from: { r: from.r, c: from.c }, to: { r, c }, jumped: jumped.map((pos) => ({ r: pos.r, c: pos.c })), score, dir: { dr, dc } });
         }
         jumped.push({ r, c });
         total += zombieTotal(over);
@@ -658,8 +724,8 @@
         r += dr; c += dc;
       }
       if (total > zombieTotal(piece)) continue;
-      if (!inBounds(r, c, 5, 5)) result.push({ type: 'jump', from: clone(from), to: 'out', jumped, score, dir: { dr, dc } });
-      else if (!excluded.some((pos) => pos.r === r && pos.c === c)) result.push({ type: 'jump', from: clone(from), to: { r, c }, jumped, score, dir: { dr, dc } });
+      if (!inBounds(r, c, 5, 5)) result.push({ type: 'jump', from: { r: from.r, c: from.c }, to: 'out', jumped, score, dir: { dr, dc } });
+      else if (!excluded.some((pos) => pos.r === r && pos.c === c)) result.push({ type: 'jump', from: { r: from.r, c: from.c }, to: { r, c }, jumped, score, dir: { dr, dc } });
     }
     return result;
   }
@@ -786,6 +852,7 @@
       return action.steps.reduce((state, step) => this.apply(state, step), source);
     },
     expandSearchAction(action) { return action.type === 'zombie-turn' ? action.steps : [action]; },
+    cloneState(state) { return zombieCloneState(state); },
     apply(source, action) {
       const state = zombieCloneState(source);
       if (action.type === 'stop') { state.turn = other(state.turn); state.continuing = null; state.path = []; return state; }
@@ -1309,6 +1376,7 @@
       return action.steps.reduce((state, step) => this.apply(state, step), source);
     },
     expandSearchAction(action) { return action.type === 'torii-plan' ? action.steps : [action]; },
+    cloneState(state) { return toriiCloneState(state); },
     apply(source, action) {
       const state = toriiCloneState(source);
       if (action.type === 'tile') { state.pendingTile = action.tile; return state; }
@@ -1410,7 +1478,7 @@
     const moves = [];
     for (const [dr, dc] of ICE_DIRS) {
       const to = iceSlide(board, from, dr, dc);
-      if (to) moves.push({ type: 'move', from: clone(from), to, dir: { dr, dc } });
+      if (to) moves.push({ type: 'move', from: { r: from.r, c: from.c }, to, dir: { dr, dc } });
     }
     return moves;
   }
@@ -1541,6 +1609,7 @@
       }
       return result.length ? result : [{ type: 'skip' }];
     },
+    cloneState(state) { return iceCloneState(state); },
     apply(source, action) {
       const state = iceCloneState(source);
       if (action.type === 'skip') {
