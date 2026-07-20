@@ -372,6 +372,8 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(coreSource, /this\.game\.rolloutStep/, 'Games may own the whole rollout step to avoid enumerating actions');
   assert.match(coreSource, /this\.game\.cloneState \? this\.game\.cloneState\(state\) : clone\(state\)/, 'The search uses game-provided fast state copies when available');
   assert.match(coreSource, /new MessageChannel\(\)/, 'Search slices yield through MessageChannel to avoid the 4ms timer clamp');
+  assert.match(coreSource, /actions\.length === 1 && actions\[0\]\.type === 'skip'/, 'Undo skips past forced-skip turns that would replay immediately');
+  assert.match(coreSource, /const anyHuman = this\.settings\.players\.first === 'human' \|\| this\.settings\.players\.second === 'human';\s*let entry = this\.history\.pop\(\);\s*if \(anyHuman\)/, 'Undo in computer-vs-computer games steps one move instead of resetting to the start');
   const santoriniRolloutProbe = structuredClone(santoriniReady);
   const santoriniStepAction = santoriniGame.rolloutStep(santoriniRolloutProbe);
   assert.equal(santoriniStepAction.type, 'turn', 'Santorini lazy rollout sampling returns a complete turn');

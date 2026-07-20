@@ -398,8 +398,18 @@
       this.animating = false;
       this.plannedActions = [];
       this.plannedPlayer = null;
+      // 「上一步」退回到最近一個輪到人類、且真的有選擇的局面（唯一行動是被迫跳過的
+      // 回合會立刻被自動重播，必須跳過）；純電腦對局一次退一手，不自動退回開局。
+      const humanDecision = (state) => {
+        if (this.settings.players[state.turn] !== 'human') return false;
+        const actions = this.game.actions(state);
+        return actions.length > 0 && !(actions.length === 1 && actions[0].type === 'skip');
+      };
+      const anyHuman = this.settings.players.first === 'human' || this.settings.players.second === 'human';
       let entry = this.history.pop();
-      while (this.history.length && this.settings.players[entry.state.turn] !== 'human') entry = this.history.pop();
+      if (anyHuman) {
+        while (this.history.length && !humanDecision(entry.state)) entry = this.history.pop();
+      }
       this.state = clone(entry.state);
       this.ui = clone(entry.ui);
       this.logs.length = entry.logLength;
