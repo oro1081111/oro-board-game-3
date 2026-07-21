@@ -23,6 +23,24 @@ const VARIANTS = {
       created.state.tilesUsed = { first: { 1: false, 2: true, 3: false }, second: { 1: false, 2: false, 3: false } };
       return created;
     };
+  },
+  // 跳躍森靈：先手全可用；後手 1 已翻面（標準的後手、全開的先手）。
+  'torii-first-all'(engine) {
+    const original = engine.game.create.bind(engine.game);
+    engine.game.create = (mode, previous) => {
+      const created = original(mode, previous);
+      created.state.tilesUsed = { first: { 1: false, 2: false, 3: false }, second: { 1: true, 2: false, 3: false } };
+      return created;
+    };
+  },
+  // 跳躍森靈：雙方 1、2、3 全可用（完全對稱、無預翻）。
+  'torii-none-used'(engine) {
+    const original = engine.game.create.bind(engine.game);
+    engine.game.create = (mode, previous) => {
+      const created = original(mode, previous);
+      created.state.tilesUsed = { first: { 1: false, 2: false, 3: false }, second: { 1: false, 2: false, 3: false } };
+      return created;
+    };
   }
 };
 
