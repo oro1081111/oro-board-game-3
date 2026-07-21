@@ -8,10 +8,23 @@ const vm = require('node:vm');
 const os = require('node:os');
 const { fork } = require('node:child_process');
 
-const [gameId = 'soulaween', gamesArg = '100', itersArg = '5000', workersArg] = process.argv.slice(2);
+const [gameId = 'soulaween', gamesArg = '100', itersArg = '5000', workersArg, variantArg] = process.argv.slice(2);
 const totalGames = Number(gamesArg);
 const iterations = Number(itersArg);
 const MAX_PLIES = 400;
+
+// 實驗用初始設置變體：只影響本工具的對局，不改動正式遊戲。
+const VARIANTS = {
+  // 跳躍森靈：先手 1、3 可用（2 已翻面）維持標準；後手 1、2、3 全可用。
+  'torii-second-all'(engine) {
+    const original = engine.game.create.bind(engine.game);
+    engine.game.create = (mode, previous) => {
+      const created = original(mode, previous);
+      created.state.tilesUsed = { first: { 1: false, 2: true, 3: false }, second: { 1: false, 2: false, 3: false } };
+      return created;
+    };
+  }
+};
 
 // 各遊戲的「勝利方式」分類器（可選）：回傳字串標籤，統計會依先後手分開列出。
 const WIN_CLASSIFIERS = {
@@ -55,6 +68,7 @@ async function workerMain() {
   const count = Number(process.env.SELFPLAY_COUNT);
   const engine = loadEngine();
   if (!engine.game) { process.exit(2); }
+  if (variantArg) VARIANTS[variantArg](engine);
   const classify = WIN_CLASSIFIERS[gameId];
   const tally = { first: 0, second: 0, draw: 0, unfinished: 0, plies: 0, ms: 0, types: {} };
   for (let i = 0; i < count; i += 1) {
@@ -81,10 +95,11 @@ async function main() {
     console.error('用法：node tools/selfplay.cjs [gameId] [games] [iterations] [workers]');
     process.exit(1);
   }
+  if (variantArg && !VARIANTS[variantArg]) { console.error(`找不到變體：${variantArg}（可用：${Object.keys(VARIANTS).join('、')}）`); process.exit(1); }
   const workers = Math.max(1, Math.min(Number(workersArg) || os.cpus().length, totalGames));
   const per = Math.floor(totalGames / workers);
   const counts = Array.from({ length: workers }, (_, i) => per + (i < totalGames % workers ? 1 : 0));
-  console.log(`自我對弈：${gameId} × ${totalGames} 場，每步 ${iterations.toLocaleString()} 次 MCTS 模擬，${workers} 個行程平行`);
+  console.log(`自我對弈：${gameId} × ${totalGames} 場，每步 ${iterations.toLocaleString()} 次 MCTS 模擬，${workers} 個行程平行${variantArg ? `，變體設置：${variantArg}` : ''}`);
   const started = Date.now();
   const tallies = [];
   const progress = new Array(workers).fill(0);
