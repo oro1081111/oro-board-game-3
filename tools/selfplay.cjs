@@ -41,6 +41,15 @@ const VARIANTS = {
       created.state.tilesUsed = { first: { 1: false, 2: false, 3: false }, second: { 1: false, 2: false, 3: false } };
       return created;
     };
+  },
+  // 跳躍森靈：先手 3 已翻面（剩 1、2 可用）；後手 1、2、3 全可用。
+  'torii-first-flip3-second-all'(engine) {
+    const original = engine.game.create.bind(engine.game);
+    engine.game.create = (mode, previous) => {
+      const created = original(mode, previous);
+      created.state.tilesUsed = { first: { 1: false, 2: false, 3: true }, second: { 1: false, 2: false, 3: false } };
+      return created;
+    };
   }
 };
 
