@@ -375,6 +375,20 @@ const { BOARD_GAMES, GameCore } = window;
   assert.equal(gobView.cols, 3);
   assert.equal((gobView.tray.match(/class="choice-zone gobblet-reserve/g) || []).length, 2, 'Gobblet shows both reserves');
   assert.match(gobGame.view(gobState('first', cover), { select: { kind: 'reserve', size: 2 } }).board, /cell legal/, 'Gobblet highlights legal destinations for the selected reserve piece');
+  // rollout 遇必勝就選：紅方 (0,0)(0,1) 已兩枚可見，(0,2) 放置即勝——rollout 必須選中它而非亂走
+  const gobRolloutState = gobState('first', win, { first: { 1: 1, 2: 2, 3: 2 }, second: { 1: 2, 2: 2, 3: 2 } });
+  for (let trial = 0; trial < 20; trial += 1) {
+    const chosen = gobGame.rolloutAction(gobRolloutState, gobGame.actions(gobRolloutState));
+    assert.equal(gobGame.apply(gobRolloutState, chosen).winner, 'first', 'Gobblet rollout always takes an available immediate win');
+  }
+  const iceWinProbe = { turn: 'second', board: (() => { const b = Array.from({ length: 5 }, () => Array(5).fill(null)); b[0][0] = { owner: 'first', kind: 'circle', id: 't0' }; b[0][1] = { owner: 'second', kind: 'square', id: 't1' }; b[3][0] = { owner: 'second', kind: 'square', id: 't2' }; b[4][4] = { owner: 'second', kind: 'circle', id: 't3' }; b[2][2] = { owner: 'first', kind: 'square', id: 't4' }; b[4][0] = { owner: 'first', kind: 'square', id: 't5' }; b[2][4] = { owner: 'first', kind: 'square', id: 't6' }; return b; })(), passed: false, winner: null };
+  const iceWinning = iceGame.actions(iceWinProbe).filter((action) => iceGame.apply(iceWinProbe, action).winner === 'second');
+  if (iceWinning.length) {
+    for (let trial = 0; trial < 20; trial += 1) {
+      const chosen = iceGame.rolloutAction(iceWinProbe, iceGame.actions(iceWinProbe));
+      assert.equal(iceGame.apply(iceWinProbe, chosen).winner, 'second', 'Ice Stage rollout always takes an available immediate win');
+    }
+  }
 
   const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
   assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');

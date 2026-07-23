@@ -4,6 +4,12 @@
   const { clone, other, key, samePos } = window.GameCore;
   const games = {};
   const posText = (pos) => `第 ${pos.r + 1} 列第 ${pos.c + 1} 欄`;
+  // 輕量 rollout 策略：模擬時若有讓當前玩家立即獲勝的行動就選它，否則均勻隨機。
+  // 僅用於評估確認會受益的遊戲；純抓必勝、不引入局面偏好。
+  function greedyWinRollout(game, state, actions) {
+    for (const action of actions) if (game.apply(state, action).winner === state.turn) return action;
+    return actions[Math.floor(Math.random() * actions.length)];
+  }
   const scoreHtml = (value, label) => `<strong>${value}</strong><small>${label}</small>`;
   const scoreInline = (value, label) => `<span class="score-inline"><strong>${value}</strong><small>${label}</small></span>`;
   const cellButton = (r, c, classes, content, label) => `<button class="cell ${classes || ''}" data-r="${r}" data-c="${c}" aria-label="${label || posText({ r, c })}">${content || ''}</button>`;
@@ -1582,6 +1588,8 @@
     rolloutLimit: 80,
     animationDuration(action) { return action.type === 'move' ? 380 : 0; },
     animationOptions() { return { spring: true }; },
+    // rollout 遇必勝就選（評估顯示明顯提升棋力，成本可接受）。
+    rolloutAction(state, actions) { return greedyWinRollout(this, state, actions); },
     rules: [
       { title: '配件與目標', html: '<ul><li>5×5 棋盤；藍、橙雙方各有圓形棋 1 枚與方塊棋 4 枚，藍方先手。</li><li>棋盤正中央的格子稱為「中央格」。</li><li>讓自己的圓形棋抵達中央格、包圍移除對手的圓形棋，或在棋子總數不超過 5 枚時擁有較多棋子，即可獲勝。</li></ul>' },
       { title: '初始設置', html: '<ol><li><strong>標準：</strong>橙方 5 枚棋放在最上排、藍方 5 枚棋放在最下排，圓形棋位於該排中央。</li><li><strong>隨機：</strong>中央格與其上下左右 4 格保持空置；其餘格子中隨機選 5 組旋轉 180 度的對稱格，每組放置藍、橙棋各一枚，其中隨機一組放置雙方圓形棋。</li><li>設置完成後每一枚棋子必須至少能向一個方向移動，否則重新設置。</li></ol>' },
@@ -1775,6 +1783,8 @@
     rolloutLimit: 60,
     animationDuration(action) { return action.type === 'move' ? 320 : 0; },
     animationOptions() { return { spring: true }; },
+    // rollout 遇必勝就選（3×3 盤面小，成本幾乎為零，棋力大幅提升）。
+    rolloutAction(state, actions) { return greedyWinRollout(this, state, actions); },
     rules: [
       { title: '配件與目標', html: '<ul><li>3×3 棋盤；雙方各有 6 枚奇雞棋（大、中、小各 2 枚）。</li><li>率先讓自己 3 枚「目前可見」的棋子橫向、直向或對角連成一線者獲勝。</li><li>只有每一格最上方、目前可見的棋子會被計入連線。</li></ul>' },
       { title: '棋子大小與覆蓋', html: '<ul><li>大可覆蓋中或小，中可覆蓋小；不能覆蓋相同或更大的棋子。</li><li>可以覆蓋對手的棋子，也可以覆蓋自己的棋子。</li><li>被覆蓋的棋子留在原位，但暫時不算可見、不計入連線；一格內依大到小往上堆疊。</li></ul>' },
