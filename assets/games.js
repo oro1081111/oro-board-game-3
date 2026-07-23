@@ -1699,5 +1699,198 @@
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // 奇雞連連 Gobblet Gobblers
+  // ---------------------------------------------------------------------------
+  const GOB_SIZES = [1, 2, 3];
+  const GOB_SIZE_NAMES = { 1: '小', 2: '中', 3: '大' };
+  const gobName = (player) => player === 'first' ? '紅方' : '藍方';
+  const gobTop = (stack) => stack.length ? stack[stack.length - 1] : null;
+  const GOB_LINES = (() => {
+    const lines = [];
+    for (let r = 0; r < 3; r += 1) lines.push([{ r, c: 0 }, { r, c: 1 }, { r, c: 2 }]);
+    for (let c = 0; c < 3; c += 1) lines.push([{ r: 0, c }, { r: 1, c }, { r: 2, c }]);
+    lines.push([{ r: 0, c: 0 }, { r: 1, c: 1 }, { r: 2, c: 2 }]);
+    lines.push([{ r: 0, c: 2 }, { r: 1, c: 1 }, { r: 2, c: 0 }]);
+    return lines;
+  })();
+  function gobLineOwners(board) {
+    const owners = new Set();
+    for (const line of GOB_LINES) {
+      const tops = line.map((pos) => gobTop(board[pos.r][pos.c]));
+      if (tops[0] && tops.every((top) => top && top.owner === tops[0].owner)) owners.add(tops[0].owner);
+    }
+    return owners;
+  }
+  function gobActions(state) {
+    if (state.winner) return [];
+    const actions = [];
+    const owner = state.turn;
+    for (const size of GOB_SIZES) {
+      if (state.reserve[owner][size] <= 0) continue;
+      for (let r = 0; r < 3; r += 1) for (let c = 0; c < 3; c += 1) {
+        const top = gobTop(state.board[r][c]);
+        if (!top || top.size < size) actions.push({ type: 'place', size, r, c });
+      }
+    }
+    for (let r = 0; r < 3; r += 1) for (let c = 0; c < 3; c += 1) {
+      const top = gobTop(state.board[r][c]);
+      if (!top || top.owner !== owner) continue;
+      for (let tr = 0; tr < 3; tr += 1) for (let tc = 0; tc < 3; tc += 1) {
+        if (tr === r && tc === c) continue;
+        const dest = gobTop(state.board[tr][tc]);
+        if (!dest || dest.size < top.size) actions.push({ type: 'move', from: { r, c }, to: { r: tr, c: tc } });
+      }
+    }
+    return actions;
+  }
+  function gobCloneState(state) {
+    return {
+      turn: state.turn,
+      board: state.board.map((row) => row.map((stack) => stack.map((piece) => ({ owner: piece.owner, size: piece.size, id: piece.id })))),
+      reserve: { first: { ...state.reserve.first }, second: { ...state.reserve.second } },
+      nextId: state.nextId,
+      winner: state.winner
+    };
+  }
+
+  games.gobblet = {
+    title: '奇雞連連 Gobblet Gobblers',
+    nameZh: '奇雞連連',
+    nameEn: 'Gobblet Gobblers',
+    credit: '設計者：Thierry Denoual，代理：新天鵝堡',
+    firstName: '紅方', secondName: '藍方',
+    designer: '遊戲設計：Thierry Denoual。',
+    publisher: '原版由 Blue Orange Games 出版；中文版由新天鵝堡 Swan Panasia 代理。',
+    publisherHtml: '<p>《奇雞連連 Gobblet Gobblers》原版由 Blue Orange Games 出版，是經典井字遊戲的「大吃小」變體；中文版由新天鵝堡 Swan Panasia 代理發行。規則精簡、適合親子，卻因為棋子能互相覆蓋而藏有記憶與策略深度。</p><p><strong>系列作品：</strong>《Gobblet》、《Gobblet Gobblers》、《Gobblet Junior》。</p>',
+    publisherLink: { label: '前往新天鵝堡官方介紹', href: 'https://www.swanpanasia.com/products/gobblet-gobblers' },
+    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    introHtml: '<p>兩位玩家輪流放下或搬動自己的奇雞。大奇雞可以一口「吃掉」蓋住比較小的奇雞——不管是對手的還是自己的。只有每一格最上面、看得見的奇雞才算數；率先讓自己三隻看得見的奇雞連成一線就獲勝。棋子能覆蓋與移動，讓這款 3×3 小遊戲比井字遊戲多了記憶與埋伏的樂趣。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 5–10 分鐘</dd><dt>年齡</dt><dd>5 歲以上</dd><dt>類型</dt><dd>覆蓋、連線、記憶</dd></dl>',
+    links: [
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/13230/gobblers' },
+      { label: '官方介紹', href: 'https://www.swanpanasia.com/products/gobblet-gobblers' },
+      { label: '中文說明書', href: 'https://boardgamegeek.com/boardgame/13230/gobblers/files' }
+    ],
+    openings: [{ value: 'standard', label: '標準' }],
+    rolloutLimit: 60,
+    animationDuration(action) { return action.type === 'move' ? 320 : 0; },
+    animationOptions() { return { spring: true }; },
+    rules: [
+      { title: '配件與目標', html: '<ul><li>3×3 棋盤；雙方各有 6 枚奇雞棋（大、中、小各 2 枚）。</li><li>率先讓自己 3 枚「目前可見」的棋子橫向、直向或對角連成一線者獲勝。</li><li>只有每一格最上方、目前可見的棋子會被計入連線。</li></ul>' },
+      { title: '棋子大小與覆蓋', html: '<ul><li>大可覆蓋中或小，中可覆蓋小；不能覆蓋相同或更大的棋子。</li><li>可以覆蓋對手的棋子，也可以覆蓋自己的棋子。</li><li>被覆蓋的棋子留在原位，但暫時不算可見、不計入連線；一格內依大到小往上堆疊。</li></ul>' },
+      { title: '回合行動', html: '<p>輪到玩家時，擇一執行：</p><ol><li><strong>放置庫存棋：</strong>選一枚尚未進入棋盤的棋子，放到任一空格，或蓋在任一枚比它小的棋子上。</li><li><strong>移動場上棋：</strong>選一枚自己顏色且目前可見的棋子，移到另一個空格或蓋在比它小的棋子上；被覆蓋的棋子不能移動，拿起後不能放回原處。</li></ol>' },
+      { title: '露出與覆蓋', html: '<ul><li>移開棋子時，原本被它覆蓋的棋子會立刻重新露出，成為該格可見棋子並參與本回合連線判定。</li><li>只要符合大小規則，剛拿起的棋子也可以再蓋住剛形成的連線。</li></ul>' },
+      { title: '勝負判定（順序很重要）', html: '<ol><li>先檢查<strong>對手</strong>是否有 3 枚可見棋子連線；若有，立即由對手獲勝——即使你同時也連成一線。</li><li>對手沒有連線時，才檢查回合玩家是否連線；若有則回合玩家獲勝。</li><li>雙方都沒有連線則換手。</li></ol><p>因此移開自己的大棋露出對手底下的連線，會直接讓對手獲勝，行動前務必確認。</p>' }
+    ],
+    create() {
+      return {
+        turn: 'first',
+        board: Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => [])),
+        reserve: { first: { 1: 2, 2: 2, 3: 2 }, second: { 1: 2, 2: 2, 3: 2 } },
+        nextId: 0,
+        winner: null
+      };
+    },
+    cloneState(state) { return gobCloneState(state); },
+    actions(state) { return gobActions(state); },
+    apply(source, action) {
+      const state = gobCloneState(source);
+      const actor = state.turn;
+      if (action.type === 'place') {
+        state.reserve[actor][action.size] -= 1;
+        state.board[action.r][action.c].push({ owner: actor, size: action.size, id: state.nextId++ });
+      } else {
+        const piece = state.board[action.from.r][action.from.c].pop();
+        state.board[action.to.r][action.to.c].push(piece);
+      }
+      const owners = gobLineOwners(state.board);
+      const opponent = other(actor);
+      if (owners.has(opponent)) { state.winner = opponent; return state; }
+      if (owners.has(actor)) { state.winner = actor; return state; }
+      state.turn = opponent;
+      if (!gobActions(state).length) state.winner = actor;
+      return state;
+    },
+    outcome(state) { return state.winner; },
+    describe(action, before, after) {
+      const name = gobName(before.turn);
+      let msg;
+      if (action.type === 'place') msg = `${name}放置${GOB_SIZE_NAMES[action.size]}奇雞到${posText(action)}`;
+      else {
+        const piece = gobTop(before.board[action.from.r][action.from.c]);
+        msg = `${name}將${GOB_SIZE_NAMES[piece.size]}奇雞從${posText(action.from)}移到${posText(action.to)}`;
+      }
+      if (after.winner && after.winner !== 'draw') msg += `，${gobName(after.winner)}連線獲勝`;
+      return `${msg}。`;
+    },
+    view(state, ui) {
+      const sel = ui.select && (ui.select.kind === 'reserve'
+        ? state.reserve[state.turn][ui.select.size] > 0
+        : gobTop(state.board[ui.select.r]?.[ui.select.c] || [])?.owner === state.turn) ? ui.select : null;
+      const actions = this.actions(state);
+      const dests = new Set((sel ? actions.filter((action) => sel.kind === 'reserve'
+        ? action.type === 'place' && action.size === sel.size
+        : action.type === 'move' && action.from.r === sel.r && action.from.c === sel.c) : []).map((action) => {
+          const target = action.type === 'place' ? action : action.to;
+          return key(target.r, target.c);
+        }));
+      const movable = new Set(actions.filter((action) => action.type === 'move').map((action) => key(action.from.r, action.from.c)));
+      let board = '';
+      for (let r = 0; r < 3; r += 1) for (let c = 0; c < 3; c += 1) {
+        const stack = state.board[r][c];
+        const top = gobTop(stack);
+        const classes = [];
+        if (dests.has(key(r, c))) classes.push('legal');
+        if (sel && sel.kind === 'board' && sel.r === r && sel.c === c) classes.push('selected');
+        else if (!sel && top && top.owner === state.turn && movable.has(key(r, c))) classes.push('movable');
+        const badge = stack.length > 1 ? `<b class="gob-stack-badge">${stack.length}</b>` : '';
+        const piece = top ? `<span class="piece gobblet-piece size-${top.size} ${top.owner}" data-anim-id="gob-${top.id}">${badge}</span>` : '';
+        const label = `${posText({ r, c })}${top ? `，${gobName(top.owner)}${GOB_SIZE_NAMES[top.size]}奇雞` : '，空格'}`;
+        board += cellButton(r, c, classes.join(' '), piece, label);
+      }
+      const reserveZone = (owner) => `<section class="choice-zone gobblet-reserve ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${gobName(owner)}庫存奇雞"><div>${GOB_SIZES.map((size) => {
+        const remaining = state.reserve[owner][size];
+        const selected = state.turn === owner && sel?.kind === 'reserve' && sel.size === size;
+        return `<button class="tray-btn gobblet-token ${selected ? 'selected' : ''}" data-reserve="${size}" data-owner="${owner}" ${state.turn === owner && remaining > 0 ? '' : 'disabled'}><span class="piece gobblet-piece size-${size} ${owner}"></span><small>×${remaining}</small></button>`;
+      }).join('')}</div></section>`;
+      const tray = `<div class="dual-choice">${reserveZone('first')}${reserveZone('second')}</div>`;
+      const outcome = this.outcome(state);
+      const hint = outcome
+        ? `遊戲結束：${gobName(outcome)}獲勝`
+        : sel ? '請選擇目的地（空格或比它小的棋子）' : `現在是${gobName(state.turn)}的回合，選擇場上可見棋子或下方庫存`;
+      return {
+        cols: 3, rows: 3, boardClass: 'gobblet-board', board, tray, hint, hideScores: true,
+        winColors: { first: '#fb6a70', second: '#7188f4' },
+        turnColors: { first: '#fb6a70', second: '#7188f4' },
+        firstScore: '', secondScore: ''
+      };
+    },
+    bind(state, ui, controller, board, tray) {
+      tray.querySelectorAll(`[data-reserve][data-owner="${state.turn}"]`).forEach((button) => button.addEventListener('click', () => {
+        if (!controller.isHumanTurn()) return;
+        const size = Number(button.dataset.reserve);
+        const current = ui.select;
+        if (current?.kind === 'reserve' && current.size === size) controller.setUi({ select: null });
+        else controller.setUi({ select: { kind: 'reserve', size } });
+      }));
+      board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
+        if (!controller.isHumanTurn()) return;
+        const pos = { r: Number(button.dataset.r), c: Number(button.dataset.c) };
+        const sel = ui.select;
+        if (sel) {
+          let action;
+          if (sel.kind === 'reserve') action = this.actions(state).find((item) => item.type === 'place' && item.size === sel.size && item.r === pos.r && item.c === pos.c);
+          else action = this.actions(state).find((item) => item.type === 'move' && item.from.r === sel.r && item.from.c === sel.c && item.to.r === pos.r && item.to.c === pos.c);
+          if (action) { controller.commit(action); return; }
+          if (sel.kind === 'board' && sel.r === pos.r && sel.c === pos.c) { controller.setUi({ select: null }); return; }
+        }
+        const top = gobTop(state.board[pos.r][pos.c]);
+        if (top && top.owner === state.turn && this.actions(state).some((item) => item.type === 'move' && item.from.r === pos.r && item.from.c === pos.c)) {
+          controller.setUi({ select: { kind: 'board', r: pos.r, c: pos.c } });
+        }
+      }));
+    }
+  };
+
   window.BOARD_GAMES = games;
 }());

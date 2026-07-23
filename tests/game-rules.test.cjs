@@ -13,7 +13,7 @@ const { BOARD_GAMES, GameCore } = window;
 
 (async () => {
   const basic = GameCore.runSelfTests(BOARD_GAMES);
-  assert.equal(basic.length, 8);
+  assert.equal(basic.length, 9);
   assert.deepEqual(basic.filter((item) => !item.ok), []);
 
   const soulGame = BOARD_GAMES.soulaween;
@@ -329,6 +329,53 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(iceSelectedView.board, /selected/, 'Ice Stage marks the selected piece');
   assert.equal((iceSelectedView.board.match(/cell legal| legal"/g) || []).length, 1, 'Ice Stage highlights only the selected piece destinations');
 
+  const gobGame = BOARD_GAMES.gobblet;
+  const gob = gobGame.create();
+  assert.equal(gob.turn, 'first');
+  assert.deepEqual(gob.reserve.first, { 1: 2, 2: 2, 3: 2 }, 'Gobblet gives each player two of each size');
+  assert.equal(gobGame.actions(gob).length, 27, 'Gobblet opening allows any of three sizes on any of nine empty cells');
+  assert.ok(gobGame.actions(gob).every((action) => action.type === 'place'), 'Gobblet opening has no moves, only placements');
+  const gobState = (turn, board, reserve) => ({ turn, board, reserve: reserve || { first: { 1: 2, 2: 2, 3: 2 }, second: { 1: 2, 2: 2, 3: 2 } }, nextId: 100, winner: null });
+  const gobEmpty = () => Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => []));
+  const gobP = (owner, size, id) => ({ owner, size, id });
+  // 覆蓋：大蓋小合法、同尺寸與更大不合法
+  let cover = gobEmpty();
+  cover[1][1] = [gobP('second', 1, 1)];
+  const coverActions = gobGame.actions(gobState('first', cover));
+  assert.ok(coverActions.some((a) => a.type === 'place' && a.size === 2 && a.r === 1 && a.c === 1), 'Gobblet lets a bigger piece cover a smaller one');
+  assert.ok(!coverActions.some((a) => a.type === 'place' && a.size === 1 && a.r === 1 && a.c === 1), 'Gobblet forbids covering an equal-size piece');
+  cover[0][0] = [gobP('second', 3, 2)];
+  assert.ok(!gobGame.actions(gobState('first', cover)).some((a) => a.r === 0 && a.c === 0), 'Gobblet forbids placing on a larger piece');
+  // 只有可見的頂端棋子計入連線
+  let win = gobEmpty();
+  win[0][0] = [gobP('first', 2, 1)]; win[0][1] = [gobP('first', 2, 2)];
+  win[0][2] = [gobP('second', 1, 3)];
+  const winMove = gobGame.actions(gobState('first', win, { first: { 1: 1, 2: 2, 3: 2 }, second: { 1: 2, 2: 2, 3: 2 } })).find((a) => a.type === 'place' && a.size === 2 && a.r === 0 && a.c === 2);
+  assert.equal(gobGame.apply(gobState('first', win, { first: { 1: 1, 2: 2, 3: 2 }, second: { 1: 2, 2: 2, 3: 2 } }), winMove).winner, 'first', 'Gobblet wins by covering into a visible three-in-a-row');
+  // 露出對手底下的連線 → 對手獲勝（先檢查對手）
+  let uncover = gobEmpty();
+  uncover[0][0] = [gobP('second', 1, 1), gobP('first', 3, 2)]; // 底藍上紅（紅可見）
+  uncover[0][1] = [gobP('second', 1, 3)];
+  uncover[0][2] = [gobP('second', 1, 4)];
+  const uncoverActions = gobGame.actions(gobState('first', uncover));
+  const suicide = uncoverActions.find((a) => a.type === 'move' && a.from.r === 0 && a.from.c === 0 && a.to.r === 2 && a.to.c === 2);
+  assert.equal(gobGame.apply(gobState('first', uncover), suicide).winner, 'second', 'Gobblet checks the opponent first: uncovering their line loses');
+  // 被覆蓋的棋子不能移動
+  let covered = gobEmpty();
+  covered[1][1] = [gobP('first', 1, 1), gobP('second', 2, 2)]; // 紅被藍蓋
+  assert.ok(!gobGame.actions(gobState('first', covered)).some((a) => a.type === 'move' && a.from.r === 1 && a.from.c === 1), 'Gobblet cannot move a covered piece');
+  assert.ok(gobGame.actions(gobState('second', covered)).some((a) => a.type === 'move' && a.from.r === 1 && a.from.c === 1), 'Gobblet can move the visible top piece');
+  // apply 不修改來源
+  const gobBefore = JSON.stringify(gob);
+  gobGame.apply(gob, gobGame.actions(gob)[0]);
+  assert.equal(JSON.stringify(gob), gobBefore, 'Gobblet apply does not mutate the source state');
+  const gobView = gobGame.view(gob, {});
+  assert.match(gobView.boardClass, /gobblet-board/);
+  assert.equal(gobView.hideScores, true, 'Gobblet has no score row');
+  assert.equal(gobView.cols, 3);
+  assert.equal((gobView.tray.match(/class="choice-zone gobblet-reserve/g) || []).length, 2, 'Gobblet shows both reserves');
+  assert.match(gobGame.view(gobState('first', cover), { select: { kind: 'reserve', size: 2 } }).board, /cell legal/, 'Gobblet highlights legal destinations for the selected reserve piece');
+
   const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
   assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');
   assert.match(soulaweenPage, /assets\/game-core\.js/, 'Soulaween loads the shared controller');
@@ -337,7 +384,7 @@ const { BOARD_GAMES, GameCore } = window;
   const lobbyHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(lobbyHtml, /assets\/lobby-boards\//, 'Lobby previews load captured game boards');
   assert.match(lobbyHtml, /board\.replaceWith\(image\)/, 'Lobby replaces synthetic previews with real board images');
-  for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage']) {
+  for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet']) {
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
@@ -352,7 +399,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.doesNotMatch(shellCss, /(?:^|\n)\.santorini-worker \{/, 'Santorini board and worker piece classes cannot collide');
   assert.match(shellCss, /\.mijn-piece \.piece-mark \{ position: absolute; inset: 19%;/, 'Garden board marks use a centered drawing box');
   assert.match(shellCss, /\.mijn-token \.mark-push, \.mijn-token \.mark-pull \{ width: 24px; height: 24px;/, 'Garden supply circles stay smaller than their board counterparts');
-  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 8, 'Every lobby board image links to its game');
+  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 9, 'Every lobby board image links to its game');
   assert.doesNotMatch(lobbyHtml, /詳細規則|其他遊戲|統一介面與純 MCTS AI/, 'Lobby omits redundant catalog text and rule buttons');
   assert.match(shellCss, /\.mijn-piece \.mark-pull \{ border: clamp\(/, 'Garden hollow circles use the centered element box instead of an oversized pseudo-element');
   assert.match(shellCss, /\.mijn-piece \.mark-push, \.mijn-piece \.mark-pull/);

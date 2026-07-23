@@ -100,6 +100,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
   border-radius: 18px;
   box-shadow: inset 0 0 0 3px rgba(255,255,255,.55), 0 0 0 2px rgba(73,73,55,.4);
 }
+.board.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .board.cols-4 { grid-template-columns: repeat(4, 1fr); }
 .board.cols-5 { grid-template-columns: repeat(5, 1fr); }
 .board.cols-6 { grid-template-columns: repeat(6, 1fr); }
@@ -338,6 +339,22 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .piece.ice-piece.ice-square { width: 64%; border-radius: 18%; }
 .piece.ice-piece.ice-circle { width: 72%; }
 .piece.ice-piece.ice-circle::after { content: ''; position: absolute; inset: 24%; border: 4px solid rgba(255,255,255,.85); border-radius: 50%; }
+
+.gobblet-board { background: #f3ead6; border-color: #b9975b; box-shadow: inset 0 0 0 3px rgba(255,255,255,.6), 0 0 0 2px rgba(120,92,45,.4); }
+.gobblet-board .cell { background: #fdfaf1; }
+.gobblet-board .cell.movable { outline: 3px solid rgba(255,165,15,.4); outline-offset: -5px; }
+.piece.gobblet-piece { border: 3px solid rgba(0,0,0,.18); box-shadow: inset 0 -6px 0 rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.22); }
+.piece.gobblet-piece.size-1 { width: 40%; }
+.piece.gobblet-piece.size-2 { width: 58%; }
+.piece.gobblet-piece.size-3 { width: 78%; }
+.piece.gobblet-piece.first { background: var(--first); }
+.piece.gobblet-piece.second { background: var(--second); }
+.gob-stack-badge { position: absolute; top: -2px; right: -2px; min-width: 15px; height: 15px; padding: 0 3px; display: grid; place-items: center; border-radius: 999px; background: #2e2a2f; color: #fff; font-size: 10px; line-height: 1; box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+.gobblet-reserve .gobblet-token { flex-direction: column; gap: 3px; padding: 4px 6px; }
+.gobblet-token .gobblet-piece { position: static; aspect-ratio: 1; border-radius: 50%; }
+.gobblet-token .gobblet-piece.size-1 { width: 16px; }
+.gobblet-token .gobblet-piece.size-2 { width: 24px; }
+.gobblet-token .gobblet-piece.size-3 { width: 32px; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
 .desktop-card { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }
