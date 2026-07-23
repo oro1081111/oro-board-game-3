@@ -7,10 +7,10 @@
     { value: 'mcts', label: 'MCTS 電腦', icon: 'mcts' }
   ];
   const PRESETS = [
-    { label: '簡單', value: 400 },
-    { label: '中級', value: 1200 },
-    { label: '困難', value: 2500 },
-    { label: '專家', value: 5000 }
+    { label: '簡單', value: 500 },
+    { label: '中級', value: 1500 },
+    { label: '困難', value: 3000 },
+    { label: '專家', value: 6000 }
   ];
   const GAME_LINKS = [
     ['soulaween', '蒐靈祭 Soulaween'],
@@ -251,7 +251,7 @@
       this.settings = {
         opening: game.openings[0].value,
         players: { first: 'human', second: 'mcts' },
-        iterations: 1200
+        iterations: 1500
       };
       this.state = null;
       this.ui = {};
@@ -299,7 +299,7 @@
       this.$('newGame').addEventListener('click', () => this.newGame());
       this.$('undoMove').addEventListener('click', () => this.undo());
       this.$('applySettings').addEventListener('click', () => {
-        this.settings.iterations = Math.max(100, Number(this.$('iterations').value) || 1200);
+        this.settings.iterations = Math.max(100, Number(this.$('iterations').value) || 1500);
         this.close('settingsLayer');
         this.newGame();
       });
