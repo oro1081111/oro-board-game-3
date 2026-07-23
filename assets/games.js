@@ -1730,6 +1730,70 @@
     }
     return owners;
   }
+  function gobHasLegalAction(state, owner) {
+    for (const size of GOB_SIZES) {
+      if (state.reserve[owner][size] <= 0) continue;
+      for (let r = 0; r < 3; r += 1) for (let c = 0; c < 3; c += 1) {
+        const top = gobTop(state.board[r][c]);
+        if (!top || top.size < size) return true;
+      }
+    }
+    for (let r = 0; r < 3; r += 1) for (let c = 0; c < 3; c += 1) {
+      const top = gobTop(state.board[r][c]);
+      if (!top || top.owner !== owner) continue;
+      for (let tr = 0; tr < 3; tr += 1) for (let tc = 0; tc < 3; tc += 1) {
+        if (tr === r && tc === c) continue;
+        const dest = gobTop(state.board[tr][tc]);
+        if (!dest || dest.size < top.size) return true;
+      }
+    }
+    return false;
+  }
+  function gobWinnerAfterAction(state, action) {
+    const actor = state.turn;
+    let piece;
+    if (action.type === 'place') {
+      piece = { owner: actor, size: action.size, id: -1 };
+      state.reserve[actor][action.size] -= 1;
+      state.board[action.r][action.c].push(piece);
+    } else {
+      piece = state.board[action.from.r][action.from.c].pop();
+      state.board[action.to.r][action.to.c].push(piece);
+    }
+    const owners = gobLineOwners(state.board);
+    const opponent = other(actor);
+    let winner = owners.has(opponent) ? opponent : owners.has(actor) ? actor : null;
+    if (!winner && !gobHasLegalAction(state, opponent)) winner = actor;
+    if (action.type === 'place') {
+      state.board[action.r][action.c].pop();
+      state.reserve[actor][action.size] += 1;
+    } else {
+      state.board[action.to.r][action.to.c].pop();
+      state.board[action.from.r][action.from.c].push(piece);
+    }
+    return winner;
+  }
+  function gobReplyWins(state) {
+    const actor = state.turn;
+    for (const size of GOB_SIZES) {
+      if (state.reserve[actor][size] <= 0) continue;
+      for (let r = 0; r < 3; r += 1) for (let c = 0; c < 3; c += 1) {
+        const top = gobTop(state.board[r][c]);
+        if ((!top || top.size < size) && gobWinnerAfterAction(state, { type: 'place', size, r, c }) === actor) return true;
+      }
+    }
+    for (let r = 0; r < 3; r += 1) for (let c = 0; c < 3; c += 1) {
+      const top = gobTop(state.board[r][c]);
+      if (!top || top.owner !== actor) continue;
+      for (let tr = 0; tr < 3; tr += 1) for (let tc = 0; tc < 3; tc += 1) {
+        if (tr === r && tc === c) continue;
+        const dest = gobTop(state.board[tr][tc]);
+        if ((!dest || dest.size < top.size)
+          && gobWinnerAfterAction(state, { type: 'move', from: { r, c }, to: { r: tr, c: tc } }) === actor) return true;
+      }
+    }
+    return false;
+  }
   function gobActions(state) {
     if (state.winner) return [];
     const actions = [];
@@ -1761,6 +1825,42 @@
       winner: state.winner
     };
   }
+  function gobApply(source, action) {
+    const state = gobCloneState(source);
+    const actor = state.turn;
+    if (action.type === 'place') {
+      state.reserve[actor][action.size] -= 1;
+      state.board[action.r][action.c].push({ owner: actor, size: action.size, id: state.nextId++ });
+    } else {
+      const piece = state.board[action.from.r][action.from.c].pop();
+      state.board[action.to.r][action.to.c].push(piece);
+    }
+    const owners = gobLineOwners(state.board);
+    const opponent = other(actor);
+    if (owners.has(opponent)) { state.winner = opponent; return state; }
+    if (owners.has(actor)) { state.winner = actor; return state; }
+    state.turn = opponent;
+    if (!gobActions(state).length) state.winner = actor;
+    return state;
+  }
+  function gobRootActions(state, actions) {
+    const safe = actions.filter((action) => {
+      const next = gobApply(state, action);
+      return next.winner === state.turn || (!next.winner && !gobReplyWins(next));
+    });
+    return safe.length ? safe : actions;
+  }
+  function gobDefensiveRollout(state, actions) {
+    for (const action of actions) if (gobWinnerAfterAction(state, action) === state.turn) return action;
+    const remaining = actions.slice();
+    while (remaining.length) {
+      const index = Math.floor(Math.random() * remaining.length);
+      const action = remaining.splice(index, 1)[0];
+      const next = gobApply(state, action);
+      if (!next.winner && !gobReplyWins(next)) return action;
+    }
+    return actions[Math.floor(Math.random() * actions.length)];
+  }
 
   games.gobblet = {
     title: '奇雞連連 Gobblet Gobblers',
@@ -1783,8 +1883,9 @@
     rolloutLimit: 60,
     animationDuration(action) { return action.type === 'move' ? 320 : 0; },
     animationOptions() { return { spring: true }; },
-    // rollout 遇必勝就選（3×3 盤面小，成本幾乎為零，棋力大幅提升）。
-    rolloutAction(state, actions) { return greedyWinRollout(this, state, actions); },
+    // 根節點與 rollout 都先避開可阻擋的下一手敗局；rollout 找到第一個隨機安全步就停止。
+    rootActions(state, actions) { return gobRootActions(state, actions); },
+    rolloutAction(state, actions) { return gobDefensiveRollout(state, actions); },
     rules: [
       { title: '配件與目標', html: '<ul><li>3×3 棋盤；雙方各有 6 枚奇雞棋（大、中、小各 2 枚）。</li><li>率先讓自己 3 枚「目前可見」的棋子橫向、直向或對角連成一線者獲勝。</li><li>只有每一格最上方、目前可見的棋子會被計入連線。</li></ul>' },
       { title: '棋子大小與覆蓋', html: '<ul><li>大可覆蓋中或小，中可覆蓋小；不能覆蓋相同或更大的棋子。</li><li>可以覆蓋對手的棋子，也可以覆蓋自己的棋子。</li><li>被覆蓋的棋子留在原位，但暫時不算可見、不計入連線；一格內依大到小往上堆疊。</li></ul>' },
@@ -1803,24 +1904,7 @@
     },
     cloneState(state) { return gobCloneState(state); },
     actions(state) { return gobActions(state); },
-    apply(source, action) {
-      const state = gobCloneState(source);
-      const actor = state.turn;
-      if (action.type === 'place') {
-        state.reserve[actor][action.size] -= 1;
-        state.board[action.r][action.c].push({ owner: actor, size: action.size, id: state.nextId++ });
-      } else {
-        const piece = state.board[action.from.r][action.from.c].pop();
-        state.board[action.to.r][action.to.c].push(piece);
-      }
-      const owners = gobLineOwners(state.board);
-      const opponent = other(actor);
-      if (owners.has(opponent)) { state.winner = opponent; return state; }
-      if (owners.has(actor)) { state.winner = actor; return state; }
-      state.turn = opponent;
-      if (!gobActions(state).length) state.winner = actor;
-      return state;
-    },
+    apply(source, action) { return gobApply(source, action); },
     outcome(state) { return state.winner; },
     describe(action, before, after) {
       const name = gobName(before.turn);

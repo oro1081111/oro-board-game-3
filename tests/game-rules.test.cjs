@@ -381,6 +381,24 @@ const { BOARD_GAMES, GameCore } = window;
     const chosen = gobGame.rolloutAction(gobRolloutState, gobGame.actions(gobRolloutState));
     assert.equal(gobGame.apply(gobRolloutState, chosen).winner, 'first', 'Gobblet rollout always takes an available immediate win');
   }
+  // 藍方必須阻擋紅方下一手完成第一列；根節點與 rollout 都只能留下安全行動。
+  const gobThreat = gobEmpty();
+  gobThreat[0][0] = [gobP('first', 1, 10)]; gobThreat[0][1] = [gobP('first', 1, 11)];
+  gobThreat[1][1] = [gobP('second', 1, 12)];
+  const gobThreatState = gobState('second', gobThreat, { first: { 1: 0, 2: 2, 3: 2 }, second: { 1: 1, 2: 2, 3: 2 } });
+  const leavesGobbletWin = (action) => {
+    const next = gobGame.apply(gobThreatState, action);
+    return !next.winner && gobGame.actions(next).some((reply) => gobGame.apply(next, reply).winner === 'first');
+  };
+  const gobThreatActions = gobGame.actions(gobThreatState);
+  const gobRootActions = gobGame.rootActions(gobThreatState, gobThreatActions);
+  assert.ok(gobRootActions.length < gobThreatActions.length, 'Gobblet root filter removes moves that allow an immediate reply win');
+  assert.ok(gobRootActions.every((action) => !leavesGobbletWin(action)), 'Gobblet root filter keeps every available one-ply defense');
+  for (let trial = 0; trial < 20; trial += 1) {
+    assert.ok(!leavesGobbletWin(gobGame.rolloutAction(gobThreatState, gobThreatActions)), 'Gobblet rollout always blocks a preventable immediate loss');
+  }
+  const gobDefenseResult = await GameCore.runMcts(gobGame, gobThreatState, 100, () => true);
+  assert.ok(!leavesGobbletWin(gobDefenseResult.action), 'Gobblet MCTS searches only safe root defenses when one exists');
   const iceWinProbe = { turn: 'second', board: (() => { const b = Array.from({ length: 5 }, () => Array(5).fill(null)); b[0][0] = { owner: 'first', kind: 'circle', id: 't0' }; b[0][1] = { owner: 'second', kind: 'square', id: 't1' }; b[3][0] = { owner: 'second', kind: 'square', id: 't2' }; b[4][4] = { owner: 'second', kind: 'circle', id: 't3' }; b[2][2] = { owner: 'first', kind: 'square', id: 't4' }; b[4][0] = { owner: 'first', kind: 'square', id: 't5' }; b[2][4] = { owner: 'first', kind: 'square', id: 't6' }; return b; })(), passed: false, winner: null };
   const iceWinning = iceGame.actions(iceWinProbe).filter((action) => iceGame.apply(iceWinProbe, action).winner === 'second');
   if (iceWinning.length) {
@@ -431,6 +449,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(coreSource, /search\.root\.visits >= floor && \(!painted \|\| Date\.now\(\) - lastPaint > 250\)/, 'The win bar only paints after the 200-iteration floor and then throttles updates');
   assert.match(coreSource, /game\.immediateAction\s*\n?\s*\? game\.immediateAction\(state, searchActions\)/, 'MCTS lets games override the immediate-win check');
   assert.match(coreSource, /: searchActions\.find\(\(action\) => game\.outcome\(applySearch\(action\)\) === state\.turn\)/, 'MCTS checks every game for a one-move win by default before searching');
+  assert.match(coreSource, /game\.rootActions\?\.\(state, searchActions\) \|\| searchActions/, 'MCTS supports game-specific root action filtering');
   assert.match(coreSource, /this\.game\.searchActions\?\.\(state\) \|\| this\.game\.actions\(state\)/, 'MCTS supports game-specific search actions');
   assert.match(coreSource, /this\.game\.rolloutActions\?\.\(state\) \|\| this\.actions\(state\)/, 'Rollouts may use cheaper per-step actions than the search tree');
   assert.match(coreSource, /this\.game\.rolloutStep/, 'Games may own the whole rollout step to avoid enumerating actions');

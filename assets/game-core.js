@@ -31,10 +31,10 @@
   const samePos = (a, b) => Boolean(a && b && a.r === b.r && a.c === b.c);
 
   class MctsSearch {
-    constructor(game, state) {
+    constructor(game, state, rootActions) {
       this.game = game;
       this.rootPlayer = state.turn;
-      this.root = this.node(this.copy(state), null, null);
+      this.root = this.node(this.copy(state), null, null, rootActions);
     }
 
     copy(state) { return this.game.cloneState ? this.game.cloneState(state) : clone(state); }
@@ -42,14 +42,14 @@
     actions(state) { return this.game.searchActions?.(state) || this.game.actions(state); }
     apply(state, action) { return this.game.searchApply?.(state, action) || this.game.apply(state, action); }
 
-    node(state, parent, action) {
+    node(state, parent, action, actions) {
       const done = this.game.outcome(state) !== null;
       return {
         state,
         parent,
         action,
         children: [],
-        untried: done ? [] : this.actions(state),
+        untried: done ? [] : actions || this.actions(state),
         visits: 0,
         value: 0,
         firstWins: 0,
@@ -162,7 +162,8 @@
         iterations: 1
       });
     }
-    const search = new MctsSearch(game, state);
+    const rootActions = game.rootActions?.(state, searchActions) || searchActions;
+    const search = new MctsSearch(game, state, rootActions);
     const total = Math.max(1, Number(iterations) || 1);
     return new Promise((resolve) => {
       let batch = 12;
