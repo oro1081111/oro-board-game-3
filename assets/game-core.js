@@ -263,6 +263,7 @@
           <header class="modal-head"><h2>遊戲設定</h2><button class="icon-btn" data-close="settingsLayer" aria-label="關閉設定">${gearSvg}</button></header>
           <div class="modal-body">
             <section class="settings-section" id="openingSection"><div class="settings-label">棋盤設置</div><div class="mode-options" id="openingOptions"></div></section>
+            <section class="settings-section" id="memoryModeSection"><div class="settings-label">記憶模式</div><div class="mode-options" id="memoryModeOptions"></div></section>
             <section class="settings-section"><div class="settings-label">先手設置</div><div class="player-grid" data-player="first"></div></section>
             <section class="settings-section"><div class="settings-label">後手設置</div><div class="player-grid" data-player="second"></div></section>
             <section class="settings-section"><div class="settings-label">AI 迭代次數</div><input class="ai-input" id="iterations" type="number" min="100" step="100"><div class="difficulty-row" id="difficulty"></div></section>
@@ -285,6 +286,7 @@
       this.game = game;
       this.settings = {
         opening: game.openings[0].value,
+        memoryMode: game.defaultMemoryMode || game.memoryModes?.[0]?.value || null,
         players: { first: 'human', second: 'mcts' },
         iterations: 1500
       };
@@ -356,6 +358,13 @@
       this.$('openingOptions').innerHTML = this.game.openings.map((item) => `<button class="mode-card ${item.value === this.settings.opening ? 'selected' : ''}" data-opening="${item.value}">${item.label}</button>`).join('');
       this.$('openingOptions').querySelectorAll('[data-opening]').forEach((button) => button.addEventListener('click', () => {
         this.settings.opening = button.dataset.opening;
+        this.renderSettings();
+      }));
+      const memoryModes = this.game.memoryModes || [];
+      this.$('memoryModeSection').hidden = !memoryModes.length;
+      this.$('memoryModeOptions').innerHTML = memoryModes.map((item) => `<button class="mode-card ${item.value === this.settings.memoryMode ? 'selected' : ''}" data-memory-mode="${item.value}">${item.label}</button>`).join('');
+      this.$('memoryModeOptions').querySelectorAll('[data-memory-mode]').forEach((button) => button.addEventListener('click', () => {
+        this.settings.memoryMode = button.dataset.memoryMode;
         this.renderSettings();
       }));
       document.querySelectorAll('.player-grid').forEach((grid) => {

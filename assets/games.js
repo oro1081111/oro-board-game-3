@@ -1880,6 +1880,8 @@
       { label: '中文說明書', href: 'https://boardgamegeek.com/boardgame/13230/gobblers/files' }
     ],
     openings: [{ value: 'standard', label: '標準' }],
+    memoryModes: [{ value: 'public', label: '公開' }, { value: 'hint', label: '提示' }, { value: 'hidden', label: '隱藏' }],
+    defaultMemoryMode: 'hint',
     rolloutLimit: 60,
     animationDuration(action) { return action.type === 'move' ? 320 : 0; },
     animationOptions() { return { spring: true }; },
@@ -1917,7 +1919,8 @@
       if (after.winner && after.winner !== 'draw') msg += `，${gobName(after.winner)}連線獲勝`;
       return `${msg}。`;
     },
-    view(state, ui) {
+    view(state, ui, controller) {
+      const memoryMode = controller?.settings.memoryMode || this.defaultMemoryMode;
       const sel = ui.select && (ui.select.kind === 'reserve'
         ? state.reserve[state.turn][ui.select.size] > 0
         : gobTop(state.board[ui.select.r]?.[ui.select.c] || [])?.owner === state.turn) ? ui.select : null;
@@ -1937,9 +1940,13 @@
         if (dests.has(key(r, c))) classes.push('legal');
         if (sel && sel.kind === 'board' && sel.r === r && sel.c === c) classes.push('selected');
         else if (!sel && top && top.owner === state.turn && movable.has(key(r, c))) classes.push('movable');
-        const badge = stack.length > 1 ? `<b class="gob-stack-badge">${stack.length}</b>` : '';
-        const piece = top ? `<span class="piece gobblet-piece size-${top.size} ${top.owner}" data-anim-id="gob-${top.id}">${badge}</span>` : '';
-        const label = `${posText({ r, c })}${top ? `，${gobName(top.owner)}${GOB_SIZE_NAMES[top.size]}奇雞` : '，空格'}`;
+        const badge = memoryMode === 'hint' && stack.length > 1 ? `<b class="gob-stack-badge">${stack.length}</b>` : '';
+        const piece = memoryMode === 'public'
+          ? `<span class="gobblet-public-stack">${stack.map((item) => `<i class="gobblet-ring size-${item.size} ${item.owner}" data-anim-id="gob-${item.id}"></i>`).join('')}</span>`
+          : top ? `<span class="piece gobblet-piece size-${top.size} ${top.owner}" data-anim-id="gob-${top.id}">${badge}</span>` : '';
+        const publicLabel = stack.map((item) => `${gobName(item.owner)}${GOB_SIZE_NAMES[item.size]}奇雞`).join('、');
+        const detail = memoryMode === 'public' ? publicLabel : `${gobName(top?.owner)}${GOB_SIZE_NAMES[top?.size]}奇雞${memoryMode === 'hint' && stack.length > 1 ? `，共 ${stack.length} 枚` : ''}`;
+        const label = `${posText({ r, c })}${top ? `，${detail}` : '，空格'}`;
         board += cellButton(r, c, classes.join(' '), piece, label);
       }
       const reserveZone = (owner) => `<section class="choice-zone gobblet-reserve ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${gobName(owner)}庫存奇雞"><div>${GOB_SIZES.map((size) => {
