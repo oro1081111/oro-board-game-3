@@ -2181,10 +2181,10 @@
         const detail = memoryMode === 'public' ? publicLabel : `${gobName(top?.owner)}${CLASSIC_SIZE_NAMES[top?.size]}棋${memoryMode === 'hint' && stack.length > 1 ? `，共 ${stack.length} 枚` : ''}`;
         board += cellButton(r, c, classes.join(' '), piece, `${posText({ r, c })}${top ? `，${detail}` : '，空格'}`);
       }
-      const reserveZone = (owner) => `<section class="choice-zone gobblet-reserve classic-reserve ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${gobName(owner)}待放區"><small class="classic-level-guide">4級最大・3級・2級・1級最小</small><div>${state.reserve[owner].map((pile, pileIndex) => {
+      const reserveZone = (owner) => `<section class="choice-zone gobblet-reserve classic-reserve ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${gobName(owner)}待放區"><div>${state.reserve[owner].map((pile, pileIndex) => {
         const top = gobTop(pile);
         const selected = state.turn === owner && sel?.kind === 'reserve' && sel.pile === pileIndex;
-        return `<button class="tray-btn gobblet-token ${selected ? 'selected' : ''}" data-pile="${pileIndex}" data-owner="${owner}" ${state.turn === owner && top ? '' : 'disabled'}>${top ? `<span class="piece gobblet-piece size-${top.size} ${owner}"><b class="classic-piece-level" aria-hidden="true">${top.size}</b></span>` : '<span class="empty-pile">—</span>'}<small>${top ? `${top.size}級` : '已用完'}</small></button>`;
+        return `<button class="tray-btn gobblet-token ${selected ? 'selected' : ''}" data-pile="${pileIndex}" data-owner="${owner}" aria-label="${gobName(owner)}${['左', '中', '右'][pileIndex]}側待放棋${top ? `，${top.size}級` : '已用完'}" ${state.turn === owner && top ? '' : 'disabled'}>${top ? `<span class="piece gobblet-piece size-${top.size} ${owner}"><b class="classic-piece-level" aria-hidden="true">${top.size}</b></span>` : '<span class="empty-pile">—</span>'}</button>`;
       }).join('')}</div></section>`;
       const outcome = this.outcome(state);
       const hint = outcome
