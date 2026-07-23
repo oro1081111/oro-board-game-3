@@ -13,7 +13,7 @@ const { BOARD_GAMES, GameCore } = window;
 
 (async () => {
   const basic = GameCore.runSelfTests(BOARD_GAMES);
-  assert.equal(basic.length, 9);
+  assert.equal(basic.length, 10);
   assert.deepEqual(basic.filter((item) => !item.ok), []);
 
   const soulGame = BOARD_GAMES.soulaween;
@@ -413,6 +413,78 @@ const { BOARD_GAMES, GameCore } = window;
   }
   const gobDefenseResult = await GameCore.runMcts(gobGame, gobThreatState, 100, () => true);
   assert.ok(!leavesGobbletWin(gobDefenseResult.action), 'Gobblet MCTS searches only safe root defenses when one exists');
+
+  const classicGame = BOARD_GAMES['gobblet-classic'];
+  const classic = classicGame.create();
+  const classicEmpty = () => Array.from({ length: 4 }, () => Array.from({ length: 4 }, () => []));
+  const classicP = (owner, size, id) => ({ owner, size, id });
+  assert.equal(classic.turn, 'first');
+  assert.deepEqual(classic.reserve.first.map((pile) => pile.map((piece) => piece.size)), [[1, 2, 3, 4], [1, 2, 3, 4], [1, 2, 3, 4]], 'Classic Gobblet starts with three fixed piles, largest piece exposed');
+  assert.equal(classicGame.actions(classic).length, 48, 'Classic Gobblet opening offers three exposed large pieces on sixteen empty cells');
+  assert.ok(classicGame.actions(classic).every((action) => action.type === 'place' && Number.isInteger(action.pile)), 'Classic Gobblet reserve actions identify their source pile');
+  const classicBefore = JSON.stringify(classic);
+  const classicPlaced = classicGame.apply(classic, { type: 'place', pile: 0, r: 0, c: 0 });
+  assert.equal(JSON.stringify(classic), classicBefore, 'Classic Gobblet apply does not mutate its source state');
+  assert.equal(classicPlaced.board[0][0][0].size, 4);
+  assert.equal(classicPlaced.reserve.first[0].at(-1).size, 3, 'Taking the largest reserve piece exposes the next size in the same pile');
+
+  const noThreat = classicGame.create();
+  noThreat.board = classicEmpty();
+  noThreat.board[0][0] = [classicP('second', 1, 100)];
+  assert.ok(!classicGame.actions(noThreat).some((action) => action.type === 'place' && action.r === 0 && action.c === 0), 'Reserve pieces cannot cover an occupied cell without a three-in-line threat');
+  const defense = classicGame.create();
+  defense.board = classicEmpty();
+  for (let c = 0; c < 3; c += 1) defense.board[0][c] = [classicP('second', 1, 110 + c)];
+  defense.board[1][0] = [classicP('second', 1, 120)];
+  const defenseActions = classicGame.actions(defense);
+  assert.ok(defenseActions.some((action) => action.type === 'place' && action.r === 0 && action.c === 1), 'A larger reserve piece may cover an opponent piece in their visible three-in-line');
+  assert.ok(!defenseActions.some((action) => action.type === 'place' && action.r === 1 && action.c === 0), 'The reserve defense exception cannot cover an opponent piece outside the threat line');
+
+  const classicMoves = classicGame.create();
+  classicMoves.board = classicEmpty();
+  classicMoves.board[0][0] = [classicP('first', 4, 130)];
+  classicMoves.board[1][1] = [classicP('second', 2, 131)];
+  classicMoves.board[2][2] = [classicP('first', 1, 132)];
+  const moveActions = classicGame.actions(classicMoves).filter((action) => action.type === 'move' && action.from.r === 0 && action.from.c === 0);
+  assert.ok(moveActions.some((action) => action.to.r === 1 && action.to.c === 1), 'A board piece may cover a smaller opponent piece');
+  assert.ok(moveActions.some((action) => action.to.r === 2 && action.to.c === 2), 'A board piece may cover a smaller friendly piece');
+
+  const simultaneous = classicGame.create();
+  simultaneous.board = classicEmpty();
+  simultaneous.board[0][0] = [classicP('second', 1, 140), classicP('first', 4, 141)];
+  for (let c = 1; c < 4; c += 1) simultaneous.board[0][c] = [classicP('second', 1, 141 + c)];
+  for (let c = 0; c < 3; c += 1) simultaneous.board[1][c] = [classicP('first', 1, 150 + c)];
+  const simultaneousMove = classicGame.actions(simultaneous).find((action) => action.type === 'move' && action.from.r === 0 && action.from.c === 0 && action.to.r === 1 && action.to.c === 3);
+  assert.equal(classicGame.apply(simultaneous, simultaneousMove).winner, 'second', 'Classic Gobblet checks the opponent first when one move reveals both four-in-a-row lines');
+
+  assert.deepEqual(classicGame.memoryModes.map((item) => item.value), ['public', 'hint', 'hidden']);
+  const classicMemory = classicGame.create();
+  classicMemory.board = classicEmpty();
+  classicMemory.board[2][2] = [classicP('first', 1, 160), classicP('second', 3, 161)];
+  const classicHint = classicGame.view(classicMemory, {}, { settings: { memoryMode: 'hint' } });
+  const classicHidden = classicGame.view(classicMemory, {}, { settings: { memoryMode: 'hidden' } });
+  const classicPublic = classicGame.view(classicMemory, {}, { settings: { memoryMode: 'public' } });
+  assert.equal(classicHint.cols, 4);
+  assert.equal((classicHint.tray.match(/data-pile=/g) || []).length, 6, 'Classic Gobblet shows three reserve piles for each player');
+  assert.match(classicHint.board, /gob-stack-badge">2</, 'Classic Gobblet hint mode shows the stack count');
+  assert.doesNotMatch(classicHidden.board, /gob-stack-badge|gobblet-ring|共 2 枚/, 'Classic Gobblet hidden mode exposes no label or count');
+  assert.equal((classicPublic.board.match(/class="gobblet-ring/g) || []).length, 2, 'Classic Gobblet public mode renders every covered piece as a ring');
+  assert.match(classicPublic.board, /gobblet-ring size-1 first/);
+  assert.match(classicPublic.board, /gobblet-ring size-3 second/);
+
+  const classicThreat = classicGame.create();
+  classicThreat.turn = 'second';
+  classicThreat.board = classicEmpty();
+  for (let c = 0; c < 3; c += 1) classicThreat.board[0][c] = [classicP('first', 1, 170 + c)];
+  const classicThreatActions = classicGame.actions(classicThreat);
+  const classicLeavesWin = (action) => {
+    const next = classicGame.apply(classicThreat, action);
+    return !next.winner && classicGame.actions(next).some((reply) => classicGame.apply(next, reply).winner === 'first');
+  };
+  const classicSafe = classicGame.rootActions(classicThreat, classicThreatActions);
+  assert.ok(classicSafe.length < classicThreatActions.length, 'Classic Gobblet root filter removes moves that allow an immediate reply win');
+  assert.ok(classicSafe.every((action) => !classicLeavesWin(action)), 'Classic Gobblet MCTS root keeps every available one-ply defense');
+
   const iceWinProbe = { turn: 'second', board: (() => { const b = Array.from({ length: 5 }, () => Array(5).fill(null)); b[0][0] = { owner: 'first', kind: 'circle', id: 't0' }; b[0][1] = { owner: 'second', kind: 'square', id: 't1' }; b[3][0] = { owner: 'second', kind: 'square', id: 't2' }; b[4][4] = { owner: 'second', kind: 'circle', id: 't3' }; b[2][2] = { owner: 'first', kind: 'square', id: 't4' }; b[4][0] = { owner: 'first', kind: 'square', id: 't5' }; b[2][4] = { owner: 'first', kind: 'square', id: 't6' }; return b; })(), passed: false, winner: null };
   const iceWinning = iceGame.actions(iceWinProbe).filter((action) => iceGame.apply(iceWinProbe, action).winner === 'second');
   if (iceWinning.length) {
@@ -433,6 +505,7 @@ const { BOARD_GAMES, GameCore } = window;
   for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet']) {
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
+  assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'gobblet-classic.svg')), 'Lobby board image exists: gobblet-classic');
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
   assert.doesNotMatch(shellCss, /\.santorini-level[^}]*animation:/, 'Santorini buildings do not replay their entry animation on every render');
   assert.match(shellCss, /\.board-wrap \{ width: 100%; min-width: 0;/, 'Board wrappers keep the board at the available width');
@@ -445,13 +518,14 @@ const { BOARD_GAMES, GameCore } = window;
   assert.doesNotMatch(shellCss, /(?:^|\n)\.santorini-worker \{/, 'Santorini board and worker piece classes cannot collide');
   assert.match(shellCss, /\.mijn-piece \.piece-mark \{ position: absolute; inset: 19%;/, 'Garden board marks use a centered drawing box');
   assert.match(shellCss, /\.mijn-token \.mark-push, \.mijn-token \.mark-pull \{ width: 24px; height: 24px;/, 'Garden supply circles stay smaller than their board counterparts');
-  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 9, 'Every lobby board image links to its game');
+  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 10, 'Every lobby board image links to its game');
   assert.doesNotMatch(lobbyHtml, /詳細規則|其他遊戲|統一介面與純 MCTS AI/, 'Lobby omits redundant catalog text and rule buttons');
   assert.match(shellCss, /\.mijn-piece \.mark-pull \{ border: clamp\(/, 'Garden hollow circles use the centered element box instead of an oversized pseudo-element');
   assert.match(shellCss, /\.mijn-piece \.mark-push, \.mijn-piece \.mark-pull/);
   assert.match(shellCss, /\.piece\.fmg-piece \{[^}]*background: transparent;[^}]*border:/, 'Four Moves pieces are hollow rings');
   assert.match(shellCss, /\.gobblet-ring\.size-1 \{ inset: 30%; \}/, 'Gobblet public mode preserves the small-piece ring size');
   assert.match(shellCss, /\.gobblet-ring\.size-3 \{ inset: 11%; \}/, 'Gobblet public mode preserves the large-piece ring size');
+  assert.match(shellCss, /\.gobblet-classic-board \.gobblet-ring\.size-4 \{ inset: 7%; \}/, 'Classic Gobblet public mode includes its fourth ring size');
   const coreSource = fs.readFileSync(path.join(root, 'assets', 'game-core.js'), 'utf8');
   assert.match(coreSource, /label: '隨機電腦'/);
   assert.match(coreSource, /label: 'MCTS 電腦'/);

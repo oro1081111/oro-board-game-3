@@ -21,15 +21,16 @@
       <article class="game-card"><a class="preview-link" href="games/torii/game.html" aria-label="開始跳躍森靈 Torii"><div class="game-preview" data-preview="torii" data-cols="4"></div></a><div class="game-body"><p class="status playable">可遊玩</p><h3>跳躍森靈 <span>Torii</span></h3><p class="description">使用行動板塊移動森靈、散布信徒並以四連線建立鳥居。</p><div class="meta"><span>2 人</span><span>4×4 棋盤</span><span>路徑與鳥居</span></div><div class="actions"><a class="button primary" href="games/torii/game.html">開始遊戲</a></div></div></article>
       <article class="game-card"><a class="preview-link" href="games/ice-stage/game.html" aria-label="開始冰塊棋 ICE STAGE"><div class="game-preview" data-preview="ice-stage" data-cols="5"></div></a><div class="game-body"><p class="status playable">可遊玩</p><h3>冰塊棋 <span>ICE STAGE</span></h3><p class="description">棋子沿直線滑到底，包圍對手棋群整群移除。讓圓形棋抵達中央或困住對手圓形棋即可獲勝。</p><div class="meta"><span>2 人</span><span>5×5 棋盤</span><span>滑行與包圍</span></div><div class="actions"><a class="button primary" href="games/ice-stage/game.html">開始遊戲</a></div></div></article>
       <article class="game-card"><a class="preview-link" href="games/gobblet/game.html" aria-label="開始奇雞連連 Gobblet Gobblers"><div class="game-preview" data-preview="gobblet" data-cols="3"></div></a><div class="game-body"><p class="status playable">可遊玩</p><h3>奇雞連連 <span>Gobblet Gobblers</span></h3><p class="description">大奇雞能蓋住小奇雞，只有可見的棋子計入連線。率先讓三隻可見奇雞連成一線即獲勝。</p><div class="meta"><span>2 人</span><span>3×3 棋盤</span><span>覆蓋連線</span></div><div class="actions"><a class="button primary" href="games/gobblet/game.html">開始遊戲</a></div></div></article>
+      <article class="game-card"><a class="preview-link" href="games/gobblet-classic/game.html" aria-label="開始棋蹟連連 Gobblet"><div class="game-preview" data-preview="gobblet-classic" data-cols="4"></div></a><div class="game-body"><p class="status playable">可遊玩</p><h3>棋蹟連連 <span>Gobblet</span></h3><p class="description">從場外三疊依序取棋，以四種尺寸覆蓋與移動；只有可見棋子計入四連線。</p><div class="meta"><span>2 人</span><span>4×4 棋盤</span><span>覆蓋與記憶</span></div><div class="actions"><a class="button primary" href="games/gobblet-classic/game.html">開始遊戲</a></div></div></article>
     </section>
   </main>
   <footer class="site-footer">棋類遊戲 3.0 · 網頁版僅供遊戲推廣與程式練習，實體遊戲版權屬各設計者與出版社。</footer>
   <script>
-    const previewImages = { zombie: 'zombie-jump', 'four-color': 'four-color-chess', 'four-moves': 'four-moves-chess' };
+    const previewImages = { zombie: 'zombie-jump.png', 'four-color': 'four-color-chess.png', 'four-moves': 'four-moves-chess.png', 'gobblet-classic': 'gobblet-classic.svg' };
     document.querySelectorAll('[data-preview]').forEach((board) => {
       const image = document.createElement('img');
       image.className = 'game-preview-image';
-      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || board.dataset.preview}.png?v=20260715c`;
+      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || `${board.dataset.preview}.png`}?v=20260723f`;
       image.alt = `${board.dataset.preview} 實際遊戲中局棋盤`;
       board.replaceWith(image);
     });

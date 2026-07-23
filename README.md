@@ -15,6 +15,7 @@
 | 跳躍森靈 Torii | `games/torii/game.html` | `games/torii/rules.html` |
 | 冰塊棋 ICE STAGE | `games/ice-stage/game.html` | `games/ice-stage/rules.html` |
 | 奇雞連連 Gobblet Gobblers | `games/gobblet/game.html` | `games/gobblet/rules.html` |
+| 棋蹟連連 Gobblet | `games/gobblet-classic/game.html` | `games/gobblet-classic/rules.html` |
 
 ## 共用架構
 

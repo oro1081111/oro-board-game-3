@@ -362,6 +362,20 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .gobblet-token .gobblet-piece.size-1 { width: 16px; }
 .gobblet-token .gobblet-piece.size-2 { width: 24px; }
 .gobblet-token .gobblet-piece.size-3 { width: 32px; }
+.gobblet-classic-board .piece.gobblet-piece.size-1 { width: 30%; }
+.gobblet-classic-board .piece.gobblet-piece.size-2 { width: 48%; }
+.gobblet-classic-board .piece.gobblet-piece.size-3 { width: 68%; }
+.gobblet-classic-board .piece.gobblet-piece.size-4 { width: 88%; }
+.gobblet-classic-board .gobblet-ring.size-1 { inset: 34%; }
+.gobblet-classic-board .gobblet-ring.size-2 { inset: 25%; }
+.gobblet-classic-board .gobblet-ring.size-3 { inset: 16%; }
+.gobblet-classic-board .gobblet-ring.size-4 { inset: 7%; }
+.classic-reserve .gobblet-token { min-width: 0; padding: 3px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-1 { width: 12px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-2 { width: 18px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-3 { width: 25px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-4 { width: 32px; }
+.classic-reserve .empty-pile { min-height: 32px; display: grid; place-items: center; color: #aaa; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
 .desktop-card { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }

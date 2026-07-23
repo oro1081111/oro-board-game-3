@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="棋蹟連連紅藍棋子中局">
+  <rect width="800" height="800" rx="50" fill="#f3ead6"/>
+  <rect x="34" y="34" width="732" height="732" rx="42" fill="#b9975b"/>
+  <rect x="48" y="48" width="704" height="704" rx="32" fill="#f3ead6" stroke="#fff" stroke-opacity=".65" stroke-width="8"/>
+  <g fill="#fdfaf1" stroke="#e5ddcb" stroke-width="4">
+    <rect x="64" y="64" width="156" height="156" rx="18"/><rect x="236" y="64" width="156" height="156" rx="18"/><rect x="408" y="64" width="156" height="156" rx="18"/><rect x="580" y="64" width="156" height="156" rx="18"/>
+    <rect x="64" y="236" width="156" height="156" rx="18"/><rect x="236" y="236" width="156" height="156" rx="18"/><rect x="408" y="236" width="156" height="156" rx="18"/><rect x="580" y="236" width="156" height="156" rx="18"/>
+    <rect x="64" y="408" width="156" height="156" rx="18"/><rect x="236" y="408" width="156" height="156" rx="18"/><rect x="408" y="408" width="156" height="156" rx="18"/><rect x="580" y="408" width="156" height="156" rx="18"/>
+    <rect x="64" y="580" width="156" height="156" rx="18"/><rect x="236" y="580" width="156" height="156" rx="18"/><rect x="408" y="580" width="156" height="156" rx="18"/><rect x="580" y="580" width="156" height="156" rx="18"/>
+  </g>
+  <g stroke="#000" stroke-opacity=".18" stroke-width="6">
+    <circle cx="314" cy="142" r="68" fill="#7188f4"/><circle cx="486" cy="142" r="54" fill="#fb6a70"/>
+    <circle cx="142" cy="314" r="68" fill="#fb6a70"/><circle cx="314" cy="314" r="68" fill="#7188f4"/>
+    <circle cx="486" cy="314" r="68" fill="#fb6a70"/><circle cx="142" cy="486" r="68" fill="#fb6a70"/>
+    <circle cx="314" cy="486" r="68" fill="#7188f4"/>
+  </g>
+  <g fill="#2e2a2f" stroke="#fff" stroke-width="3"><circle cx="541" cy="259" r="19"/><text x="541" y="267" fill="#fff" stroke="none" text-anchor="middle" font-family="sans-serif" font-size="23" font-weight="700">2</text></g>
+</svg>

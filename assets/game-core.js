@@ -21,7 +21,8 @@
     ['four-moves-chess', '四步棋 Four Moves Chess'],
     ['torii', '跳躍森靈 Torii'],
     ['ice-stage', '冰塊棋 ICE STAGE'],
-    ['gobblet', '奇雞連連 Gobblet']
+    ['gobblet', '奇雞連連 Gobblet'],
+    ['gobblet-classic', '棋蹟連連 Gobblet']
   ];
 
   const clone = (value) => JSON.parse(JSON.stringify(value));
