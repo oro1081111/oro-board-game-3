@@ -14,5 +14,8 @@
     <circle cx="486" cy="314" r="68" fill="#fb6a70"/><circle cx="142" cy="486" r="68" fill="#fb6a70"/>
     <circle cx="314" cy="486" r="68" fill="#7188f4"/>
   </g>
+  <g fill="#fff" font-family="sans-serif" font-size="34" font-weight="700" text-anchor="middle" style="text-shadow:0 2px 3px rgba(0,0,0,.55)">
+    <text x="314" y="154">4</text><text x="486" y="154">3</text><text x="142" y="326">4</text><text x="314" y="326">4</text><text x="486" y="326">4</text><text x="142" y="498">4</text><text x="314" y="498">4</text>
+  </g>
   <g fill="#2e2a2f" stroke="#fff" stroke-width="3"><circle cx="541" cy="259" r="19"/><text x="541" y="267" fill="#fff" stroke="none" text-anchor="middle" font-family="sans-serif" font-size="23" font-weight="700">2</text></g>
 </svg>

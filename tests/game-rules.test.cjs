@@ -466,9 +466,15 @@ const { BOARD_GAMES, GameCore } = window;
   const classicPublic = classicGame.view(classicMemory, {}, { settings: { memoryMode: 'public' } });
   assert.equal(classicHint.cols, 4);
   assert.equal((classicHint.tray.match(/data-pile=/g) || []).length, 6, 'Classic Gobblet shows three reserve piles for each player');
+  assert.doesNotMatch(classicHint.tray, /第 [123] 疊/, 'Classic Gobblet reserve buttons show piece levels instead of pile numbers');
+  assert.match(classicHint.tray, /4級最大・3級・2級・1級最小/, 'Classic Gobblet reserve area explains all four levels');
+  assert.equal((classicHint.tray.match(/classic-piece-level/g) || []).length, 6, 'Every exposed reserve piece carries its level number');
   assert.match(classicHint.board, /gob-stack-badge">2</, 'Classic Gobblet hint mode shows the stack count');
+  assert.match(classicHint.board, /classic-piece-level[^>]*[^<]*3</, 'The visible board piece carries its level number');
   assert.doesNotMatch(classicHidden.board, /gob-stack-badge|gobblet-ring|共 2 枚/, 'Classic Gobblet hidden mode exposes no label or count');
-  assert.equal((classicPublic.board.match(/class="gobblet-ring/g) || []).length, 2, 'Classic Gobblet public mode renders every covered piece as a ring');
+  assert.match(classicHidden.board, /classic-piece-level/, 'Hidden mode keeps the requested level number on the visible piece');
+  assert.equal((classicPublic.board.match(/class="gobblet-ring size-/g) || []).length, 2, 'Classic Gobblet public mode renders every covered piece as a ring');
+  assert.equal((classicPublic.board.match(/gobblet-ring-level/g) || []).length, 2, 'Every public ring carries its level number');
   assert.match(classicPublic.board, /gobblet-ring size-1 first/);
   assert.match(classicPublic.board, /gobblet-ring size-3 second/);
 

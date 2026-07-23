@@ -355,8 +355,8 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .gobblet-ring.size-1 { inset: 30%; }
 .gobblet-ring.size-2 { inset: 21%; }
 .gobblet-ring.size-3 { inset: 11%; }
-.gobblet-ring.first { border-color: var(--first); }
-.gobblet-ring.second { border-color: var(--second); }
+.gobblet-ring.first { border-color: var(--first); color: var(--first); }
+.gobblet-ring.second { border-color: var(--second); color: var(--second); }
 .gobblet-reserve .gobblet-token { flex-direction: column; gap: 3px; padding: 4px 6px; }
 .gobblet-token .gobblet-piece { position: static; aspect-ratio: 1; border-radius: 50%; }
 .gobblet-token .gobblet-piece.size-1 { width: 16px; }
@@ -371,10 +371,14 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .gobblet-classic-board .gobblet-ring.size-3 { inset: 16%; }
 .gobblet-classic-board .gobblet-ring.size-4 { inset: 7%; }
 .classic-reserve .gobblet-token { min-width: 0; padding: 3px; }
-.classic-reserve .gobblet-token .gobblet-piece.size-1 { width: 12px; }
-.classic-reserve .gobblet-token .gobblet-piece.size-2 { width: 18px; }
-.classic-reserve .gobblet-token .gobblet-piece.size-3 { width: 25px; }
-.classic-reserve .gobblet-token .gobblet-piece.size-4 { width: 32px; }
+.classic-piece-level { color: #fff; font-size: clamp(12px, 3vw, 20px); line-height: 1; text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+.gobblet-ring-level { position: absolute; top: 0; left: 50%; min-width: 14px; height: 14px; display: grid; place-items: center; transform: translate(-50%, -55%); border: 1px solid currentColor; border-radius: 50%; background: #fff; color: inherit; font-size: 9px; font-style: normal; line-height: 1; }
+.classic-level-guide { display: block; margin-bottom: 3px; color: #777; font-size: 9px; font-weight: 900; text-align: center; white-space: nowrap; }
+.classic-reserve .gobblet-token .classic-piece-level { font-size: 9px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-1 { width: 16px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-2 { width: 21px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-3 { width: 27px; }
+.classic-reserve .gobblet-token .gobblet-piece.size-4 { width: 33px; }
 .classic-reserve .empty-pile { min-height: 32px; display: grid; place-items: center; color: #aaa; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }

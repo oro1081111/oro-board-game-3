@@ -1997,7 +1997,7 @@
   // 棋蹟連連 Gobblet
   // ---------------------------------------------------------------------------
   const CLASSIC_SIZES = [1, 2, 3, 4];
-  const CLASSIC_SIZE_NAMES = { 1: '小', 2: '中小', 3: '中大', 4: '大' };
+  const CLASSIC_SIZE_NAMES = { 1: '1級', 2: '2級', 3: '3級', 4: '4級' };
   const CLASSIC_LINES = (() => {
     const lines = [];
     for (let r = 0; r < 4; r += 1) lines.push(Array.from({ length: 4 }, (_, c) => ({ r, c })));
@@ -2119,7 +2119,7 @@
     rootActions(state, actions) { return classicRootActions(state, actions); },
     rules: [
       { title: '配件與目標', html: '<ul><li>4×4 棋盤；雙方各有 12 枚棋子，四種尺寸各 3 枚。</li><li>率先讓自己 4 枚目前可見的棋子橫向、直向或對角連成一線者獲勝。</li><li>只有每格最上方、目前可見的棋子會被計入連線。</li></ul>' },
-      { title: '場外三疊', html: '<ul><li>每位玩家把 12 枚棋子套成 3 疊，每疊由下到上依序為小、中小、中大、大。</li><li>每回合只能拿取其中一疊最上方、目前露出的棋子；遊戲中不能重排場外棋子疊。</li></ul>' },
+      { title: '場外三疊', html: '<ul><li>棋子分為 1–4 級：4 級最大、1 級最小；棋面數字就是棋子的等級。</li><li>每位玩家把 12 枚棋子套成 3 疊，每疊依序露出 4、3、2、1 級。</li><li>每回合只能拿取其中一疊最上方、目前露出的棋子；遊戲中不能重排場外棋子疊。</li></ul>' },
       { title: '回合行動', html: '<ol><li><strong>場外放置：</strong>從自己一疊拿取最上方棋子，通常只能放到空格。</li><li><strong>移動場上棋：</strong>移動自己目前可見的棋子到空格，或覆蓋任一枚比它小的棋子；可覆蓋自己或對手。</li></ol>' },
       { title: '三連線防守例外', html: '<p>若對手已有 3 枚可見棋子位於同一條四連線上，可從場外拿取一枚較大的棋子，直接覆蓋該三連線中的一枚對手棋子。不能覆蓋線外棋子、自己的棋子或同尺寸／更大的棋子。</p>' },
       { title: '揭露與勝負順序', html: '<ol><li>移動棋子後，底下最上層棋子會立即重新露出。</li><li>完成整次行動後，先檢查對手是否四連線；若有，對手立即獲勝。</li><li>對手沒有四連線時，才檢查回合玩家；若雙方同時連線，仍由對手獲勝。</li></ol>' },
@@ -2144,7 +2144,7 @@
       let msg;
       if (action.type === 'place') {
         const piece = gobTop(before.reserve[before.turn][action.pile]);
-        msg = `${name}從第 ${action.pile + 1} 疊放置${CLASSIC_SIZE_NAMES[piece.size]}棋到${posText(action)}`;
+        msg = `${name}從待放區放置${CLASSIC_SIZE_NAMES[piece.size]}棋到${posText(action)}`;
       } else {
         const piece = gobTop(before.board[action.from.r][action.from.c]);
         msg = `${name}將${CLASSIC_SIZE_NAMES[piece.size]}棋從${posText(action.from)}移到${posText(action.to)}`;
@@ -2175,21 +2175,21 @@
         else if (!sel && top?.owner === state.turn && movable.has(key(r, c))) classes.push('movable');
         const badge = memoryMode === 'hint' && stack.length > 1 ? `<b class="gob-stack-badge">${stack.length}</b>` : '';
         const piece = memoryMode === 'public'
-          ? `<span class="gobblet-public-stack">${stack.map((item) => `<i class="gobblet-ring size-${item.size} ${item.owner}" data-anim-id="classic-${item.id}"></i>`).join('')}</span>`
-          : top ? `<span class="piece gobblet-piece size-${top.size} ${top.owner}" data-anim-id="classic-${top.id}">${badge}</span>` : '';
+          ? `<span class="gobblet-public-stack">${stack.map((item) => `<i class="gobblet-ring size-${item.size} ${item.owner}" data-anim-id="classic-${item.id}"><b class="gobblet-ring-level" aria-hidden="true">${item.size}</b></i>`).join('')}</span>`
+          : top ? `<span class="piece gobblet-piece size-${top.size} ${top.owner}" data-anim-id="classic-${top.id}"><b class="classic-piece-level" aria-hidden="true">${top.size}</b>${badge}</span>` : '';
         const publicLabel = stack.map((item) => `${gobName(item.owner)}${CLASSIC_SIZE_NAMES[item.size]}棋`).join('、');
         const detail = memoryMode === 'public' ? publicLabel : `${gobName(top?.owner)}${CLASSIC_SIZE_NAMES[top?.size]}棋${memoryMode === 'hint' && stack.length > 1 ? `，共 ${stack.length} 枚` : ''}`;
         board += cellButton(r, c, classes.join(' '), piece, `${posText({ r, c })}${top ? `，${detail}` : '，空格'}`);
       }
-      const reserveZone = (owner) => `<section class="choice-zone gobblet-reserve classic-reserve ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${gobName(owner)}場外棋子疊"><div>${state.reserve[owner].map((pile, pileIndex) => {
+      const reserveZone = (owner) => `<section class="choice-zone gobblet-reserve classic-reserve ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${gobName(owner)}待放區"><small class="classic-level-guide">4級最大・3級・2級・1級最小</small><div>${state.reserve[owner].map((pile, pileIndex) => {
         const top = gobTop(pile);
         const selected = state.turn === owner && sel?.kind === 'reserve' && sel.pile === pileIndex;
-        return `<button class="tray-btn gobblet-token ${selected ? 'selected' : ''}" data-pile="${pileIndex}" data-owner="${owner}" ${state.turn === owner && top ? '' : 'disabled'}>${top ? `<span class="piece gobblet-piece size-${top.size} ${owner}"></span>` : '<span class="empty-pile">—</span>'}<small>第 ${pileIndex + 1} 疊</small></button>`;
+        return `<button class="tray-btn gobblet-token ${selected ? 'selected' : ''}" data-pile="${pileIndex}" data-owner="${owner}" ${state.turn === owner && top ? '' : 'disabled'}>${top ? `<span class="piece gobblet-piece size-${top.size} ${owner}"><b class="classic-piece-level" aria-hidden="true">${top.size}</b></span>` : '<span class="empty-pile">—</span>'}<small>${top ? `${top.size}級` : '已用完'}</small></button>`;
       }).join('')}</div></section>`;
       const outcome = this.outcome(state);
       const hint = outcome
         ? `遊戲結束：${gobName(outcome)}獲勝`
-        : sel ? '請選擇合法目的地' : `現在是${gobName(state.turn)}的回合，選擇場外棋子疊或場上可見棋子`;
+        : sel ? '請選擇合法目的地' : `現在是${gobName(state.turn)}的回合，選擇待放區或場上可見棋子`;
       return {
         cols: 4, rows: 4, boardClass: 'gobblet-board gobblet-classic-board', board,
         tray: `<div class="dual-choice">${reserveZone('first')}${reserveZone('second')}</div>`, hint, hideScores: true,
