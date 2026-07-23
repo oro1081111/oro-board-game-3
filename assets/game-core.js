@@ -189,6 +189,39 @@
     });
   }
 
+  // 勝率條專用：對「當前盤面」持續累積搜尋；到達 floor 才首次顯示，之後節流平順更新，
+  // 累積到 cap 或被中止（玩家落子、換手）為止。onUpdate 收到目前為止的評估結果。
+  function evaluateBar(game, state, floor, cap, onUpdate, tokenIsCurrent) {
+    if (game.outcome(state) !== null) return Promise.resolve(null);
+    const search = new MctsSearch(game, state);
+    return new Promise((resolve) => {
+      let batch = 12;
+      let painted = false;
+      let lastPaint = 0;
+      const channel = typeof MessageChannel === 'function' ? new MessageChannel() : null;
+      const finish = (value) => { if (channel) { channel.port1.close(); channel.port2.close(); } resolve(value); };
+      const paint = () => {
+        const result = search.result();
+        if (result) { onUpdate(result); painted = true; lastPaint = Date.now(); }
+      };
+      const work = () => {
+        if (!tokenIsCurrent()) return finish(null);
+        const started = Date.now();
+        const until = Math.min(cap, search.root.visits + batch);
+        while (search.root.visits < until) search.iterate();
+        const elapsed = Date.now() - started;
+        if (elapsed < 8) batch = Math.min(batch * 2, 4000);
+        else if (elapsed > 20) batch = Math.max(12, Math.floor(batch / 2));
+        if (search.root.visits >= floor && (!painted || Date.now() - lastPaint > 250)) paint();
+        if (search.root.visits >= cap) { if (!painted) paint(); return finish(search.result()); }
+        if (channel) channel.port2.postMessage(0);
+        else setTimeout(work, 4);
+      };
+      if (channel) channel.port1.onmessage = work;
+      work();
+    });
+  }
+
   const gearSvg = '<svg class="gear-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.35 1.05V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.05-.35H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .35-1.05V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.37.37.7.69.93.29.21.65.32 1.01.32H21a2 2 0 1 1 0 4h-.09c-.36 0-.72.11-1.01.32-.32.23-.55.56-.69.93Z"></path></svg>';
 
   function shell(game) {
@@ -453,15 +486,17 @@
       else setTimeout(() => this.runComputer(type), 320);
     }
 
+    // 人類回合：對當前盤面持續累積評估，思考越久越準（保底 200、上限 5000、節流平順更新）。
     async evaluatePosition() {
       const token = ++this.token;
-      const result = await runMcts(this.game, this.state, Math.min(this.game.evaluationIterations || 40, Math.max(20, Math.round(this.settings.iterations / 50))), () => token === this.token);
-      if (!result || token !== this.token) return;
-      this.firstRate = result.firstRate;
-      this.firstWinRate = result.firstWinRate;
-      this.secondWinRate = result.secondWinRate;
-      this.drawRate = result.drawRate;
-      this.render();
+      await evaluateBar(this.game, this.state, 200, 5000, (result) => {
+        if (token !== this.token) return;
+        this.firstRate = result.firstRate;
+        this.firstWinRate = result.firstWinRate;
+        this.secondWinRate = result.secondWinRate;
+        this.drawRate = result.drawRate;
+        this.render();
+      }, () => token === this.token);
     }
 
     async runComputer(type) {
@@ -473,12 +508,15 @@
       const token = ++this.token;
       let action;
       if (type === 'random') {
-        const result = await runMcts(this.game, this.state, Math.min(this.game.evaluationIterations || 40, Math.max(20, Math.round(this.settings.iterations / 50))), () => token === this.token);
-        if (!result || token !== this.token) return;
-        this.firstRate = result.firstRate;
-        this.firstWinRate = result.firstWinRate;
-        this.secondWinRate = result.secondWinRate;
-        this.drawRate = result.drawRate;
+        // 隨機電腦即時落子，沒有思考時間，對當前盤面跑固定的保底 200 次評估。
+        await evaluateBar(this.game, this.state, 200, 200, (result) => {
+          if (token !== this.token) return;
+          this.firstRate = result.firstRate;
+          this.firstWinRate = result.firstWinRate;
+          this.secondWinRate = result.secondWinRate;
+          this.drawRate = result.drawRate;
+        }, () => token === this.token);
+        if (token !== this.token) return;
         action = pick(actions);
       } else {
         const result = await runMcts(this.game, this.state, this.settings.iterations, () => token === this.token);

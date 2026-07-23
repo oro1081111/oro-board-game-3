@@ -120,7 +120,6 @@
     ],
     openings: [{ value: 'standard', label: '禿鷹老師簡易模式' }],
     rolloutLimit: 70,
-    evaluationIterations: 80,
     animationDuration(action) { return action.collect ? 900 : action.previewed ? 0 : 650; },
     rules: [
       { title: '本頁採用的模式', html: '<p>蒐靈祭正式規則包含角色能力；本頁採用「禿鷹老師」簡易模式，雙方沒有個別能力，專注於放置、翻面與四連線收取。</p>' },
