@@ -400,6 +400,10 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .mode-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
 .mode-card { min-height: 66px; border: 2px solid transparent; border-radius: 12px; background: transparent; color: #777; font-weight: 900; display: grid; place-items: center; padding: 6px; }
 .mode-card.selected { color: #000; background: #fff; border-color: #777; box-shadow: 0 6px 12px rgba(0,0,0,.18); }
+.memory-mode-icon { position: relative; width: 28px; height: 28px; display: block; margin-bottom: 2px; border-radius: 50%; }
+.memory-mode-icon.public { border: 4px solid currentColor; }
+.memory-mode-icon.hidden, .memory-mode-icon.hint { background: currentColor; }
+.memory-mode-icon.hint::after { content: ''; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px; border: 3px solid #fff; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 1px currentColor; }
 .player-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
 .player-choice { min-height: 68px; border: 2px solid transparent; border-radius: 12px; background: transparent; color: #777; font-weight: 900; display: grid; place-items: center; gap: 2px; padding: 5px 2px; font-size: clamp(12px, 3vw, 16px); }
 .player-type-icon { position: relative; width: 30px; height: 30px; display: block; color: currentColor; }

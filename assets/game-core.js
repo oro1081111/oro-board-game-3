@@ -363,7 +363,7 @@
       }));
       const memoryModes = this.game.memoryModes || [];
       this.$('memoryModeSection').hidden = !memoryModes.length;
-      this.$('memoryModeOptions').innerHTML = memoryModes.map((item) => `<button class="mode-card ${item.value === this.settings.memoryMode ? 'selected' : ''}" data-memory-mode="${item.value}">${item.label}</button>`).join('');
+      this.$('memoryModeOptions').innerHTML = memoryModes.map((item) => `<button class="mode-card ${item.value === this.settings.memoryMode ? 'selected' : ''}" data-memory-mode="${item.value}"><i class="memory-mode-icon ${item.value}" aria-hidden="true"></i><span>${item.label}</span></button>`).join('');
       this.$('memoryModeOptions').querySelectorAll('[data-memory-mode]').forEach((button) => button.addEventListener('click', () => {
         this.settings.memoryMode = button.dataset.memoryMode;
         this.renderSettings();

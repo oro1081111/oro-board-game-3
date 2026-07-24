@@ -42,6 +42,9 @@ for (const id of gameIds) {
 }
 
 const lobby = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const lobbyCardCount = (lobby.match(/class="game-card"/g) || []).length;
+assert.equal(lobbyCardCount, gameIds.length, 'Lobby has one card per shared-shell game');
+assert.match(lobby, new RegExp(`<span class="count">${gameIds.length} 款遊戲</span>`), 'Lobby count matches game catalog');
 assert.match(lobby, /games\/soulaween\/game\.html/, 'Lobby links directly to the shared Soulaween page');
 const legacy = fs.readFileSync(path.join(root, 'interface.html'), 'utf8');
 assert.match(legacy, /games\/soulaween\/game\.html/, 'Legacy Soulaween URL redirects to the shared page');
