@@ -1817,9 +1817,10 @@
     return actions;
   }
   function gobCloneState(state) {
+    // 棋子物件不可變，棋盤各格堆疊淺拷貝、共用棋子參考即可。
     return {
       turn: state.turn,
-      board: state.board.map((row) => row.map((stack) => stack.map((piece) => ({ owner: piece.owner, size: piece.size, id: piece.id })))),
+      board: state.board.map((row) => row.map((stack) => stack.slice())),
       reserve: { first: { ...state.reserve.first }, second: { ...state.reserve.second } },
       nextId: state.nextId,
       winner: state.winner
@@ -2026,11 +2027,11 @@
   }
 
   function classicCloneState(state) {
-    const copyPiles = (owner) => state.reserve[owner].map((pile) => pile.map((piece) => ({ ...piece })));
+    // 棋子物件不可變（移動只搬整枚，從不改欄位），因此各層容器淺拷貝即可、共用棋子參考。
     return {
       turn: state.turn,
-      board: state.board.map((row) => row.map((stack) => stack.map((piece) => ({ ...piece })))),
-      reserve: { first: copyPiles('first'), second: copyPiles('second') },
+      board: state.board.map((row) => row.map((stack) => stack.slice())),
+      reserve: { first: state.reserve.first.map((pile) => pile.slice()), second: state.reserve.second.map((pile) => pile.slice()) },
       winner: state.winner
     };
   }
