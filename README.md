@@ -1,6 +1,6 @@
 # 棋類遊戲 3.0
 
-九款雙人棋類遊戲的純靜態網頁版。首頁、遊戲畫面、設定、勝率條、行動日誌、規則分頁與返回上一步採用統一介面，可直接部署到 GitHub Pages。
+十一款雙人棋類遊戲的純靜態網頁版。首頁、遊戲畫面、設定、勝率條、行動日誌、規則分頁與返回上一步採用統一介面，可直接部署到 GitHub Pages。
 
 ## 已完成遊戲
 
@@ -16,14 +16,15 @@
 | 冰塊棋 ICE STAGE | `games/ice-stage/game.html` | `games/ice-stage/rules.html` |
 | 奇雞連連 Gobblet Gobblers | `games/gobblet/game.html` | `games/gobblet/rules.html` |
 | 棋蹟連連 Gobblet | `games/gobblet-classic/game.html` | `games/gobblet-classic/rules.html` |
+| 巧克力對決 Chocolate Clash | `games/chocolate-clash/game.html` | `games/chocolate-clash/rules.html` |
 
 ## 共用架構
 
 - `assets/game-shell.css`：手機與桌面共用遊戲介面。
 - `assets/game-core.js`：設定、日誌、Undo、勝率、AI 排程與共用 MCTS。
-- `assets/games.js`：九款遊戲的狀態、合法行動、狀態轉移與棋盤繪製。
+- `assets/games.js`：十一款遊戲的狀態、合法行動、狀態轉移與棋盤繪製。
 - `interface.html`：舊網址相容轉址，實際遊戲頁為 `games/soulaween/game.html`。
-- `tests/game-rules.test.cjs`：九款共用架構遊戲的規則與 MCTS smoke test。
+- `tests/game-rules.test.cjs`：十一款共用架構遊戲的規則與 MCTS smoke test。
 - `GAME_IMPLEMENTATION_SOP.md`：未來新增遊戲的固定流程與驗收條件。
 
 ## AI
@@ -40,7 +41,7 @@ python -m http.server 8875 --bind 127.0.0.1
 
 瀏覽 `http://127.0.0.1:8875/`。專案不需要建置步驟或第三方執行期套件。
 
-GitHub Actions 會在每次推送到 `main` 或建立 Pull Request 時，自動執行規則、MCTS、九款共用頁面與內部圖片／連結檢查。
+GitHub Actions 會在每次推送到 `main` 或建立 Pull Request 時，自動執行規則、MCTS、十一款共用頁面與內部圖片／連結檢查。
 
 ## 規則來源
 

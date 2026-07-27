@@ -13,7 +13,7 @@ const { BOARD_GAMES, GameCore } = window;
 
 (async () => {
   const basic = GameCore.runSelfTests(BOARD_GAMES);
-  assert.equal(basic.length, 10);
+  assert.equal(basic.length, 11);
   assert.deepEqual(basic.filter((item) => !item.ok), []);
 
   const soulGame = BOARD_GAMES.soulaween;
@@ -501,6 +501,61 @@ const { BOARD_GAMES, GameCore } = window;
     }
   }
 
+  const chocolateGame = BOARD_GAMES['chocolate-clash'];
+  const chocolateCreated = chocolateGame.create('random', null);
+  const chocolate = chocolateCreated.state;
+  assert.equal(chocolate.queue.length, 28, 'Chocolate Clash starts with all 28 chocolates in the circle');
+  assert.deepEqual([...new Set(chocolate.queue.map((piece) => piece.type))].sort(), ['flower', 'heart', 'round', 'square']);
+  for (const type of ['flower', 'heart', 'round', 'square']) assert.equal(chocolate.queue.filter((piece) => piece.type === type).length, 7, `Chocolate Clash has seven ${type} pieces`);
+  assert.equal(chocolateGame.actions(chocolate).length, 28 * 25, 'The first player may choose any physical chocolate and any board cell');
+  assert.ok(chocolateGame.searchActions(chocolate).length < chocolateGame.actions(chocolate).length, 'MCTS removes equivalent first-move board symmetries');
+  const chosenChocolateIndex = 3;
+  const originalChocolateCircle = structuredClone(chocolate.queue);
+  const chocolateOpened = chocolateGame.apply(chocolate, chocolateGame.actions(chocolate).find((action) => action.index === chosenChocolateIndex && action.r === 2 && action.c === 2));
+  assert.equal(chocolateOpened.board[2][2].id, originalChocolateCircle[chosenChocolateIndex].id);
+  assert.equal(chocolateOpened.queue[0].id, originalChocolateCircle[chosenChocolateIndex + 1].id, 'The clockwise neighbour becomes the left endpoint');
+  assert.equal(chocolateOpened.queue.at(-1).id, originalChocolateCircle[chosenChocolateIndex - 1].id, 'The counter-clockwise neighbour becomes the right endpoint');
+
+  const emptyChocolateBoard = () => Array.from({ length: 5 }, () => Array(5).fill(null));
+  const adjacencyBoard = emptyChocolateBoard();
+  adjacencyBoard[2][2] = { id: 'placed-round', type: 'round' };
+  const adjacencyState = {
+    turn: 'first', board: adjacencyBoard,
+    queue: [{ id: 'left-round', type: 'round' }, { id: 'right-square', type: 'square' }],
+    opening: false, placed: 1, winner: null
+  };
+  const adjacencyActions = chocolateGame.actions(adjacencyState);
+  const roundActions = adjacencyActions.filter((action) => action.side === 'left');
+  assert.equal(roundActions.length, 4, 'An existing type may use only its four empty orthogonal neighbours');
+  assert.equal(roundActions.some((action) => action.r === 1 && action.c === 1), false, 'Diagonal placement is illegal');
+  assert.equal(adjacencyActions.filter((action) => action.side === 'right').length, 24, 'A type not yet present may use every empty cell');
+
+  const blockedBoard = structuredClone(adjacencyBoard);
+  for (const [r, c] of [[1, 2], [3, 2], [2, 1], [2, 3]]) blockedBoard[r][c] = { id: `block-${r}-${c}`, type: 'heart' };
+  const forcedState = { ...adjacencyState, board: blockedBoard };
+  assert.ok(chocolateGame.actions(forcedState).length > 0);
+  assert.ok(chocolateGame.actions(forcedState).every((action) => action.side === 'right'), 'If only one endpoint is playable, every legal action uses that endpoint');
+
+  const sameEndsState = {
+    ...adjacencyState,
+    queue: [{ id: 'round-left', type: 'round' }, { id: 'middle-heart', type: 'heart' }, { id: 'round-right', type: 'round' }]
+  };
+  const sameEndActions = chocolateGame.actions(sameEndsState);
+  assert.ok(sameEndActions.some((action) => action.side === 'left') && sameEndActions.some((action) => action.side === 'right'), 'Equal endpoint types remain distinct choices');
+  const singlePieceActions = chocolateGame.actions({ ...adjacencyState, queue: [{ id: 'only-round', type: 'round' }] });
+  assert.equal(singlePieceActions.length, 4, 'A final queue piece is one choice, not duplicated as both endpoints');
+  assert.ok(singlePieceActions.every((action) => action.side === 'left'));
+
+  const nearlyFullChocolate = Array.from({ length: 5 }, (_, r) => Array.from({ length: 5 }, (_, c) => r === 4 && c === 4 ? null : ({ id: `full-${r}-${c}`, type: r === 4 && c === 3 ? 'round' : 'square' })));
+  const fillChocolateState = { turn: 'first', board: nearlyFullChocolate, queue: [{ id: 'last-round', type: 'round' }, { id: 'leftover', type: 'heart' }], opening: false, placed: 24, winner: null };
+  const fillChocolateAction = chocolateGame.actions(fillChocolateState).find((action) => action.r === 4 && action.c === 4);
+  assert.ok(fillChocolateAction, 'The final empty cell is legal for an adjacent matching chocolate');
+  assert.equal(chocolateGame.outcome(chocolateGame.apply(fillChocolateState, fillChocolateAction)), 'first', 'After filling the board, the next player loses');
+  assert.match(chocolateGame.view(chocolate, {}).tray, /環形隊列：任選一顆/);
+  assert.equal(chocolateGame.view(chocolate, {}).hideScores, true, 'Chocolate Clash has no score track');
+  const chocolateMcts = await GameCore.runMcts(chocolateGame, chocolate, 40, () => true);
+  assert.equal(chocolateMcts.drawRate, 0, 'Chocolate Clash rollouts always reach a first-player or second-player win');
+
   const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
   assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');
   assert.match(soulaweenPage, /assets\/game-core\.js/, 'Soulaween loads the shared controller');
@@ -509,7 +564,7 @@ const { BOARD_GAMES, GameCore } = window;
   const lobbyHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(lobbyHtml, /assets\/lobby-boards\//, 'Lobby previews load captured game boards');
   assert.match(lobbyHtml, /board\.replaceWith\(image\)/, 'Lobby replaces synthetic previews with real board images');
-  for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet']) {
+  for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet', 'chocolate-clash']) {
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
   assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'gobblet-classic.svg')), 'Lobby board image exists: gobblet-classic');
@@ -525,7 +580,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.doesNotMatch(shellCss, /(?:^|\n)\.santorini-worker \{/, 'Santorini board and worker piece classes cannot collide');
   assert.match(shellCss, /\.mijn-piece \.piece-mark \{ position: absolute; inset: 19%;/, 'Garden board marks use a centered drawing box');
   assert.match(shellCss, /\.mijn-token \.mark-push, \.mijn-token \.mark-pull \{ width: 24px; height: 24px;/, 'Garden supply circles stay smaller than their board counterparts');
-  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 10, 'Every lobby board image links to its game');
+  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 11, 'Every lobby board image links to its game');
   assert.doesNotMatch(lobbyHtml, /詳細規則|其他遊戲|統一介面與純 MCTS AI/, 'Lobby omits redundant catalog text and rule buttons');
   assert.match(shellCss, /\.mijn-piece \.mark-pull \{ border: clamp\(/, 'Garden hollow circles use the centered element box instead of an oversized pseudo-element');
   assert.match(shellCss, /\.mijn-piece \.mark-push, \.mijn-piece \.mark-pull/);

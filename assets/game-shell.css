@@ -197,8 +197,8 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .building.level-4 { background: #4d8eb5; border-radius: 50%; box-shadow: inset 0 0 0 7px #2f6d94; }
 .building b { align-self: start; margin-top: 6px; color: #fff; text-shadow: 0 1px 2px #456; }
 
-.below-board { display: grid; gap: 6px; margin-bottom: 12px; }
-.choice-tray { min-height: 62px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px; padding: 6px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
+.below-board { min-width: 0; display: grid; gap: 6px; margin-bottom: 12px; }
+.choice-tray { width: 100%; min-width: 0; min-height: 62px; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 7px; padding: 6px; background: #fff; border-radius: 8px; box-shadow: var(--shadow); }
 .tray-btn { position: relative; min-width: 48px; min-height: 48px; border: 2px solid transparent; border-radius: 8px; display: grid; place-items: center; background: #fffef9; font-weight: 950; color: #555; box-shadow: inset 0 2px 7px rgba(0,0,0,.08); }
 .tray-btn.selected { border-color: var(--dark); transform: translateY(-2px); }
 .tray-btn:disabled { opacity: .45; cursor: not-allowed; }
@@ -379,6 +379,24 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .classic-reserve .gobblet-token .gobblet-piece.size-3 { width: 27px; }
 .classic-reserve .gobblet-token .gobblet-piece.size-4 { width: 33px; }
 .classic-reserve .empty-pile { min-height: 32px; display: grid; place-items: center; color: #aaa; }
+
+/* Chocolate Clash: a compact ordered queue and four readable chocolate types. */
+.chocolate-board { background: #70452f; border-color: #4b2b1d; }
+.chocolate-board .cell { background: #f2d8ad; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(94,51,27,.18); }
+.piece.chocolate-piece { width: 72%; height: 72%; display: grid; place-items: center; color: #fff8e9; border: 3px solid rgba(78,37,20,.32); font-size: clamp(20px, 6vw, 34px); line-height: 1; text-shadow: 0 2px 2px rgba(61,28,16,.35); box-shadow: inset 0 3px 4px rgba(255,255,255,.24), 0 4px 7px rgba(62,28,14,.24); }
+.chocolate-round { background: #6f402a; border-radius: 50%; }
+.chocolate-square { background: #9a5a34; border-radius: 18%; }
+.chocolate-heart { background: #b86154; border-radius: 45% 45% 38% 38%; }
+.chocolate-flower { background: #c5873d; border-radius: 38%; }
+.chocolate-queue { width: 100%; min-width: 0; padding: 9px; border: 2px solid #c8a878; border-radius: 14px; background: #fff8e8; }
+.queue-label { margin-bottom: 7px; color: #6b432c; font-size: 13px; font-weight: 900; text-align: center; }
+.queue-track { width: 100%; min-width: 0; display: flex; gap: 4px; overflow-x: auto; padding: 3px 1px 7px; scrollbar-width: thin; }
+.chocolate-token { flex: 0 0 32px; width: 32px; height: 32px; padding: 3px; display: grid; place-items: center; border: 2px solid rgba(83,44,26,.28); color: #fff8e9; font-size: 17px; line-height: 1; box-shadow: inset 0 2px 3px rgba(255,255,255,.22); }
+.chocolate-token:disabled { opacity: .48; filter: saturate(.72); }
+.chocolate-token.left-end, .chocolate-token.right-end { opacity: 1; border-color: #f5c242; box-shadow: 0 0 0 2px #6b432c, inset 0 2px 3px rgba(255,255,255,.22); }
+.chocolate-token.selected { transform: translateY(-2px); outline: 3px solid #32a866; outline-offset: 1px; }
+.chocolate-token span { display: grid; width: 100%; height: 100%; place-items: center; }
+.chocolate-queue.opening .queue-track { padding-top: 6px; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
 .desktop-card { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }

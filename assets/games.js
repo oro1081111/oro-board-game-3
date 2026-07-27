@@ -2225,5 +2225,198 @@
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // 巧克力對決 Chocolate Clash
+  // ---------------------------------------------------------------------------
+  const CHOC_TYPES = ['round', 'square', 'heart', 'flower'];
+  const CHOC_NAMES = { round: '圓形', square: '方形', heart: '愛心形', flower: '花形' };
+  const CHOC_MARKS = { round: '●', square: '■', heart: '♥', flower: '✿' };
+  const CHOC_ORTHO = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+  function chocolateBag() {
+    const bag = CHOC_TYPES.flatMap((type) => Array.from({ length: 7 }, (_, index) => ({ id: `${type}-${index}`, type })));
+    for (let i = bag.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+    return bag;
+  }
+
+  function chocolateCloneState(state) {
+    return {
+      turn: state.turn,
+      board: state.board.map((row) => row.slice()),
+      queue: state.queue.slice(),
+      opening: state.opening,
+      placed: state.placed,
+      winner: state.winner
+    };
+  }
+
+  function chocolateCells(state, type) {
+    const empty = [];
+    let appeared = false;
+    for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
+      if (state.board[r][c]?.type === type) appeared = true;
+      if (state.board[r][c] === null) empty.push({ r, c });
+    }
+    if (!appeared) return empty;
+    return empty.filter(({ r, c }) => CHOC_ORTHO.some(([dr, dc]) => state.board[r + dr]?.[c + dc]?.type === type));
+  }
+
+  function chocolateSources(state) {
+    if (state.opening) return state.queue.map((piece, index) => ({ index, piece }));
+    if (state.queue.length === 1) return [{ side: 'left', piece: state.queue[0] }];
+    return [
+      { side: 'left', piece: state.queue[0] },
+      { side: 'right', piece: state.queue[state.queue.length - 1] }
+    ];
+  }
+
+  function chocolateSourceKey(action) {
+    return action.index === undefined ? action.side : `open-${action.index}`;
+  }
+
+  function chocolatePositionOrbit(r, c) {
+    const points = [[r, c], [c, 4 - r], [4 - r, 4 - c], [4 - c, r], [r, 4 - c], [4 - r, c], [c, r], [4 - c, 4 - r]];
+    return points.map(([rr, cc]) => `${rr},${cc}`).sort()[0];
+  }
+
+  games['chocolate-clash'] = {
+    title: '巧克力對決 Chocolate Clash',
+    nameZh: '巧克力對決',
+    nameEn: 'Chocolate Clash',
+    credit: '規則由使用者提供；本頁實作一局定勝負版本',
+    firstName: '先手',
+    secondName: '後手',
+    designer: '設計者與美術資訊未提供；本頁依使用者提供的完整規則實作。',
+    publisher: '出版資訊未提供；巧克力棋子為遊戲配件，不可食用。',
+    publisherHtml: '<p>目前未提供可核實的設計者、出版社或發行資訊；本頁依使用者提供的完整規則整理成可遊玩的網頁版本。</p><p>巧克力棋子為遊戲配件，不可食用。</p>',
+    publisherLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    introHtml: '<p>從巧克力圓圈打開缺口，再輪流從隊列左右兩端取一顆。每種巧克力第一次可放任意空格，之後必須接在同種類巧克力的上下左右。輪到自己時兩端都放不下即落敗。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 5～10 分鐘</dd><dt>年齡</dt><dd>8 歲以上</dd><dt>棋盤</dt><dd>5×5</dd></dl>',
+    links: [
+      { label: '完整規則', href: 'rules.html' },
+      { label: '規則摘要', href: 'rules.html#summary' },
+      { label: '遊戲大廳', href: '../../index.html' }
+    ],
+    openings: [{ value: 'random', label: '隨機圓圈' }],
+    rolloutLimit: 26,
+    evaluationIterations: 30,
+    rules: [
+      { title: '設置與第一步', html: '<ol><li>將四種各 7 顆、共 28 顆巧克力隨機排成封閉圓圈。</li><li>先手從圓圈任選一顆，放進 5×5 巧克力盒的任意空格。</li><li>取走處形成缺口；缺口兩側成為隊列左右端。</li></ol>' },
+      { title: '之後的回合', html: '<ul><li>只能取隊列最左端或最右端，不能跳過端點。</li><li>該種類尚未出現時，可放任意空格。</li><li>該種類已出現時，必須放在至少一顆同種類巧克力的上下左右相鄰空格；斜角不算。</li></ul>' },
+      { title: '勝負', html: '<ul><li>只有一端能放時，必須選擇該端。</li><li>兩端都沒有合法位置時，當前玩家立即落敗。</li><li>棋盤填滿後，下一位玩家沒有合法位置並落敗。本局不使用愛心計分或三戰兩勝。</li></ul>' },
+      { title: '特殊情況', html: '<ul><li>隊列只剩一顆時，它同時是左右端，也是唯一選擇。</li><li>兩端種類相同時仍可任選一端，因為會露出不同的下一顆巧克力。</li><li>已放置的巧克力不能移動、堆疊或放回隊列。</li></ul>' }
+    ],
+    create(mode, snapshot) {
+      const queue = clone(snapshot?.queue || chocolateBag());
+      return {
+        state: {
+          turn: 'first', board: Array.from({ length: 5 }, () => Array(5).fill(null)),
+          queue, opening: true, placed: 0, winner: null
+        },
+        snapshot: { queue: clone(queue) }
+      };
+    },
+    actions(state) {
+      if (state.winner) return [];
+      const actions = [];
+      for (const source of chocolateSources(state)) {
+        for (const pos of chocolateCells(state, source.piece.type)) {
+          actions.push({
+            type: 'place', piece: source.piece.type, pieceId: source.piece.id,
+            ...(source.index === undefined ? { side: source.side } : { index: source.index }), ...pos
+          });
+        }
+      }
+      return actions;
+    },
+    searchActions(state) {
+      const actions = this.actions(state);
+      if (!state.opening) return actions;
+      const seen = new Set();
+      return actions.filter((action) => {
+        const remaining = state.queue.slice(action.index + 1).concat(state.queue.slice(0, action.index));
+        const forward = remaining.map((piece) => piece.type).join(',');
+        const reverse = [...remaining].reverse().map((piece) => piece.type).join(',');
+        const signature = `${action.piece}|${forward < reverse ? forward : reverse}|${chocolatePositionOrbit(action.r, action.c)}`;
+        if (seen.has(signature)) return false;
+        seen.add(signature);
+        return true;
+      });
+    },
+    cloneState(state) { return chocolateCloneState(state); },
+    apply(source, action) {
+      const state = chocolateCloneState(source);
+      const actor = state.turn;
+      let piece;
+      if (state.opening) {
+        piece = state.queue[action.index];
+        state.queue = state.queue.slice(action.index + 1).concat(state.queue.slice(0, action.index));
+        state.opening = false;
+      } else if (action.side === 'right') piece = state.queue.pop();
+      else piece = state.queue.shift();
+      state.board[action.r][action.c] = piece;
+      state.placed += 1;
+      state.turn = other(actor);
+      if (!this.actions(state).length) state.winner = actor;
+      return state;
+    },
+    outcome(state) { return state.winner; },
+    describe(action, before) {
+      const actor = before.turn === 'first' ? '先手' : '後手';
+      const source = before.opening ? `圓圈第 ${action.index + 1} 顆` : action.side === 'right' ? '右端' : '左端';
+      return `${actor}從${source}取出${CHOC_NAMES[action.piece]}巧克力，放在${posText(action)}。`;
+    },
+    animationDuration() { return 220; },
+    view(state, ui) {
+      const allActions = this.actions(state);
+      const selected = ui.source;
+      const legal = new Set(allActions.filter((action) => !selected || chocolateSourceKey(action) === selected).map((action) => key(action.r, action.c)));
+      let board = '';
+      for (let r = 0; r < 5; r += 1) for (let c = 0; c < 5; c += 1) {
+        const piece = state.board[r][c];
+        const content = piece ? `<span class="piece chocolate-piece chocolate-${piece.type}" data-anim-id="chocolate-${piece.id}" aria-hidden="true">${CHOC_MARKS[piece.type]}</span>` : '';
+        board += cellButton(r, c, selected && legal.has(key(r, c)) ? 'legal' : '', content);
+      }
+      const playable = new Set(allActions.map(chocolateSourceKey));
+      const tokens = state.queue.map((piece, index) => {
+        const source = state.opening ? `open-${index}` : index === 0 ? 'left' : index === state.queue.length - 1 ? 'right' : '';
+        const enabled = source && playable.has(source);
+        const endpoint = !state.opening && source ? ` ${source}-end` : '';
+        const location = state.opening ? `圓圈第 ${index + 1} 顆` : source === 'left' ? '左端' : source === 'right' ? '右端' : `隊列第 ${index + 1} 顆`;
+        const label = enabled ? `選擇${location}${CHOC_NAMES[piece.type]}巧克力` : `${location}${CHOC_NAMES[piece.type]}巧克力`;
+        return `<button class="chocolate-token chocolate-${piece.type}${endpoint} ${selected === source ? 'selected' : ''}" data-source="${source}" ${enabled ? '' : 'disabled'} title="${location}：${CHOC_NAMES[piece.type]}" aria-label="${label}"><span data-anim-id="chocolate-${piece.id}">${CHOC_MARKS[piece.type]}</span></button>`;
+      }).join('');
+      const tray = `<div class="chocolate-queue ${state.opening ? 'opening' : ''}"><div class="queue-label">${state.opening ? '環形隊列：任選一顆' : `左端　剩餘 ${state.queue.length} 顆　右端`}</div><div class="queue-track">${tokens}</div></div>`;
+      const outcome = this.outcome(state);
+      let hint;
+      if (outcome) hint = `遊戲結束：${outcome === 'first' ? '先手' : '後手'}獲勝`;
+      else if (selected) {
+        const action = allActions.find((item) => chocolateSourceKey(item) === selected);
+        hint = `請放置${CHOC_NAMES[action.piece]}巧克力`;
+      } else if (state.opening) hint = '先手請從圓圈任選一顆巧克力';
+      else hint = `${state.turn === 'first' ? '先手' : '後手'}請選擇可放置的左端或右端巧克力`;
+      return {
+        cols: 5, rows: 5, boardClass: 'chocolate-board', board, tray, hint, hideScores: true,
+        winColors: { first: '#6b3f2a', second: '#d79a53', secondText: '#5a321e' },
+        turnColors: { first: '#6b3f2a', second: '#d79a53', secondText: '#3b251a' },
+        firstScore: '', secondScore: ''
+      };
+    },
+    bind(state, ui, controller, board, tray) {
+      tray.querySelectorAll('[data-source]:not(:disabled)').forEach((button) => button.addEventListener('click', () => {
+        if (controller.isHumanTurn()) controller.setUi({ source: button.dataset.source });
+      }));
+      board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
+        if (!controller.isHumanTurn() || !ui.source) return;
+        const r = Number(button.dataset.r), c = Number(button.dataset.c);
+        const action = this.actions(state).find((item) => chocolateSourceKey(item) === ui.source && item.r === r && item.c === c);
+        if (action) controller.commit(action);
+      }));
+    }
+  };
+
   window.BOARD_GAMES = games;
 }());
