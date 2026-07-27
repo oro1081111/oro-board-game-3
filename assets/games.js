@@ -2382,9 +2382,13 @@
       }
       const playable = new Set(allActions.map(chocolateSourceKey));
       const piecesBySlot = new Map(state.queue.map((piece, index) => [piece.slot ?? index, { piece, index }]));
-      const visualSlots = Array.from({ length: 14 }, (_, slot) => slot)
-        .concat(Array.from({ length: 14 }, (_, offset) => 27 - offset));
+      const visualSlots = [
+        ...Array.from({ length: 13 }, (_, slot) => slot),
+        27, ...Array(11).fill(null), 13,
+        ...Array.from({ length: 13 }, (_, offset) => 26 - offset)
+      ];
       const tokens = visualSlots.map((slot) => {
+        if (slot === null) return '<span class="chocolate-ring-gap" aria-hidden="true"></span>';
         const entry = piecesBySlot.get(slot);
         if (!entry) return `<span class="chocolate-slot empty" data-slot="${slot}" aria-hidden="true"></span>`;
         const { piece, index } = entry;

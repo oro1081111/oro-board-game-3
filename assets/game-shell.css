@@ -389,7 +389,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .chocolate-heart { background: #b86154; border-radius: 45% 45% 38% 38%; }
 .chocolate-flower { background: #c5873d; border-radius: 38%; }
 .chocolate-queue { width: 100%; min-width: 0; padding: 9px; border: 2px solid #c8a878; border-radius: 14px; background: #fff8e8; }
-.queue-track { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; overflow: hidden; padding: 3px 1px; }
+.queue-track { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 3px; overflow: hidden; padding: 3px 1px; }
 .chocolate-slot { width: 100%; min-width: 0; aspect-ratio: 1; }
 .chocolate-slot.empty { display: block; }
 .chocolate-token { height: auto; padding: clamp(1px, .5vw, 3px); display: grid; place-items: center; border: 2px solid rgba(83,44,26,.28); color: #fff8e9; font-size: clamp(10px, 2.8vw, 17px); line-height: 1; box-shadow: inset 0 2px 3px rgba(255,255,255,.22); }
