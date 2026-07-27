@@ -389,14 +389,14 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .chocolate-heart { background: #b86154; border-radius: 45% 45% 38% 38%; }
 .chocolate-flower { background: #c5873d; border-radius: 38%; }
 .chocolate-queue { width: 100%; min-width: 0; padding: 9px; border: 2px solid #c8a878; border-radius: 14px; background: #fff8e8; }
-.queue-label { margin-bottom: 7px; color: #6b432c; font-size: 13px; font-weight: 900; text-align: center; }
-.queue-track { width: 100%; min-width: 0; display: flex; gap: 4px; overflow-x: auto; padding: 3px 1px 7px; scrollbar-width: thin; }
-.chocolate-token { flex: 0 0 32px; width: 32px; height: 32px; padding: 3px; display: grid; place-items: center; border: 2px solid rgba(83,44,26,.28); color: #fff8e9; font-size: 17px; line-height: 1; box-shadow: inset 0 2px 3px rgba(255,255,255,.22); }
+.queue-track { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; overflow: hidden; padding: 3px 1px; }
+.chocolate-slot { width: 100%; min-width: 0; aspect-ratio: 1; }
+.chocolate-slot.empty { display: block; }
+.chocolate-token { height: auto; padding: clamp(1px, .5vw, 3px); display: grid; place-items: center; border: 2px solid rgba(83,44,26,.28); color: #fff8e9; font-size: clamp(10px, 2.8vw, 17px); line-height: 1; box-shadow: inset 0 2px 3px rgba(255,255,255,.22); }
 .chocolate-token:disabled { opacity: .48; filter: saturate(.72); }
 .chocolate-token.left-end, .chocolate-token.right-end { opacity: 1; border-color: #f5c242; box-shadow: 0 0 0 2px #6b432c, inset 0 2px 3px rgba(255,255,255,.22); }
-.chocolate-token.selected { transform: translateY(-2px); outline: 3px solid #32a866; outline-offset: 1px; }
+.chocolate-token.selected { outline: 3px solid #32a866; outline-offset: 1px; }
 .chocolate-token span { display: grid; width: 100%; height: 100%; place-items: center; }
-.chocolate-queue.opening .queue-track { padding-top: 6px; }
 
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
 .desktop-card { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }

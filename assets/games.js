@@ -2239,7 +2239,7 @@
       const j = Math.floor(Math.random() * (i + 1));
       [bag[i], bag[j]] = [bag[j], bag[i]];
     }
-    return bag;
+    return bag.map((piece, slot) => ({ ...piece, slot }));
   }
 
   function chocolateCloneState(state) {
@@ -2310,7 +2310,7 @@
       { title: '特殊情況', html: '<ul><li>隊列只剩一顆時，它同時是左右端，也是唯一選擇。</li><li>兩端種類相同時仍可任選一端，因為會露出不同的下一顆巧克力。</li><li>已放置的巧克力不能移動、堆疊或放回隊列。</li></ul>' }
     ],
     create(mode, snapshot) {
-      const queue = clone(snapshot?.queue || chocolateBag());
+      const queue = clone(snapshot?.queue || chocolateBag()).map((piece, slot) => ({ ...piece, slot: piece.slot ?? slot }));
       return {
         state: {
           turn: 'first', board: Array.from({ length: 5 }, () => Array(5).fill(null)),
@@ -2381,15 +2381,21 @@
         board += cellButton(r, c, selected && legal.has(key(r, c)) ? 'legal' : '', content);
       }
       const playable = new Set(allActions.map(chocolateSourceKey));
-      const tokens = state.queue.map((piece, index) => {
+      const piecesBySlot = new Map(state.queue.map((piece, index) => [piece.slot ?? index, { piece, index }]));
+      const visualSlots = Array.from({ length: 14 }, (_, slot) => slot)
+        .concat(Array.from({ length: 14 }, (_, offset) => 27 - offset));
+      const tokens = visualSlots.map((slot) => {
+        const entry = piecesBySlot.get(slot);
+        if (!entry) return `<span class="chocolate-slot empty" data-slot="${slot}" aria-hidden="true"></span>`;
+        const { piece, index } = entry;
         const source = state.opening ? `open-${index}` : index === 0 ? 'left' : index === state.queue.length - 1 ? 'right' : '';
         const enabled = source && playable.has(source);
         const endpoint = !state.opening && source ? ` ${source}-end` : '';
         const location = state.opening ? `圓圈第 ${index + 1} 顆` : source === 'left' ? '左端' : source === 'right' ? '右端' : `隊列第 ${index + 1} 顆`;
         const label = enabled ? `選擇${location}${CHOC_NAMES[piece.type]}巧克力` : `${location}${CHOC_NAMES[piece.type]}巧克力`;
-        return `<button class="chocolate-token chocolate-${piece.type}${endpoint} ${selected === source ? 'selected' : ''}" data-source="${source}" ${enabled ? '' : 'disabled'} title="${location}：${CHOC_NAMES[piece.type]}" aria-label="${label}"><span data-anim-id="chocolate-${piece.id}">${CHOC_MARKS[piece.type]}</span></button>`;
+        return `<button class="chocolate-slot chocolate-token chocolate-${piece.type}${endpoint} ${selected === source ? 'selected' : ''}" data-slot="${slot}" data-source="${source}" ${enabled ? '' : 'disabled'} title="${location}：${CHOC_NAMES[piece.type]}" aria-label="${label}"><span data-anim-id="chocolate-${piece.id}">${CHOC_MARKS[piece.type]}</span></button>`;
       }).join('');
-      const tray = `<div class="chocolate-queue ${state.opening ? 'opening' : ''}"><div class="queue-label">${state.opening ? '環形隊列：任選一顆' : `左端　剩餘 ${state.queue.length} 顆　右端`}</div><div class="queue-track">${tokens}</div></div>`;
+      const tray = `<div class="chocolate-queue"><div class="queue-track">${tokens}</div></div>`;
       const outcome = this.outcome(state);
       let hint;
       if (outcome) hint = `遊戲結束：${outcome === 'first' ? '先手' : '後手'}獲勝`;
