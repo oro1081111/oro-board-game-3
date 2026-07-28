@@ -28,11 +28,11 @@
   </main>
   <footer class="site-footer">棋類遊戲 3.0 · 網頁版僅供遊戲推廣與程式練習，實體遊戲版權屬各設計者與出版社。</footer>
   <script>
-    const previewImages = { zombie: 'zombie-jump.png', 'four-color': 'four-color-chess.png', 'four-moves': 'four-moves-chess.png', 'gobblet-classic': 'gobblet-classic.svg', 'animal-shogi': 'animal-shogi.svg' };
+    const previewImages = { zombie: 'zombie-jump.png', 'four-color': 'four-color-chess.png', 'four-moves': 'four-moves-chess.png', 'gobblet-classic': 'gobblet-classic.svg', 'animal-shogi': 'animal-shogi.jpg' };
     document.querySelectorAll('[data-preview]').forEach((board) => {
       const image = document.createElement('img');
       image.className = 'game-preview-image';
-      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || `${board.dataset.preview}.png`}?v=20260728c`;
+      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || `${board.dataset.preview}.png`}?v=20260728f`;
       image.alt = `${board.dataset.preview} 實際遊戲中局棋盤`;
       board.replaceWith(image);
     });
