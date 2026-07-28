@@ -2232,14 +2232,22 @@
   const CHOC_NAMES = { round: '圓形', square: '方形', heart: '愛心形', flower: '花形' };
   const CHOC_MARKS = { round: '●', square: '■', heart: '♥', flower: '✿' };
   const CHOC_ORTHO = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  const CHOC_CLASSIC = 'ABBCCCDAABBBCDDAAABCCDDDABCD';
 
-  function chocolateBag() {
-    const bag = CHOC_TYPES.flatMap((type) => Array.from({ length: 7 }, (_, index) => ({ id: `${type}-${index}`, type })));
-    for (let i = bag.length - 1; i > 0; i -= 1) {
+  function chocolateBag(pattern) {
+    const types = pattern
+      ? [...pattern].map((letter) => CHOC_TYPES[letter.charCodeAt(0) - 65])
+      : CHOC_TYPES.flatMap((type) => Array(7).fill(type));
+    for (let i = types.length - 1; !pattern && i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1));
-      [bag[i], bag[j]] = [bag[j], bag[i]];
+      [types[i], types[j]] = [types[j], types[i]];
     }
-    return bag.map((piece, slot) => ({ ...piece, slot }));
+    const counts = {};
+    return types.map((type, slot) => {
+      const index = counts[type] || 0;
+      counts[type] = index + 1;
+      return { id: `${type}-${index}`, type, slot };
+    });
   }
 
   function chocolateCloneState(state) {
@@ -2300,17 +2308,23 @@
       { label: '規則摘要', href: 'rules.html#summary' },
       { label: '遊戲大廳', href: '../../index.html' }
     ],
-    openings: [{ value: 'random', label: '隨機圓圈' }],
+    openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }],
+    defaultOpening: 'random',
+    openingLabel: '初始設置',
     rolloutLimit: 26,
     evaluationIterations: 30,
     rules: [
-      { title: '設置與第一步', html: '<ol><li>將四種各 7 顆、共 28 顆巧克力隨機排成封閉圓圈。</li><li>先手從圓圈任選一顆，放進 5×5 巧克力盒的任意空格。</li><li>取走處形成缺口；缺口兩側成為隊列左右端。</li></ol>' },
+      { title: '設置與第一步', html: '<ol><li>依所選初始設置，將四種各 7 顆、共 28 顆巧克力排成封閉圓圈。</li><li>先手從圓圈任選一顆，放進 5×5 巧克力盒的任意空格。</li><li>取走處形成缺口；缺口兩側成為隊列左右端。</li></ol>' },
       { title: '之後的回合', html: '<ul><li>只能取隊列最左端或最右端，不能跳過端點。</li><li>該種類尚未出現時，可放任意空格。</li><li>該種類已出現時，必須放在至少一顆同種類巧克力的上下左右相鄰空格；斜角不算。</li></ul>' },
       { title: '勝負', html: '<ul><li>只有一端能放時，必須選擇該端。</li><li>兩端都沒有合法位置時，當前玩家立即落敗。</li><li>棋盤填滿後，下一位玩家沒有合法位置並落敗。本局不使用愛心計分或三戰兩勝。</li></ul>' },
       { title: '特殊情況', html: '<ul><li>隊列只剩一顆時，它同時是左右端，也是唯一選擇。</li><li>兩端種類相同時仍可任選一端，因為會露出不同的下一顆巧克力。</li><li>已放置的巧克力不能移動、堆疊或放回隊列。</li></ul>' }
     ],
     create(mode, snapshot) {
-      const queue = clone(snapshot?.queue || chocolateBag()).map((piece, slot) => ({ ...piece, slot: piece.slot ?? slot }));
+      let queue;
+      if (mode === 'random') queue = chocolateBag();
+      else if (mode === 'same' && snapshot?.queue) queue = clone(snapshot.queue);
+      else queue = chocolateBag(CHOC_CLASSIC);
+      queue = queue.map((piece, slot) => ({ ...piece, slot: piece.slot ?? slot }));
       return {
         state: {
           turn: 'first', board: Array.from({ length: 5 }, () => Array(5).fill(null)),
