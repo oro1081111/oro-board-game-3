@@ -33,7 +33,7 @@ a { color: inherit; }
 .game-card h3 { margin: 5px 0 9px; font-size: 21px; line-height: 1.2; }
 .game-card h3 span { display: block; margin-top: 3px; color: var(--muted); font-family: Georgia, serif; font-size: 15px; font-weight: 600; }
 .description { min-height: 66px; margin: 0; color: #5f5f59; font-size: 14px; line-height: 1.6; }
-.status { width: fit-content; margin: 0; padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: 900; }
+.status { width: fit-content; margin: 0 0 0 auto; padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: 900; }
 .status.playable { background: #dff7ed; color: #087452; }
 .status.pending { background: #ecebe5; color: #74736c; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }

@@ -46,6 +46,14 @@ const lobbyCardCount = (lobby.match(/class="game-card"/g) || []).length;
 assert.equal(lobbyCardCount, gameIds.length, 'Lobby has one card per shared-shell game');
 assert.match(lobby, new RegExp(`<span class="count">${gameIds.length} 款遊戲</span>`), 'Lobby count matches game catalog');
 assert.match(lobby, /games\/soulaween\/game\.html/, 'Lobby links directly to the shared Soulaween page');
+const lobbyCards = [...lobby.matchAll(/<article class="game-card">([\s\S]*?)<\/article>/g)];
+for (const [, card] of lobbyCards) {
+  const tags = [...card.match(/<div class="meta">([\s\S]*?)<\/div>/)[1].matchAll(/<span>([^<]+)<\/span>/g)].map((match) => match[1]);
+  assert.ok(tags.length >= 4 && tags.length <= 5, 'Each lobby card has four or five short tags');
+  assert.ok(tags.every((tag) => tag !== '2 人' && !/^\d+×\d+ 棋盤$/.test(tag)), 'Lobby tags omit player count and board size');
+}
+const lobbyCss = fs.readFileSync(path.join(root, 'assets', 'lobby.css'), 'utf8');
+assert.match(lobbyCss, /\.status \{[^}]*margin: 0 0 0 auto;/, 'Playable badges align to the right');
 const legacy = fs.readFileSync(path.join(root, 'interface.html'), 'utf8');
 assert.match(legacy, /games\/soulaween\/game\.html/, 'Legacy Soulaween URL redirects to the shared page');
 
