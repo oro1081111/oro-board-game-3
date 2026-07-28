@@ -738,6 +738,12 @@ const { BOARD_GAMES, GameCore } = window;
     label: '前往官方粉專',
     href: 'https://www.facebook.com/guessclub2017/',
   }, 'Chocolate Clash publisher button opens the requested official Facebook page');
+  assert.equal(BOARD_GAMES['animal-shogi'].cover, '../../assets/covers/animal-shogi.jpg', 'Animal Shogi uses the official product photo');
+  assert.ok(fs.existsSync(path.resolve(root, 'games', 'animal-shogi', BOARD_GAMES['animal-shogi'].cover)), 'Animal Shogi official product photo exists');
+  assert.match(shellCss, /\.piece\.animal-piece\.first \{ background: var\(--first\);/, 'Animal Shogi first player uses shared red');
+  assert.match(shellCss, /\.piece\.animal-piece\.second \{ background: var\(--second\);/, 'Animal Shogi second player uses shared blue');
+  assert.match(shellCss, /\.animal-hand\.first \{ background: #fff4f4;/, 'Animal Shogi first hand uses a pale red background');
+  assert.match(shellCss, /\.animal-hand\.second \{ background: #f2f5ff;/, 'Animal Shogi second hand uses a pale blue background');
   for (const id of ['gobblet', 'gobblet-classic', 'chocolate-clash']) {
     const game = BOARD_GAMES[id];
     assert.match(game.ruleLink.href, /^https:\/\//, `${id}: rules button opens an external source`);

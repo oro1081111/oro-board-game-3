@@ -405,8 +405,8 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .animal-board .cell.animal-home-second { background: #cbdcf1; }
 .animal-board .cell.movable { outline: 3px solid rgba(50,145,83,.72); outline-offset: -5px; }
 .piece.animal-piece { width: 82%; height: 82%; border: 3px solid #8a6237; border-radius: 18% 18% 28% 28%; background: #fae7b5; color: #35291c; box-shadow: inset 0 3px 0 rgba(255,255,255,.5), 0 3px 6px rgba(55,34,15,.25); }
-.piece.animal-piece.first { background: #f7d49d; border-color: #ad6639; }
-.piece.animal-piece.second { background: #dbe7f5; border-color: #587aa6; }
+.piece.animal-piece.first { background: var(--first); border-color: #c43f47; }
+.piece.animal-piece.second { background: var(--second); border-color: #405bc4; }
 .animal-face { position: relative; width: 100%; height: 100%; display: grid; place-content: center; text-align: center; line-height: 1; }
 .animal-piece.second .animal-face, .animal-mini.second .animal-face { transform: rotate(180deg); }
 .animal-face b { font-size: clamp(24px, 7vw, 42px); }
@@ -415,11 +415,13 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .animal-move-dot.w { top: 50%; left: 4%; transform: translateY(-50%); }.animal-move-dot.e { top: 50%; right: 4%; transform: translateY(-50%); }
 .animal-move-dot.sw { bottom: 5%; left: 7%; }.animal-move-dot.s { bottom: 3%; left: 50%; transform: translateX(-50%); }.animal-move-dot.se { right: 7%; bottom: 5%; }
 .animal-hand > div { min-height: 54px; display: flex; align-items: center; gap: 8px; }
+.animal-hand.first { background: #fff4f4; border-color: #e9b9bb; }
+.animal-hand.second { background: #f2f5ff; border-color: #bcc8ef; }
 .animal-hand-piece { position: relative; flex: 0 0 48px; width: 48px; height: 52px; min-height: 52px; padding: 2px; display: grid; place-items: center; }
 .animal-hand-piece.selected { outline: 3px solid #329153; }
 .animal-mini { width: 42px; height: 48px; display: block; border: 2px solid #8a6237; border-radius: 7px 7px 11px 11px; background: #fae7b5; color: #35291c; }
-.animal-mini.first { background: #f7d49d; border-color: #ad6639; }
-.animal-mini.second { background: #dbe7f5; border-color: #587aa6; }
+.animal-mini.first { background: var(--first); border-color: #c43f47; }
+.animal-mini.second { background: var(--second); border-color: #405bc4; }
 .animal-mini .animal-face b { font-size: 22px; }
 .animal-mini .animal-move-dot { width: 5px; height: 5px; border-width: 0; }
 

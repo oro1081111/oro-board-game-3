@@ -2571,7 +2571,7 @@
     publisherLink: { label: '前往新天鵝堡官方介紹', href: 'https://www.swanpanasia.com/products/lets-catch-the-lion' },
     ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
     introHtml: '<p>獅子、長頸鹿、大象與小雞在十二格森林中展開迷你將棋對決。捕捉的棋子會轉而加入自己，之後可以重新放回棋盤；抓到對手獅子，或讓自己的獅子安全闖入敵陣即可獲勝。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 5～10 分鐘</dd><dt>年齡</dt><dd>4 歲以上</dd><dt>棋盤</dt><dd>3×4</dd></dl>',
-    cover: '../../assets/covers/animal-shogi.svg',
+    cover: '../../assets/covers/animal-shogi.jpg',
     links: [
       { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/56796/lets-catch-the-lion' },
       { label: '官方介紹', href: 'https://www.swanpanasia.com/products/lets-catch-the-lion' },
@@ -2675,8 +2675,6 @@
       return {
         cols: 3, rows: 4, boardClass: 'animal-board', board,
         tray: `<div class="dual-choice">${handZone('first')}${handZone('second')}</div>`, hint, hideScores: true,
-        winColors: { first: '#d87832', second: '#4e78b9' },
-        turnColors: { first: '#d87832', second: '#4e78b9' },
         firstScore: '', secondScore: ''
       };
     },
