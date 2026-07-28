@@ -635,6 +635,8 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(coreSource, /game\.rootActions\?\.\(state, searchActions\) \|\| searchActions/, 'MCTS supports game-specific root action filtering');
   assert.match(coreSource, /memoryMode: game\.defaultMemoryMode \|\| game\.memoryModes\?\.\[0\]\?\.value \|\| null/, 'Display-only memory mode defaults live in controller settings');
   assert.match(coreSource, /memory-mode-icon \$\{item\.value\}/, 'Every memory mode option renders its shared icon');
+  assert.match(coreSource, /<h3>遊戲設計與美術<\/h3>/, 'Every intro uses the complete design and art heading');
+  assert.doesNotMatch(coreSource, /<h3>設計與美術<\/h3>/, 'The old shortened design and art heading is gone');
   assert.match(coreSource, /this\.game\.searchActions\?\.\(state\) \|\| this\.game\.actions\(state\)/, 'MCTS supports game-specific search actions');
   assert.match(coreSource, /this\.game\.rolloutActions\?\.\(state\) \|\| this\.actions\(state\)/, 'Rollouts may use cheaper per-step actions than the search tree');
   assert.match(coreSource, /this\.game\.rolloutStep/, 'Games may own the whole rollout step to avoid enumerating actions');
@@ -655,7 +657,12 @@ const { BOARD_GAMES, GameCore } = window;
     assert.ok(game.publisherHtml && game.publisherLink?.href, `${id}: publisher section has detailed copy and an official/source link`);
     assert.ok(game.ruleLink?.href, `${id}: rules tab has a rules document button`);
     assert.equal(game.links?.length, 3, `${id}: intro uses the shared three-link layout`);
+    assert.match(game.designer, /^遊戲設計：.+<br>美術設計：.+$/, `${id}: design and art credits use two labeled lines`);
   }
+  assert.deepEqual(BOARD_GAMES['chocolate-clash'].publisherLink, {
+    label: '前往官方粉專',
+    href: 'https://www.facebook.com/guessclub2017/',
+  }, 'Chocolate Clash publisher button opens the requested official Facebook page');
   for (const id of ['gobblet', 'gobblet-classic', 'chocolate-clash']) {
     const game = BOARD_GAMES[id];
     assert.match(game.ruleLink.href, /^https:\/\//, `${id}: rules button opens an external source`);

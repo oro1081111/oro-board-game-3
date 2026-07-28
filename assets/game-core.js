@@ -667,7 +667,7 @@
         ? `<div class="publisher-actions"><a class="info-link" href="${this.game.publisherLink.href}" target="_blank" rel="noopener noreferrer">${this.game.publisherLink.label}</a></div>`
         : '';
       const publisher = this.game.publisherHtml || `<p>${this.game.publisher}</p>`;
-      this.$('tab-intro').innerHTML = `${nameRow}${cover}<section class="info-box"><h3>遊戲介紹</h3>${this.game.introHtml || `<p>${this.game.intro}</p>`}</section><section class="info-box"><h3>設計與美術</h3><p>${this.game.designer}</p></section><section class="info-box publisher-box"><h3>出版資訊</h3>${publisher}${publisherLink}</section>${links ? `<nav class="info-links" aria-label="遊戲相關連結">${links}</nav>` : ''}`;
+      this.$('tab-intro').innerHTML = `${nameRow}${cover}<section class="info-box"><h3>遊戲介紹</h3>${this.game.introHtml || `<p>${this.game.intro}</p>`}</section><section class="info-box"><h3>遊戲設計與美術</h3><p>${this.game.designer}</p></section><section class="info-box publisher-box"><h3>出版資訊</h3>${publisher}${publisherLink}</section>${links ? `<nav class="info-links" aria-label="遊戲相關連結">${links}</nav>` : ''}`;
     }
   }
 
