@@ -45,19 +45,22 @@ a { color: inherit; }
 
 .preview-link { display: block; text-decoration: none; }
 .game-preview-image { width: 100%; aspect-ratio: 1.35; display: block; object-fit: contain; background: #deddd2; border-bottom: 1px solid var(--line); transition: filter .18s ease; }
-.game-preview-frame { --preview-bg: #d7e9c5; --preview-spot-a: #8cbc72; --preview-spot-b: #92bd76; aspect-ratio: 1.35; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 10% 14%, var(--preview-spot-a) 0 19%, transparent 19.5%), radial-gradient(circle at 91% 88%, var(--preview-spot-b) 0 24%, transparent 24.5%), var(--preview-bg); border-bottom: 1px solid var(--line); }
-.game-preview-frame[data-preview="soulaween"] { --preview-bg: #ded7eb; --preview-spot-a: #8d72b0; --preview-spot-b: #6d9f98; }
-.game-preview-frame[data-preview="mijnlieff"] { --preview-bg: #e7e4bd; --preview-spot-a: #84aa68; --preview-spot-b: #d0a84f; }
-.game-preview-frame[data-preview="santorini"] { --preview-bg: #d9edf2; --preview-spot-a: #69aecd; --preview-spot-b: #f4f0df; }
-.game-preview-frame[data-preview="zombie"] { --preview-bg: #dce2d7; --preview-spot-a: #70876b; --preview-spot-b: #a7b39b; }
+.game-preview-frame { --preview-bg: #d7e9c5; --preview-spot-a: #8cbc72; --preview-spot-b: #92bd76; --preview-ink: #302f29; position: relative; aspect-ratio: 1.35; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 10% 14%, var(--preview-spot-a) 0 19%, transparent 19.5%), radial-gradient(circle at 91% 88%, var(--preview-spot-b) 0 24%, transparent 24.5%), var(--preview-bg); border-bottom: 1px solid var(--line); }
+.game-preview-frame[data-preview="soulaween"] { --preview-bg: #f0d4ab; --preview-spot-a: #f27c38; --preview-spot-b: #27292b; --preview-ink: #17191a; }
+.game-preview-frame[data-preview="mijnlieff"] { --preview-bg: #eee8da; --preview-spot-a: #58bcc0; --preview-spot-b: #e96f50; }
+.game-preview-frame[data-preview="santorini"] { --preview-bg: #dff3f2; --preview-spot-a: #54bfd2; --preview-spot-b: #efaaa0; --preview-ink: #155e80; }
+.game-preview-frame[data-preview="zombie"] { --preview-bg: #d5e2de; --preview-spot-a: #20222d; --preview-spot-b: #78b9b6; --preview-ink: #20222d; }
 .game-preview-frame[data-preview="four-color"] { --preview-bg: #eee2ca; --preview-spot-a: #df777d; --preview-spot-b: #6e8bd5; }
 .game-preview-frame[data-preview="four-moves"] { --preview-bg: #d9e0e8; --preview-spot-a: #77879b; --preview-spot-b: #a9b6c4; }
-.game-preview-frame[data-preview="torii"] { --preview-bg: #eadfcf; --preview-spot-a: #ba5c58; --preview-spot-b: #617d67; }
+.game-preview-frame[data-preview="torii"] { --preview-bg: #d9eadb; --preview-spot-a: #087668; --preview-spot-b: #b7404f; --preview-ink: #174b43; }
 .game-preview-frame[data-preview="ice-stage"] { --preview-bg: #e0f0f5; --preview-spot-a: #8cc7dc; --preview-spot-b: #b7dce8; }
-.game-preview-frame[data-preview="gobblet"] { --preview-bg: #f2e2c8; --preview-spot-a: #e39a43; --preview-spot-b: #5d83bb; }
-.game-preview-frame[data-preview="gobblet-classic"] { --preview-bg: #eadfc9; --preview-spot-a: #b89459; --preview-spot-b: #7687b7; }
-.game-preview-frame[data-preview="chocolate-clash"] { --preview-bg: #ead7c9; --preview-spot-a: #9a6044; --preview-spot-b: #d79aa1; }
+.game-preview-frame[data-preview="gobblet"] { --preview-bg: #ffe06a; --preview-spot-a: #e84b2d; --preview-spot-b: #3db6df; --preview-ink: #76331e; }
+.game-preview-frame[data-preview="gobblet-classic"] { --preview-bg: #dce7f2; --preview-spot-a: #2d6aa0; --preview-spot-b: #8d5048; --preview-ink: #173d67; }
+.game-preview-frame[data-preview="chocolate-clash"] { --preview-bg: #eee8e3; --preview-spot-a: #7bc7c0; --preview-spot-b: #cf99a0; --preview-ink: #4b3732; }
 .game-preview-board { display: block; width: auto; height: auto; max-width: calc(100% - 104px); max-height: calc(100% - 36px); object-fit: contain; border-radius: 10px; box-shadow: 0 7px 14px rgba(45,53,35,.24); transition: filter .18s ease; }
+.game-preview-title { position: absolute; z-index: 1; width: 52px; color: var(--preview-ink); font-weight: 900; line-height: 1.05; text-shadow: 0 1px 2px rgba(255,255,255,.95), 0 0 6px rgba(255,255,255,.75); pointer-events: none; }
+.game-preview-title.zh { top: 15px; left: 11px; font-size: 15px; letter-spacing: .04em; }
+.game-preview-title.en { right: 11px; bottom: 15px; font-family: Georgia, serif; font-size: 10px; text-align: right; overflow-wrap: anywhere; }
 .preview-link:hover .game-preview-image, .preview-link:focus-visible .game-preview-image, .preview-link:hover .game-preview-board, .preview-link:focus-visible .game-preview-board { filter: brightness(.96); }
 .preview-link:focus-visible { outline: 3px solid rgba(36,36,33,.25); outline-offset: -3px; }
 .game-preview { --cols: 4; aspect-ratio: 1.35; display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 5px; padding: 18px; background: #deddd2; border-bottom: 1px solid var(--line); }
