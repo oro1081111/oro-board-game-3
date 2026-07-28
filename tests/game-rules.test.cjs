@@ -670,7 +670,9 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(lobbyCss, /\.game-preview-title\.en \{[^}]*rotate\(90deg\)/, 'English lobby titles run vertically on the right');
   assert.match(lobbyCss, /\.game-preview-title \{[^}]*font-family: sans-serif; font-size: 18px; font-weight: 900;/, 'Lobby titles match the original Animal Shogi typography');
   assert.doesNotMatch(lobbyCss, /\.game-preview-title \{[^}]*text-shadow:/, 'Lobby titles have no dark outline or shadow');
-  assert.match(lobbyHtml, /12 \/ titleEn\.textContent\.length/, 'Long English titles compress without changing the original font size');
+  assert.doesNotMatch(lobbyHtml, /title-scale/, 'English lobby titles are not compressed');
+  assert.match(lobbyCss, /\.game-preview-title\.zh \{ top: 15px;/, 'All Chinese lobby titles share the same top edge');
+  assert.match(lobbyCss, /\.game-preview-title\.en \{ top: calc\(100% - 15px\);/, 'All English lobby titles share the same bottom edge');
   assert.match(lobbyCss, /data-preview="zombie"\][^}]*--preview-bg: #20222d;[^}]*--preview-spot-a: #78b9b6/, 'Zombie JUMP uses a dark background with light circles');
   assert.match(lobbyCss, /\.game-preview-board \{[^}]*max-height: calc\(100% - 36px\);[^}]*object-fit: contain/, 'Lobby board screenshots remain uncropped');
   for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet', 'chocolate-clash']) {
@@ -682,6 +684,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(animalLobbySvg, /fill="#d7e9c5"/, 'Animal Shogi lobby preview restores its original green background');
   assert.match(animalLobbySvg, /fill="#fff"[^>]*rotate\(-90[^>]*>動物將棋</, 'Animal Shogi uses a vertical white Chinese label');
   assert.match(animalLobbySvg, /fill="#fff"[^>]*rotate\(90[^>]*>LET’S CATCH THE LION!</, 'Animal Shogi uses a vertical white English label');
+  assert.doesNotMatch(animalLobbySvg, /textLength=|lengthAdjust=/, 'Animal Shogi English label is not compressed');
   assert.doesNotMatch(animalLobbySvg, /<text[^>]*stroke=/, 'Animal Shogi labels have no dark outline');
   assert.match(animalLobbySvg, /href="data:image\/jpeg;base64,/, 'Animal Shogi lobby preview embeds its board screenshot so browsers cannot block it');
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
