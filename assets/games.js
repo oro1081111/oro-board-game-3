@@ -1873,12 +1873,13 @@
     publisher: '原版由 Blue Orange Games 出版；中文版由新天鵝堡 Swan Panasia 代理。',
     publisherHtml: '<p>《奇雞連連 Gobblet Gobblers》原版由 Blue Orange Games 出版，是經典井字遊戲的「大吃小」變體；中文版由新天鵝堡 Swan Panasia 代理發行。規則精簡、適合親子，卻因為棋子能互相覆蓋而藏有記憶與策略深度。</p><p><strong>系列作品：</strong>《Gobblet》、《Gobblet Gobblers》、《Gobblet Junior》。</p>',
     publisherLink: { label: '前往新天鵝堡官方介紹', href: 'https://www.swanpanasia.com/products/gobblet-gobblers' },
-    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    ruleLink: { label: '中文規則（PDF）', href: 'https://www.gokids.com.tw/tsaiss/Blueorange/Game%20Rule/Gobblet%20Gobbler%20%E8%B2%AA%E5%90%83%E9%AC%BC%E5%85%A5%E9%96%80%E7%89%88%E6%A1%8C%E4%B8%8A%E9%81%8A%E6%88%B2.pdf' },
     introHtml: '<p>兩位玩家輪流放下或搬動自己的奇雞。大奇雞可以一口「吃掉」蓋住比較小的奇雞——不管是對手的還是自己的。只有每一格最上面、看得見的奇雞才算數；率先讓自己三隻看得見的奇雞連成一線就獲勝。棋子能覆蓋與移動，讓這款 3×3 小遊戲比井字遊戲多了記憶與埋伏的樂趣。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 5–10 分鐘</dd><dt>年齡</dt><dd>5 歲以上</dd><dt>類型</dt><dd>覆蓋、連線、記憶</dd></dl>',
+    cover: '../../assets/covers/gobblet-gobblers.jpg',
     links: [
       { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/13230/gobblers' },
       { label: '官方介紹', href: 'https://www.swanpanasia.com/products/gobblet-gobblers' },
-      { label: '中文說明書', href: 'https://boardgamegeek.com/boardgame/13230/gobblers/files' }
+      { label: '中文規則', href: 'https://www.gokids.com.tw/tsaiss/Blueorange/Game%20Rule/Gobblet%20Gobbler%20%E8%B2%AA%E5%90%83%E9%AC%BC%E5%85%A5%E9%96%80%E7%89%88%E6%A1%8C%E4%B8%8A%E9%81%8A%E6%88%B2.pdf' }
     ],
     openings: [{ value: 'standard', label: '標準' }],
     memoryModes: [{ value: 'public', label: '公開' }, { value: 'hint', label: '提示' }, { value: 'hidden', label: '隱藏' }],
@@ -2104,12 +2105,13 @@
     publisher: '原版由 Blue Orange Games 出版；繁體中文版由新天鵝堡 Swan Panasia 代理。',
     publisherHtml: '<p>《棋蹟連連 Gobblet》是《奇雞連連》的 4×4 進階版本。雙方各有三疊、四種尺寸的套疊棋子，必須同時記住被覆蓋的棋子、場外各疊的下一枚棋子，並留意移動後重新露出的連線。</p><p><strong>繁體中文版：</strong>新天鵝堡 Swan Panasia 代理發行。</p>',
     publisherLink: { label: '前往新天鵝堡官方介紹', href: 'https://www.swanpanasia.com/products/gobblet' },
-    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    ruleLink: { label: '中文規則（PDF）', href: 'https://www.gokids.com.tw/tsaiss/Blueorange/Game%20Rule/Gobblet%20%E8%B2%AA%E5%90%83%E9%AC%BC%E9%80%B2%E9%9A%8E%E7%89%88%E6%A1%8C%E4%B8%8A%E9%81%8A%E6%88%B2.pdf' },
     introHtml: '<p>兩位玩家輪流從場外三疊拿出最上方棋子，或移動棋盤上自己目前可見的棋子。較大的棋子可以套住較小的棋子；只有每格最上方可見的棋子會計入連線。率先讓四枚同色可見棋子橫向、直向或對角連成一線即可獲勝。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 15 分鐘</dd><dt>年齡</dt><dd>7 歲以上</dd><dt>配件</dt><dd>4×4 棋盤、24 枚棋子</dd></dl>',
+    cover: '../../assets/covers/gobblet.jpg',
     links: [
       { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/2266/gobblet' },
       { label: '官方介紹', href: 'https://www.swanpanasia.com/products/gobblet' },
-      { label: '中文說明書', href: 'https://www.gokids.com.tw/tsaiss/Blueorange/Game%20Rule/Gobblet%20%E8%B2%AA%E5%90%83%E9%AC%BC%E9%80%B2%E9%9A%8E%E7%89%88%E6%A1%8C%E4%B8%8A%E9%81%8A%E6%88%B2.pdf' }
+      { label: '中文規則', href: 'https://www.gokids.com.tw/tsaiss/Blueorange/Game%20Rule/Gobblet%20%E8%B2%AA%E5%90%83%E9%AC%BC%E9%80%B2%E9%9A%8E%E7%89%88%E6%A1%8C%E4%B8%8A%E9%81%8A%E6%88%B2.pdf' }
     ],
     openings: [{ value: 'standard', label: '標準' }],
     memoryModes: [{ value: 'public', label: '公開' }, { value: 'hint', label: '提示' }, { value: 'hidden', label: '隱藏' }],
@@ -2294,19 +2296,20 @@
     title: '巧克力對決 Chocolate Clash',
     nameZh: '巧克力對決',
     nameEn: 'Chocolate Clash',
-    credit: '規則由使用者提供；本頁實作一局定勝負版本',
+    credit: '設計者：Sky Huang，出版：BGDesign Taiwan',
     firstName: '先手',
     secondName: '後手',
-    designer: '設計者與美術資訊未提供；本頁依使用者提供的完整規則實作。',
-    publisher: '出版資訊未提供；巧克力棋子為遊戲配件，不可食用。',
-    publisherHtml: '<p>目前未提供可核實的設計者、出版社或發行資訊；本頁依使用者提供的完整規則整理成可遊玩的網頁版本。</p><p>巧克力棋子為遊戲配件，不可食用。</p>',
-    publisherLink: { label: '開啟本站完整規則', href: 'rules.html' },
-    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    designer: '遊戲設計與美術：Sky Huang。',
+    publisher: 'BGDesign Taiwan；2023 年於日本 Game Market 秋季場展出。',
+    publisherHtml: '<p>《巧克力對決》由 Sky Huang 設計並負責美術，透過 BGDesign Taiwan 發表；2023 年於日本 Game Market 秋季場展出。</p><p>巧克力棋子為遊戲配件，不可食用。</p>',
+    publisherLink: { label: '前往官方介紹', href: 'https://gamemarket.jp/game/182388' },
+    ruleLink: { label: '中文規則與介紹', href: 'https://bghut.com/goods-11316.html' },
     introHtml: '<p>從巧克力圓圈打開缺口，再輪流從隊列左右兩端取一顆。每種巧克力第一次可放任意空格，之後必須接在同種類巧克力的上下左右。輪到自己時兩端都放不下即落敗。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 5～10 分鐘</dd><dt>年齡</dt><dd>8 歲以上</dd><dt>棋盤</dt><dd>5×5</dd></dl>',
+    cover: '../../assets/covers/chocolate-clash.jpg',
     links: [
-      { label: '完整規則', href: 'rules.html' },
-      { label: '規則摘要', href: 'rules.html#summary' },
-      { label: '遊戲大廳', href: '../../index.html' }
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/410394/chocolate-clash' },
+      { label: '官方介紹', href: 'https://gamemarket.jp/game/182388' },
+      { label: '中文規則', href: 'https://bghut.com/goods-11316.html' }
     ],
     openings: [{ value: 'standard', label: '經典' }, { value: 'random', label: '隨機' }, { value: 'same', label: '相同' }],
     defaultOpening: 'random',

@@ -656,6 +656,13 @@ const { BOARD_GAMES, GameCore } = window;
     assert.ok(game.ruleLink?.href, `${id}: rules tab has a rules document button`);
     assert.equal(game.links?.length, 3, `${id}: intro uses the shared three-link layout`);
   }
+  for (const id of ['gobblet', 'gobblet-classic', 'chocolate-clash']) {
+    const game = BOARD_GAMES[id];
+    assert.match(game.ruleLink.href, /^https:\/\//, `${id}: rules button opens an external source`);
+    assert.deepEqual(game.links.map((link) => link.label), ['BGG 頁面', '官方介紹', '中文規則'], `${id}: intro links BGG, official information, and Chinese rules`);
+    assert.ok(game.links.every((link) => link.href.startsWith('https://')), `${id}: all three source links are external`);
+    assert.ok(fs.existsSync(path.resolve(root, 'games', id, game.cover)), `${id}: intro cover image exists`);
+  }
   assert.equal(BOARD_GAMES.mijnlieff.title, '花園棋 Garden', 'Garden uses the requested English title');
 
   for (const [id, game] of Object.entries(BOARD_GAMES)) {
