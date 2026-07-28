@@ -660,7 +660,11 @@ const { BOARD_GAMES, GameCore } = window;
   const shellCss = fs.readFileSync(path.join(root, 'assets', 'game-shell.css'), 'utf8');
   const lobbyHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(lobbyHtml, /assets\/lobby-boards\//, 'Lobby previews load captured game boards');
-  assert.match(lobbyHtml, /board\.replaceWith\(image\)/, 'Lobby replaces synthetic previews with real board images');
+  assert.match(lobbyHtml, /board\.replaceChildren\(image\)/, 'Lobby preserves real board screenshots inside decorative backgrounds');
+  const lobbyCss = fs.readFileSync(path.join(root, 'assets', 'lobby.css'), 'utf8');
+  assert.match(lobbyCss, /\.game-preview-frame \{[^}]*--preview-bg:/, 'Lobby board backgrounds share the Animal Shogi composition');
+  assert.equal((lobbyCss.match(/\.game-preview-frame\[data-preview=/g) || []).length, 11, 'Every non-Animal-Shogi board has a game-specific background palette');
+  assert.match(lobbyCss, /\.game-preview-board \{[^}]*max-height: calc\(100% - 36px\);[^}]*object-fit: contain/, 'Lobby board screenshots remain uncropped');
   for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet', 'chocolate-clash']) {
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
