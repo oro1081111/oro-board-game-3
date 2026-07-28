@@ -665,7 +665,11 @@ const { BOARD_GAMES, GameCore } = window;
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
   assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'gobblet-classic.svg')), 'Lobby board image exists: gobblet-classic');
-  assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'animal-shogi.jpg')), 'Lobby board screenshot exists: animal-shogi');
+  assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'animal-shogi.svg')), 'Lobby board composite exists: animal-shogi');
+  assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'animal-shogi-board-source.jpg')), 'Unscaled Animal Shogi board screenshot exists');
+  const animalLobbySvg = fs.readFileSync(path.join(root, 'assets', 'lobby-boards', 'animal-shogi.svg'), 'utf8');
+  assert.match(animalLobbySvg, /fill="#d7e9c5"/, 'Animal Shogi lobby preview preserves its original green background');
+  assert.match(animalLobbySvg, /href="animal-shogi-board-source\.jpg"/, 'Animal Shogi lobby preview uses the unscaled real board screenshot');
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
   assert.doesNotMatch(shellCss, /\.santorini-level[^}]*animation:/, 'Santorini buildings do not replay their entry animation on every render');
   assert.match(shellCss, /\.board-wrap \{ width: 100%; min-width: 0;/, 'Board wrappers keep the board at the available width');
