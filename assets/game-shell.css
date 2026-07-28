@@ -43,6 +43,14 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
   align-items: start;
   padding: 0 24px 28px;
 }
+.legal-footer {
+  width: min(100%, 1320px);
+  padding: 18px 24px 30px;
+  color: #666;
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
 .phone-app { width: min(100%, 520px); min-height: 100vh; background: var(--paper); box-shadow: 0 0 34px rgba(0,0,0,.22); }
 .topbar {
   height: 64px;
@@ -466,7 +474,7 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .difficulty-btn.selected { border-color: #777; color: #000; }
 .confirm-btn { width: calc(100% - 52px); min-height: 54px; margin: 10px auto 18px; border: 0; border-radius: 999px; color: #fff; background: var(--dark); font-size: clamp(20px, 4.5vw, 29px); font-weight: 950; }
 .info-modal { width: min(91vw, 490px); }
-.info-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 17px 18px; background: #fff; border-bottom: 2px solid #aaa; }
+.info-tabs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 17px 18px; background: #fff; border-bottom: 2px solid #aaa; }
 .tab-btn { min-height: 46px; border: 2px solid var(--line); border-radius: 999px; background: var(--panel); font-size: clamp(15px, 3.5vw, 21px); font-weight: 950; }
 .tab-btn.active { background: #d9d6c4; }
 .info-content { max-height: min(70vh, 650px); overflow: auto; padding: 18px; background: var(--paper); }

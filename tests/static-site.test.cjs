@@ -4,6 +4,7 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const gameIds = ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet', 'gobblet-classic', 'chocolate-clash', 'animal-shogi'];
+const legalNotice = '© 奧羅桌遊設計工作室 ·AI棋類程式實作練習。僅供非商業分享，請勿私自商用。原創桌遊版權屬於各自作者與出版社。提供線上版本推廣給大家更多好玩遊戲，任何線上版都無法取代實體桌遊的樂趣。';
 
 function walk(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -18,7 +19,13 @@ const missing = [];
 
 for (const file of htmlFiles) {
   const source = fs.readFileSync(file, 'utf8');
-  assert.doesNotMatch(source, /遊戲畫面原型|AI 迭帶次數/, `${path.relative(root, file)} must not contain retired prototype wording`);
+  const relative = path.relative(root, file);
+  assert.doesNotMatch(source, /遊戲畫面原型|AI 迭帶次數/, `${relative} must not contain retired prototype wording`);
+  if (!relative.endsWith(path.join('game.html'))) assert.ok(source.includes(legalNotice), `${relative} includes the legal notice`);
+  if (relative.endsWith(path.join('rules.html'))) {
+    assert.match(source, /location\.replace\('game\.html'\)/, `${relative} redirects direct visitors to the game`);
+    assert.match(source, /body\{display:none\}/, `${relative} never flashes the hidden rules`);
+  }
   for (const match of source.matchAll(/(?:href|src)="([^"]+)"/g)) {
     const reference = match[1];
     if (/^(?:https?:|mailto:|data:|javascript:|#)/.test(reference)) continue;
@@ -56,5 +63,9 @@ const lobbyCss = fs.readFileSync(path.join(root, 'assets', 'lobby.css'), 'utf8')
 assert.match(lobbyCss, /\.status \{[^}]*margin: 0 0 0 auto;/, 'Playable badges align to the right');
 const legacy = fs.readFileSync(path.join(root, 'interface.html'), 'utf8');
 assert.match(legacy, /games\/soulaween\/game\.html/, 'Legacy Soulaween URL redirects to the shared page');
+const gameCore = fs.readFileSync(path.join(root, 'assets', 'game-core.js'), 'utf8');
+assert.ok(gameCore.includes(legalNotice), 'Shared game shell includes the legal notice');
+assert.doesNotMatch(gameCore, /data-tab="rules"/, 'Game information modal does not expose the rules page');
+assert.match(gameCore, /rules\\\.html/, 'Only local rules.html links are filtered from game information');
 
 console.log(`ok - ${htmlFiles.length} HTML pages have valid internal assets; ${gameIds.length} games use the shared shell`);
