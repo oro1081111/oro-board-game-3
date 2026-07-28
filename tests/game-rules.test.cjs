@@ -668,6 +668,9 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(lobbyHtml, /game-preview-title en/, 'Lobby backgrounds show the English game name on the right');
   assert.match(lobbyCss, /\.game-preview-title\.zh \{[^}]*rotate\(-90deg\)/, 'Chinese lobby titles run vertically on the left');
   assert.match(lobbyCss, /\.game-preview-title\.en \{[^}]*rotate\(90deg\)/, 'English lobby titles run vertically on the right');
+  assert.match(lobbyCss, /\.game-preview-title \{[^}]*font-family: sans-serif; font-size: 18px; font-weight: 900;/, 'Lobby titles match the original Animal Shogi typography');
+  assert.doesNotMatch(lobbyCss, /\.game-preview-title \{[^}]*text-shadow:/, 'Lobby titles have no dark outline or shadow');
+  assert.match(lobbyHtml, /12 \/ titleEn\.textContent\.length/, 'Long English titles compress without changing the original font size');
   assert.match(lobbyCss, /data-preview="zombie"\][^}]*--preview-bg: #20222d;[^}]*--preview-spot-a: #78b9b6/, 'Zombie JUMP uses a dark background with light circles');
   assert.match(lobbyCss, /\.game-preview-board \{[^}]*max-height: calc\(100% - 36px\);[^}]*object-fit: contain/, 'Lobby board screenshots remain uncropped');
   for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet', 'chocolate-clash']) {
@@ -679,6 +682,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(animalLobbySvg, /fill="#d7e9c5"/, 'Animal Shogi lobby preview restores its original green background');
   assert.match(animalLobbySvg, /fill="#fff"[^>]*rotate\(-90[^>]*>動物將棋</, 'Animal Shogi uses a vertical white Chinese label');
   assert.match(animalLobbySvg, /fill="#fff"[^>]*rotate\(90[^>]*>LET’S CATCH THE LION!</, 'Animal Shogi uses a vertical white English label');
+  assert.doesNotMatch(animalLobbySvg, /<text[^>]*stroke=/, 'Animal Shogi labels have no dark outline');
   assert.match(animalLobbySvg, /href="data:image\/jpeg;base64,/, 'Animal Shogi lobby preview embeds its board screenshot so browsers cannot block it');
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
   assert.doesNotMatch(shellCss, /\.santorini-level[^}]*animation:/, 'Santorini buildings do not replay their entry animation on every render');
