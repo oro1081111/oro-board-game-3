@@ -65,7 +65,7 @@ const legacy = fs.readFileSync(path.join(root, 'interface.html'), 'utf8');
 assert.match(legacy, /games\/soulaween\/game\.html/, 'Legacy Soulaween URL redirects to the shared page');
 const gameCore = fs.readFileSync(path.join(root, 'assets', 'game-core.js'), 'utf8');
 assert.ok(gameCore.includes(legalNotice), 'Shared game shell includes the legal notice');
-assert.doesNotMatch(gameCore, /data-tab="rules"/, 'Game information modal does not expose the rules page');
+assert.match(gameCore, /data-tab="rules">遊戲規則/, 'Game information modal exposes the inline game rules tab');
 assert.match(gameCore, /rules\\\.html/, 'Only local rules.html links are filtered from game information');
 
 console.log(`ok - ${htmlFiles.length} HTML pages have valid internal assets; ${gameIds.length} games use the shared shell`);

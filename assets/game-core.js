@@ -277,8 +277,8 @@
       </div>
       <div class="modal-layer" id="infoLayer">
         <section class="modal info-modal" role="dialog" aria-modal="true" aria-label="遊戲資訊">
-          <div class="info-tabs"><button class="tab-btn active" data-tab="log">行動日誌</button><button class="tab-btn" data-tab="intro">遊戲介紹</button></div>
-          <div class="info-content"><div class="info-panel active" id="tab-log"></div><div class="info-panel" id="tab-intro"></div></div>
+          <div class="info-tabs"><button class="tab-btn active" data-tab="log">行動日誌</button><button class="tab-btn" data-tab="rules">遊戲規則</button><button class="tab-btn" data-tab="intro">遊戲介紹</button></div>
+          <div class="info-content"><div class="info-panel active" id="tab-log"></div><div class="info-panel" id="tab-rules"></div><div class="info-panel" id="tab-intro"></div></div>
           <button class="confirm-btn" data-close="infoLayer">確認並關閉</button>
         </section>
       </div>`;
@@ -656,14 +656,16 @@
     renderInfo() {
       if (!this.state) return;
       this.$('tab-log').innerHTML = `<section class="info-box"><h3>行動日誌</h3><ol class="log-list">${this.logs.map((line) => `<li>${line}</li>`).join('')}</ol></section>`;
+      const isLocalRules = (link) => /(?:^|\/)rules\.html(?:#|$)/.test(link.href);
+      const ruleLink = this.game.ruleLink && !isLocalRules(this.game.ruleLink)
+        ? `<nav class="rules-actions" aria-label="規則文件"><a class="info-link" href="${this.game.ruleLink.href}" target="_blank" rel="noopener noreferrer">${this.game.ruleLink.label}</a></nav>`
+        : '';
+      this.$('tab-rules').innerHTML = `${this.game.rules.map((section) => `<section class="info-box"><h3>${section.title}</h3>${section.html}</section>`).join('')}${ruleLink}`;
       const nameZh = this.game.nameZh || this.game.title;
       const nameEn = this.game.nameEn || '';
       const nameRow = `<header class="game-name-row"><div class="game-name-card"><span>中文名稱</span><h2>${nameZh}</h2></div><div class="game-name-card"><span>English name</span><p>${nameEn}</p></div></header>`;
       const cover = this.game.cover ? `<img class="game-cover" src="${this.game.cover}" alt="${this.game.title} 遊戲封面">` : '';
-      const isLocalRules = (link) => /(?:^|\/)rules\.html(?:#|$)/.test(link.href);
-      const introLinks = [...(this.game.links || [])];
-      if (this.game.ruleLink && !isLocalRules(this.game.ruleLink) && !introLinks.some((link) => link.href === this.game.ruleLink.href)) introLinks.push(this.game.ruleLink);
-      const links = introLinks.filter((link) => !isLocalRules(link)).map((link) => `<a class="info-link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.label}</a>`).join('');
+      const links = (this.game.links || []).filter((link) => !isLocalRules(link)).map((link) => `<a class="info-link" href="${link.href}" target="_blank" rel="noopener noreferrer">${link.label}</a>`).join('');
       const publisherLink = this.game.publisherLink && !isLocalRules(this.game.publisherLink)
         ? `<div class="publisher-actions"><a class="info-link" href="${this.game.publisherLink.href}" target="_blank" rel="noopener noreferrer">${this.game.publisherLink.label}</a></div>`
         : '';
