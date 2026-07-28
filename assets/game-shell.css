@@ -398,6 +398,29 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
 .chocolate-token.selected { outline: 3px solid #32a866; outline-offset: 1px; }
 .chocolate-token span { display: grid; width: 100%; height: 100%; place-items: center; }
 
+/* Animal Shogi: friendly wooden pieces on a compact 3×4 forest board. */
+.animal-board { width: min(100%, 350px); margin: 0 auto; gap: 5px; padding: 10px; background: #7c5a35; border-color: #4d3520; }
+.animal-board .cell { border-radius: 7px; background: #eef0d2; box-shadow: inset 0 0 0 2px rgba(72,85,45,.12); }
+.animal-board .cell.animal-home-first { background: #f4d6b2; }
+.animal-board .cell.animal-home-second { background: #cbdcf1; }
+.animal-board .cell.movable { outline: 3px solid rgba(50,145,83,.72); outline-offset: -5px; }
+.piece.animal-piece { width: 82%; height: 82%; border: 3px solid #8a6237; border-radius: 18% 18% 28% 28%; background: #fae7b5; color: #35291c; box-shadow: inset 0 3px 0 rgba(255,255,255,.5), 0 3px 6px rgba(55,34,15,.25); }
+.piece.animal-piece.first { background: #f7d49d; border-color: #ad6639; }
+.piece.animal-piece.second { background: #dbe7f5; border-color: #587aa6; }
+.animal-face { width: 100%; height: 100%; display: grid; place-content: center; gap: 1px; text-align: center; line-height: 1; }
+.animal-piece.second .animal-face, .animal-mini.second .animal-face { transform: rotate(180deg); }
+.animal-face b { font-size: clamp(24px, 7vw, 42px); }
+.animal-face small { font-size: clamp(9px, 2.4vw, 13px); font-weight: 950; }
+.animal-hand > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.animal-hand-piece { min-width: 0; min-height: 60px; padding: 4px 2px; display: grid; grid-template-columns: 1fr auto; place-items: center; gap: 1px; }
+.animal-hand-piece.selected { outline: 3px solid #329153; }
+.animal-hand-piece > small { font-weight: 950; }
+.animal-mini { width: 42px; height: 48px; display: block; border: 2px solid #8a6237; border-radius: 7px 7px 11px 11px; background: #fae7b5; color: #35291c; }
+.animal-mini.first { background: #f7d49d; border-color: #ad6639; }
+.animal-mini.second { background: #dbe7f5; border-color: #587aa6; }
+.animal-mini .animal-face b { font-size: 22px; }
+.animal-mini .animal-face small { font-size: 9px; }
+
 .desktop-panel { margin-top: 24px; display: grid; gap: 14px; }
 .desktop-card { padding: 16px; background: rgba(255,255,255,.86); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,.12); }
 .desktop-card h2 { margin: 0 0 10px; font-size: 22px; }
@@ -498,4 +521,5 @@ button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-colo
   .info-links { gap: 6px; }
   .info-link { min-height: 52px; padding: 7px 5px; font-size: 12px; }
   .soulaween-line-choices { grid-template-columns: 1fr; }
+  .animal-board { width: min(100%, 320px); }
 }

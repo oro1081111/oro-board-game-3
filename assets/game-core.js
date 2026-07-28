@@ -23,7 +23,8 @@
     ['ice-stage', '冰塊棋 ICE STAGE'],
     ['gobblet', '奇雞連連 Gobblet'],
     ['gobblet-classic', '棋蹟連連 Gobblet'],
-    ['chocolate-clash', '巧克力對決 Chocolate Clash']
+    ['chocolate-clash', '巧克力對決 Chocolate Clash'],
+    ['animal-shogi', '動物將棋 Let’s Catch the Lion!']
   ];
 
   const clone = (value) => JSON.parse(JSON.stringify(value));

@@ -13,7 +13,7 @@ const { BOARD_GAMES, GameCore } = window;
 
 (async () => {
   const basic = GameCore.runSelfTests(BOARD_GAMES);
-  assert.equal(basic.length, 11);
+  assert.equal(basic.length, 12);
   assert.deepEqual(basic.filter((item) => !item.ok), []);
 
   const soulGame = BOARD_GAMES.soulaween;
@@ -579,6 +579,76 @@ const { BOARD_GAMES, GameCore } = window;
   const chocolateMcts = await GameCore.runMcts(chocolateGame, chocolate, 40, () => true);
   assert.equal(chocolateMcts.drawRate, 0, 'Chocolate Clash rollouts always reach a first-player or second-player win');
 
+  const animalGame = BOARD_GAMES['animal-shogi'];
+  const animal = animalGame.create('standard');
+  assert.equal(animalGame.actions(animal).length, 4, 'Animal Shogi starts with four legal moves');
+  assert.equal(animal.board[3][0].type, 'elephant');
+  assert.equal(animal.board[3][1].type, 'lion');
+  assert.equal(animal.board[3][2].type, 'giraffe');
+  const chickCapture = animalGame.actions(animal).find((action) => action.from?.r === 2 && action.from?.c === 1 && action.to.r === 1 && action.to.c === 1);
+  const afterChickCapture = animalGame.apply(animal, chickCapture);
+  assert.equal(afterChickCapture.board[1][1].owner, 'first', 'Moving onto an opponent piece captures it');
+  assert.equal(afterChickCapture.hands.first[0].type, 'chick', 'Captured pieces enter the capturer hand');
+  assert.equal(animal.board[1][1].owner, 'second', 'Applying an action does not mutate the source state');
+
+  const emptyAnimalBoard = () => Array.from({ length: 4 }, () => Array(3).fill(null));
+  const animalState = (board, turn = 'first', hands = { first: [], second: [] }) => ({ turn, board, hands, seen: {}, winner: null });
+  const promotionBoard = emptyAnimalBoard();
+  promotionBoard[1][1] = { id: 20, owner: 'first', type: 'chick' };
+  promotionBoard[3][2] = { id: 21, owner: 'first', type: 'lion' };
+  promotionBoard[0][2] = { id: 22, owner: 'second', type: 'lion' };
+  const promoted = animalGame.apply(animalState(promotionBoard), { type: 'move', from: { r: 1, c: 1 }, to: { r: 0, c: 1 } });
+  assert.equal(promoted.board[0][1].type, 'hen', 'A chick moving into the opponent baseline promotes');
+
+  const dropBoard = emptyAnimalBoard();
+  dropBoard[3][2] = { id: 30, owner: 'first', type: 'lion' };
+  dropBoard[0][2] = { id: 31, owner: 'second', type: 'lion' };
+  const dropped = animalGame.apply(animalState(dropBoard, 'first', { first: [{ id: 32, owner: 'first', type: 'chick' }], second: [] }), { type: 'drop', piece: 'chick', r: 0, c: 0 });
+  assert.equal(dropped.board[0][0].type, 'chick', 'A chick dropped on the opponent baseline stays a chick');
+  assert.equal(dropped.hands.first.length, 0);
+
+  const henCaptureBoard = emptyAnimalBoard();
+  henCaptureBoard[1][0] = { id: 40, owner: 'first', type: 'elephant' };
+  henCaptureBoard[3][2] = { id: 41, owner: 'first', type: 'lion' };
+  henCaptureBoard[0][1] = { id: 42, owner: 'second', type: 'hen' };
+  henCaptureBoard[0][2] = { id: 43, owner: 'second', type: 'lion' };
+  const henCaptured = animalGame.apply(animalState(henCaptureBoard), { type: 'move', from: { r: 1, c: 0 }, to: { r: 0, c: 1 } });
+  assert.equal(henCaptured.hands.first[0].type, 'chick', 'A captured hen returns to its chick side');
+
+  const lionCaptureBoard = emptyAnimalBoard();
+  lionCaptureBoard[1][1] = { id: 50, owner: 'first', type: 'giraffe' };
+  lionCaptureBoard[3][2] = { id: 51, owner: 'first', type: 'lion' };
+  lionCaptureBoard[0][1] = { id: 52, owner: 'second', type: 'lion' };
+  const lionCaptured = animalGame.apply(animalState(lionCaptureBoard), { type: 'move', from: { r: 1, c: 1 }, to: { r: 0, c: 1 } });
+  assert.equal(lionCaptured.winner, 'first', 'Capturing the opponent lion wins immediately');
+
+  const safeTryBoard = emptyAnimalBoard();
+  safeTryBoard[1][0] = { id: 60, owner: 'first', type: 'lion' };
+  safeTryBoard[2][2] = { id: 61, owner: 'second', type: 'lion' };
+  const safeTry = animalGame.apply(animalState(safeTryBoard), { type: 'move', from: { r: 1, c: 0 }, to: { r: 0, c: 0 } });
+  assert.equal(safeTry.winner, 'first', 'A lion wins by entering the opponent baseline safely');
+  const unsafeTryBoard = structuredClone(safeTryBoard);
+  unsafeTryBoard[1][1] = { id: 62, owner: 'second', type: 'elephant' };
+  const unsafeTry = animalGame.apply(animalState(unsafeTryBoard), { type: 'move', from: { r: 1, c: 0 }, to: { r: 0, c: 0 } });
+  assert.equal(unsafeTry.winner, null, 'Try does not win when an opponent piece can capture the lion next turn');
+
+  const repeatBoard = emptyAnimalBoard();
+  repeatBoard[3][0] = { id: 70, owner: 'first', type: 'lion' };
+  repeatBoard[0][2] = { id: 71, owner: 'second', type: 'lion' };
+  let repeated = animalState(repeatBoard);
+  const repeatCycle = [
+    { type: 'move', from: { r: 3, c: 0 }, to: { r: 3, c: 1 } },
+    { type: 'move', from: { r: 0, c: 2 }, to: { r: 0, c: 1 } },
+    { type: 'move', from: { r: 3, c: 1 }, to: { r: 3, c: 0 } },
+    { type: 'move', from: { r: 0, c: 1 }, to: { r: 0, c: 2 } }
+  ];
+  for (let cycle = 0; cycle < 3; cycle += 1) for (const action of repeatCycle) repeated = animalGame.apply(repeated, action);
+  assert.equal(repeated.winner, 'draw', 'The third occurrence of an identical full position is a draw');
+  const animalView = animalGame.view(animal, {});
+  assert.equal(animalView.threeWayWin, true, 'Animal Shogi exposes first win, draw, and second win probabilities');
+  assert.match(animalView.boardClass, /animal-board/);
+  assert.match(animalView.tray, /先手持有棋/);
+
   const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
   assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');
   assert.match(soulaweenPage, /assets\/game-core\.js/, 'Soulaween loads the shared controller');
@@ -591,6 +661,7 @@ const { BOARD_GAMES, GameCore } = window;
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
   assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'gobblet-classic.svg')), 'Lobby board image exists: gobblet-classic');
+  assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', 'animal-shogi.svg')), 'Lobby board image exists: animal-shogi');
   assert.doesNotMatch(shellCss, /\.follower\s*\{\s*animation:/, 'Torii followers do not replay entry animation on every render');
   assert.doesNotMatch(shellCss, /\.santorini-level[^}]*animation:/, 'Santorini buildings do not replay their entry animation on every render');
   assert.match(shellCss, /\.board-wrap \{ width: 100%; min-width: 0;/, 'Board wrappers keep the board at the available width');
@@ -606,7 +677,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.doesNotMatch(shellCss, /(?:^|\n)\.santorini-worker \{/, 'Santorini board and worker piece classes cannot collide');
   assert.match(shellCss, /\.mijn-piece \.piece-mark \{ position: absolute; inset: 19%;/, 'Garden board marks use a centered drawing box');
   assert.match(shellCss, /\.mijn-token \.mark-push, \.mijn-token \.mark-pull \{ width: 24px; height: 24px;/, 'Garden supply circles stay smaller than their board counterparts');
-  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 11, 'Every lobby board image links to its game');
+  assert.equal((lobbyHtml.match(/class="preview-link"/g) || []).length, 12, 'Every lobby board image links to its game');
   assert.doesNotMatch(lobbyHtml, /詳細規則|其他遊戲|統一介面與純 MCTS AI/, 'Lobby omits redundant catalog text and rule buttons');
   assert.match(shellCss, /\.mijn-piece \.mark-pull \{ border: clamp\(/, 'Garden hollow circles use the centered element box instead of an oversized pseudo-element');
   assert.match(shellCss, /\.mijn-piece \.mark-push, \.mijn-piece \.mark-pull/);

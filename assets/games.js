@@ -2445,5 +2445,263 @@
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // 動物將棋 Let's Catch the Lion!
+  // ---------------------------------------------------------------------------
+  const ANIMAL_NAMES = { lion: '獅子', giraffe: '長頸鹿', elephant: '大象', chick: '小雞', hen: '母雞' };
+  const ANIMAL_MARKS = { lion: '🦁', giraffe: '🦒', elephant: '🐘', chick: '🐥', hen: '🐔' };
+  const ANIMAL_HAND_TYPES = ['giraffe', 'elephant', 'chick'];
+  const ANIMAL_DIRECTIONS = {
+    lion: [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]],
+    giraffe: [[-1, 0], [0, -1], [0, 1], [1, 0]],
+    elephant: [[-1, -1], [-1, 1], [1, -1], [1, 1]],
+    chick: [[-1, 0]],
+    hen: [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0]]
+  };
+
+  function animalDirections(piece) {
+    const sign = piece.owner === 'first' ? 1 : -1;
+    return ANIMAL_DIRECTIONS[piece.type].map(([dr, dc]) => [dr * sign, dc * sign]);
+  }
+
+  function animalCloneState(state) {
+    return {
+      turn: state.turn,
+      board: state.board.map((row) => row.map((piece) => piece && { ...piece })),
+      hands: {
+        first: state.hands.first.map((piece) => ({ ...piece })),
+        second: state.hands.second.map((piece) => ({ ...piece }))
+      },
+      seen: { ...state.seen },
+      winner: state.winner
+    };
+  }
+
+  function animalPositionKey(state) {
+    const board = state.board.flat().map((piece) => piece ? `${piece.owner[0]}:${piece.type}` : '-').join('|');
+    const hand = (owner) => ANIMAL_HAND_TYPES.map((type) => state.hands[owner].filter((piece) => piece.type === type).length).join(',');
+    return `${state.turn}|${board}|${hand('first')}|${hand('second')}`;
+  }
+
+  function animalSquareAttacked(board, target, owner) {
+    for (let r = 0; r < 4; r += 1) for (let c = 0; c < 3; c += 1) {
+      const piece = board[r][c];
+      if (!piece || piece.owner !== owner) continue;
+      if (animalDirections(piece).some(([dr, dc]) => r + dr === target.r && c + dc === target.c)) return true;
+    }
+    return false;
+  }
+
+  function animalActions(state) {
+    if (state.winner) return [];
+    const actions = [];
+    const owner = state.turn;
+    for (let r = 0; r < 4; r += 1) for (let c = 0; c < 3; c += 1) {
+      const piece = state.board[r][c];
+      if (!piece || piece.owner !== owner) continue;
+      for (const [dr, dc] of animalDirections(piece)) {
+        const tr = r + dr, tc = c + dc;
+        if (!inBounds(tr, tc, 4, 3) || state.board[tr][tc]?.owner === owner) continue;
+        actions.push({ type: 'move', from: { r, c }, to: { r: tr, c: tc } });
+      }
+    }
+    for (const pieceType of ANIMAL_HAND_TYPES) {
+      if (!state.hands[owner].some((piece) => piece.type === pieceType)) continue;
+      for (let r = 0; r < 4; r += 1) for (let c = 0; c < 3; c += 1) {
+        if (!state.board[r][c]) actions.push({ type: 'drop', piece: pieceType, r, c });
+      }
+    }
+    return actions;
+  }
+
+  function animalApply(source, action) {
+    const state = animalCloneState(source);
+    const actor = state.turn;
+    if (action.type === 'drop') {
+      const index = state.hands[actor].findIndex((piece) => piece.type === action.piece);
+      const [piece] = state.hands[actor].splice(index, 1);
+      state.board[action.r][action.c] = { ...piece, owner: actor, type: action.piece };
+    } else {
+      const piece = state.board[action.from.r][action.from.c];
+      const captured = state.board[action.to.r][action.to.c];
+      state.board[action.from.r][action.from.c] = null;
+      state.board[action.to.r][action.to.c] = piece;
+      if (captured?.type === 'lion') {
+        state.winner = actor;
+        return state;
+      }
+      if (captured) {
+        state.hands[actor].push({ id: captured.id, owner: actor, type: captured.type === 'hen' ? 'chick' : captured.type });
+      }
+      if (piece.type === 'chick' && action.to.r === (actor === 'first' ? 0 : 3)) piece.type = 'hen';
+      if (piece.type === 'lion' && action.to.r === (actor === 'first' ? 0 : 3)
+        && !animalSquareAttacked(state.board, action.to, other(actor))) {
+        state.winner = actor;
+        return state;
+      }
+    }
+    state.turn = other(actor);
+    const position = animalPositionKey(state);
+    state.seen[position] = (state.seen[position] || 0) + 1;
+    if (state.seen[position] >= 3) state.winner = 'draw';
+    return state;
+  }
+
+  function animalReplyWins(state) {
+    return animalActions(state).some((action) => animalApply(state, action).winner === state.turn);
+  }
+
+  function animalPieceHtml(piece, compact = false) {
+    return `<span class="${compact ? 'animal-mini' : 'piece animal-piece'} ${piece.owner} animal-${piece.type}" ${compact ? '' : `data-anim-id="animal-${piece.id}"`}><span class="animal-face"><b aria-hidden="true">${ANIMAL_MARKS[piece.type]}</b><small>${ANIMAL_NAMES[piece.type]}</small></span></span>`;
+  }
+
+  games['animal-shogi'] = {
+    title: '動物將棋 Let’s Catch the Lion!',
+    nameZh: '動物將棋',
+    nameEn: 'Let’s Catch the Lion!',
+    credit: '設計者：北尾まどか，中文版：新天鵝堡',
+    firstName: '先手',
+    secondName: '後手',
+    designer: '遊戲設計：北尾まどか Madoka Kitao。<br>美術設計：藤田麻衣子 Maiko Fujita。',
+    publisher: '原版由 Nekomado／幻冬舎 Education 發行；繁體中文版由新天鵝堡代理。',
+    publisherHtml: '<p>《動物將棋》由日本女子職業將棋棋士北尾まどか設計、藤田麻衣子負責動物美術，以 3×4 棋盤把日本將棋的移動、捕捉、持駒再投入與升級濃縮成兒童也容易理解的版本。</p><p><strong>繁體中文版：</strong>新天鵝堡 Swan Panasia 代理發行。</p>',
+    publisherLink: { label: '前往新天鵝堡官方介紹', href: 'https://www.swanpanasia.com/products/lets-catch-the-lion' },
+    ruleLink: { label: '開啟本站完整規則', href: 'rules.html' },
+    introHtml: '<p>獅子、長頸鹿、大象與小雞在十二格森林中展開迷你將棋對決。捕捉的棋子會轉而加入自己，之後可以重新放回棋盤；抓到對手獅子，或讓自己的獅子安全闖入敵陣即可獲勝。</p><dl class="game-facts"><dt>人數</dt><dd>2 人</dd><dt>時間</dt><dd>約 5～10 分鐘</dd><dt>年齡</dt><dd>4 歲以上</dd><dt>棋盤</dt><dd>3×4</dd></dl>',
+    cover: '../../assets/covers/animal-shogi.svg',
+    links: [
+      { label: 'BGG 頁面', href: 'https://boardgamegeek.com/boardgame/56796/lets-catch-the-lion' },
+      { label: '官方介紹', href: 'https://www.swanpanasia.com/products/lets-catch-the-lion' },
+      { label: '中文規則', href: 'https://bghut.pixnet.net/blog/posts/4035952869' }
+    ],
+    openings: [{ value: 'standard', label: '標準' }],
+    rolloutLimit: 90,
+    rootActions(state, actions) {
+      const safe = actions.filter((action) => {
+        const next = animalApply(state, action);
+        return next.winner === state.turn || next.winner === 'draw' || (!next.winner && !animalReplyWins(next));
+      });
+      return safe.length ? safe : actions;
+    },
+    rolloutAction(state, actions) { return greedyWinRollout(this, state, actions); },
+    rules: [
+      { title: '目標與設置', html: '<ul><li>使用 3×4 棋盤與雙方各一枚獅子、長頸鹿、大象、小雞。</li><li>先手底排由左至右為大象、獅子、長頸鹿，小雞在前方中央；後手以相對方向對稱設置。</li><li>捕捉對手獅子，或讓自己的獅子安全抵達對手底線即可獲勝。</li></ul>' },
+      { title: '棋子移動', html: '<ul><li><strong>獅子：</strong>周圍八個方向一格。</li><li><strong>長頸鹿：</strong>上下左右一格。</li><li><strong>大象：</strong>四個斜向一格。</li><li><strong>小雞：</strong>朝對手方向前進一格。</li><li><strong>母雞：</strong>前、後、左、右與兩個斜前方一格，不能斜後退。</li></ul>' },
+      { title: '捕捉與放回', html: '<ul><li>移到對手棋所在格便捕捉它；被捕棋轉向並成為自己的持有棋。</li><li>回合中可不移動場上棋，改把一枚持有棋放到任意空格；放入後不能立刻移動。</li><li>母雞被捕後翻回小雞。獅子被捕時遊戲立即結束，不成為持有棋。</li></ul>' },
+      { title: '小雞升級', html: '<ul><li>小雞透過移動進入對手底線時，立即翻面升級為母雞。</li><li>直接把持有小雞放在對手底線是合法的，但不會升級，也可能因前方超出棋盤而暫時不能移動。</li><li>母雞離開底線仍保持母雞，只有被捕時才翻回小雞。</li></ul>' },
+      { title: '獅子闖入敵陣', html: '<p>獅子移入對手底線後，若對手下一手沒有任何棋子能合法捕捉該獅子，立即由闖入者獲勝；若對手仍能捕捉，Try 失敗，遊戲繼續。</p>' },
+      { title: '特殊規則與平手', html: '<ul><li>可在同一直行放置多枚己方小雞，也可用放回的小雞直接威脅獅子或放到無法前進的位置。</li><li>玩家不能跳過回合。</li><li>盤面、棋子正反面與所屬、雙方持有棋及行動玩家完全相同的局面第 3 次出現時，遊戲平手。</li></ul>' }
+    ],
+    create() {
+      let id = 0;
+      const piece = (owner, type) => ({ id: id++, owner, type });
+      const state = {
+        turn: 'first',
+        board: [
+          [piece('second', 'giraffe'), piece('second', 'lion'), piece('second', 'elephant')],
+          [null, piece('second', 'chick'), null],
+          [null, piece('first', 'chick'), null],
+          [piece('first', 'elephant'), piece('first', 'lion'), piece('first', 'giraffe')]
+        ],
+        hands: { first: [], second: [] },
+        seen: {},
+        winner: null
+      };
+      state.seen[animalPositionKey(state)] = 1;
+      return state;
+    },
+    cloneState(state) { return animalCloneState(state); },
+    actions(state) { return animalActions(state); },
+    apply(state, action) { return animalApply(state, action); },
+    outcome(state) { return state.winner; },
+    animationDuration(action) { return action.type === 'move' ? 300 : 220; },
+    animationOptions() { return { spring: true }; },
+    describe(action, before, after) {
+      const actor = before.turn === 'first' ? '先手' : '後手';
+      let message;
+      if (action.type === 'drop') {
+        message = `${actor}將持有的${ANIMAL_NAMES[action.piece]}放到${posText(action)}`;
+      } else {
+        const piece = before.board[action.from.r][action.from.c];
+        const captured = before.board[action.to.r][action.to.c];
+        message = `${actor}將${ANIMAL_NAMES[piece.type]}從${posText(action.from)}移到${posText(action.to)}`;
+        if (captured) message += `，捕捉${ANIMAL_NAMES[captured.type]}`;
+        if (piece.type === 'chick' && after.board[action.to.r][action.to.c]?.type === 'hen') message += '並升級為母雞';
+      }
+      if (after.winner === 'draw') message += '；相同局面第 3 次出現，遊戲平手';
+      else if (after.winner === before.turn) {
+        const captured = action.type === 'move' && before.board[action.to.r][action.to.c]?.type === 'lion';
+        message += captured ? '，捕捉獅子並獲勝' : '，獅子安全闖入敵陣並獲勝';
+      }
+      return `${message}。`;
+    },
+    view(state, ui) {
+      const actions = animalActions(state);
+      const selected = ui.select && (ui.select.kind === 'hand'
+        ? state.hands[state.turn].some((piece) => piece.type === ui.select.piece)
+        : state.board[ui.select.r]?.[ui.select.c]?.owner === state.turn) ? ui.select : null;
+      const destinations = new Set((selected ? actions.filter((action) => selected.kind === 'hand'
+        ? action.type === 'drop' && action.piece === selected.piece
+        : action.type === 'move' && samePos(action.from, selected)) : []).map((action) => {
+          const target = action.type === 'drop' ? action : action.to;
+          return key(target.r, target.c);
+        }));
+      const movable = new Set(actions.filter((action) => action.type === 'move').map((action) => key(action.from.r, action.from.c)));
+      let board = '';
+      for (let r = 0; r < 4; r += 1) for (let c = 0; c < 3; c += 1) {
+        const piece = state.board[r][c];
+        const classes = [r === 0 ? 'animal-home-second' : r === 3 ? 'animal-home-first' : ''];
+        if (destinations.has(key(r, c))) classes.push('legal');
+        if (selected?.kind === 'board' && selected.r === r && selected.c === c) classes.push('selected');
+        else if (!selected && piece?.owner === state.turn && movable.has(key(r, c))) classes.push('movable');
+        const label = `${posText({ r, c })}${piece ? `：${piece.owner === 'first' ? '先手' : '後手'}${ANIMAL_NAMES[piece.type]}` : '：空格'}`;
+        board += cellButton(r, c, classes.join(' '), piece ? animalPieceHtml(piece) : '', label);
+      }
+      const handZone = (owner) => `<section class="choice-zone animal-hand ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${owner === 'first' ? '先手' : '後手'}持有棋"><b>${owner === 'first' ? '先手' : '後手'}持有棋</b><div>${ANIMAL_HAND_TYPES.map((type) => {
+        const count = state.hands[owner].filter((piece) => piece.type === type).length;
+        const active = state.turn === owner && selected?.kind === 'hand' && selected.piece === type;
+        return `<button class="tray-btn animal-hand-piece ${active ? 'selected' : ''}" data-owner="${owner}" data-hand="${type}" ${state.turn === owner && count ? '' : 'disabled'} aria-label="${owner === 'first' ? '先手' : '後手'}持有${ANIMAL_NAMES[type]} ${count} 枚">${animalPieceHtml({ owner, type }, true)}<small>×${count}</small></button>`;
+      }).join('')}</div></section>`;
+      const outcome = this.outcome(state);
+      let hint;
+      if (outcome === 'draw') hint = '遊戲結束：三次重複局面，平手';
+      else if (outcome) hint = `遊戲結束：${outcome === 'first' ? '先手' : '後手'}獲勝`;
+      else if (selected?.kind === 'hand') hint = `請選擇空格放回${ANIMAL_NAMES[selected.piece]}`;
+      else if (selected) hint = `請選擇${ANIMAL_NAMES[state.board[selected.r][selected.c].type]}的目的地`;
+      else hint = `${state.turn === 'first' ? '先手' : '後手'}請移動棋子或放回持有棋`;
+      return {
+        cols: 3, rows: 4, boardClass: 'animal-board', board,
+        tray: `<div class="dual-choice">${handZone('first')}${handZone('second')}</div>`, hint, hideScores: true, threeWayWin: true,
+        winColors: { first: '#d87832', second: '#4e78b9', draw: '#b6903e' },
+        turnColors: { first: '#d87832', second: '#4e78b9' },
+        firstScore: '', secondScore: ''
+      };
+    },
+    bind(state, ui, controller, board, tray) {
+      tray.querySelectorAll(`[data-owner="${state.turn}"][data-hand]:not(:disabled)`).forEach((button) => button.addEventListener('click', () => {
+        if (!controller.isHumanTurn()) return;
+        const piece = button.dataset.hand;
+        if (ui.select?.kind === 'hand' && ui.select.piece === piece) controller.setUi({ select: null });
+        else controller.setUi({ select: { kind: 'hand', piece } });
+      }));
+      board.querySelectorAll('[data-r]').forEach((button) => button.addEventListener('click', () => {
+        if (!controller.isHumanTurn()) return;
+        const pos = { r: Number(button.dataset.r), c: Number(button.dataset.c) };
+        const selected = ui.select;
+        if (selected) {
+          const action = animalActions(state).find((item) => selected.kind === 'hand'
+            ? item.type === 'drop' && item.piece === selected.piece && item.r === pos.r && item.c === pos.c
+            : item.type === 'move' && samePos(item.from, selected) && samePos(item.to, pos));
+          if (action) { controller.commit(action); return; }
+          if (selected.kind === 'board' && samePos(selected, pos)) { controller.setUi({ select: null }); return; }
+        }
+        const piece = state.board[pos.r][pos.c];
+        if (piece?.owner === state.turn && animalActions(state).some((action) => action.type === 'move' && samePos(action.from, pos))) {
+          controller.setUi({ select: { kind: 'board', ...pos } });
+        }
+      }));
+    }
+  };
+
   window.BOARD_GAMES = games;
 }());
