@@ -2552,7 +2552,10 @@
   }
 
   function animalPieceHtml(piece, compact = false) {
-    return `<span class="${compact ? 'animal-mini' : 'piece animal-piece'} ${piece.owner} animal-${piece.type}" ${compact ? '' : `data-anim-id="animal-${piece.id}"`}><span class="animal-face"><b aria-hidden="true">${ANIMAL_MARKS[piece.type]}</b><small>${ANIMAL_NAMES[piece.type]}</small></span></span>`;
+    const allowed = new Set(ANIMAL_DIRECTIONS[piece.type].map(([dr, dc]) => `${dr},${dc}`));
+    const dots = [[-1, -1, 'nw'], [-1, 0, 'n'], [-1, 1, 'ne'], [0, -1, 'w'], [0, 1, 'e'], [1, -1, 'sw'], [1, 0, 's'], [1, 1, 'se']]
+      .filter(([dr, dc]) => allowed.has(`${dr},${dc}`)).map(([, , name]) => `<i class="animal-move-dot ${name}"></i>`).join('');
+    return `<span class="${compact ? 'animal-mini' : 'piece animal-piece'} ${piece.owner} animal-${piece.type}" ${compact ? '' : `data-anim-id="animal-${piece.id}"`}><span class="animal-face"><b aria-hidden="true">${ANIMAL_MARKS[piece.type]}</b>${dots}</span></span>`;
   }
 
   games['animal-shogi'] = {
@@ -2590,7 +2593,7 @@
       { title: '捕捉與放回', html: '<ul><li>移到對手棋所在格便捕捉它；被捕棋轉向並成為自己的持有棋。</li><li>回合中可不移動場上棋，改把一枚持有棋放到任意空格；放入後不能立刻移動。</li><li>母雞被捕後翻回小雞。獅子被捕時遊戲立即結束，不成為持有棋。</li></ul>' },
       { title: '小雞升級', html: '<ul><li>小雞透過移動進入對手底線時，立即翻面升級為母雞。</li><li>直接把持有小雞放在對手底線是合法的，但不會升級，也可能因前方超出棋盤而暫時不能移動。</li><li>母雞離開底線仍保持母雞，只有被捕時才翻回小雞。</li></ul>' },
       { title: '獅子闖入敵陣', html: '<p>獅子移入對手底線後，若對手下一手沒有任何棋子能合法捕捉該獅子，立即由闖入者獲勝；若對手仍能捕捉，Try 失敗，遊戲繼續。</p>' },
-      { title: '特殊規則與平手', html: '<ul><li>可在同一直行放置多枚己方小雞，也可用放回的小雞直接威脅獅子或放到無法前進的位置。</li><li>玩家不能跳過回合。</li><li>盤面、棋子正反面與所屬、雙方持有棋及行動玩家完全相同的局面第 3 次出現時，遊戲平手。</li></ul>' }
+      { title: '特殊規則', html: '<ul><li>可在同一直行放置多枚己方小雞，也可用放回的小雞直接威脅獅子或放到無法前進的位置。</li><li>玩家不能跳過回合。</li></ul>' }
     ],
     create() {
       let id = 0;
@@ -2628,7 +2631,7 @@
         if (captured) message += `，捕捉${ANIMAL_NAMES[captured.type]}`;
         if (piece.type === 'chick' && after.board[action.to.r][action.to.c]?.type === 'hen') message += '並升級為母雞';
       }
-      if (after.winner === 'draw') message += '；相同局面第 3 次出現，遊戲平手';
+      if (after.winner === 'draw') message += '；相同局面重複，遊戲結束';
       else if (after.winner === before.turn) {
         const captured = action.type === 'move' && before.board[action.to.r][action.to.c]?.type === 'lion';
         message += captured ? '，捕捉獅子並獲勝' : '，獅子安全闖入敵陣並獲勝';
@@ -2657,22 +2660,22 @@
         const label = `${posText({ r, c })}${piece ? `：${piece.owner === 'first' ? '先手' : '後手'}${ANIMAL_NAMES[piece.type]}` : '：空格'}`;
         board += cellButton(r, c, classes.join(' '), piece ? animalPieceHtml(piece) : '', label);
       }
-      const handZone = (owner) => `<section class="choice-zone animal-hand ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${owner === 'first' ? '先手' : '後手'}持有棋"><b>${owner === 'first' ? '先手' : '後手'}持有棋</b><div>${ANIMAL_HAND_TYPES.map((type) => {
+      const handZone = (owner) => `<section class="choice-zone animal-hand ${owner} ${state.turn === owner ? 'active' : ''}" aria-label="${owner === 'first' ? '先手' : '後手'}持有棋"><div>${ANIMAL_HAND_TYPES.map((type) => {
         const count = state.hands[owner].filter((piece) => piece.type === type).length;
         const active = state.turn === owner && selected?.kind === 'hand' && selected.piece === type;
-        return `<button class="tray-btn animal-hand-piece ${active ? 'selected' : ''}" data-owner="${owner}" data-hand="${type}" ${state.turn === owner && count ? '' : 'disabled'} aria-label="${owner === 'first' ? '先手' : '後手'}持有${ANIMAL_NAMES[type]} ${count} 枚">${animalPieceHtml({ owner, type }, true)}<small>×${count}</small></button>`;
+        return count ? `<button class="tray-btn animal-hand-piece ${active ? 'selected' : ''}" data-owner="${owner}" data-hand="${type}" ${state.turn === owner ? '' : 'disabled'} aria-label="${owner === 'first' ? '先手' : '後手'}持有${ANIMAL_NAMES[type]} ${count} 枚">${animalPieceHtml({ owner, type }, true)}${count > 1 ? `<small class="piece-count">${count}</small>` : ''}</button>` : '';
       }).join('')}</div></section>`;
       const outcome = this.outcome(state);
       let hint;
-      if (outcome === 'draw') hint = '遊戲結束：三次重複局面，平手';
+      if (outcome === 'draw') hint = '遊戲結束：相同局面重複';
       else if (outcome) hint = `遊戲結束：${outcome === 'first' ? '先手' : '後手'}獲勝`;
       else if (selected?.kind === 'hand') hint = `請選擇空格放回${ANIMAL_NAMES[selected.piece]}`;
       else if (selected) hint = `請選擇${ANIMAL_NAMES[state.board[selected.r][selected.c].type]}的目的地`;
       else hint = `${state.turn === 'first' ? '先手' : '後手'}請移動棋子或放回持有棋`;
       return {
         cols: 3, rows: 4, boardClass: 'animal-board', board,
-        tray: `<div class="dual-choice">${handZone('first')}${handZone('second')}</div>`, hint, hideScores: true, threeWayWin: true,
-        winColors: { first: '#d87832', second: '#4e78b9', draw: '#b6903e' },
+        tray: `<div class="dual-choice">${handZone('first')}${handZone('second')}</div>`, hint, hideScores: true,
+        winColors: { first: '#d87832', second: '#4e78b9' },
         turnColors: { first: '#d87832', second: '#4e78b9' },
         firstScore: '', secondScore: ''
       };

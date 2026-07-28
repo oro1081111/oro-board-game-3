@@ -645,9 +645,13 @@ const { BOARD_GAMES, GameCore } = window;
   for (let cycle = 0; cycle < 3; cycle += 1) for (const action of repeatCycle) repeated = animalGame.apply(repeated, action);
   assert.equal(repeated.winner, 'draw', 'The third occurrence of an identical full position is a draw');
   const animalView = animalGame.view(animal, {});
-  assert.equal(animalView.threeWayWin, true, 'Animal Shogi exposes first win, draw, and second win probabilities');
+  assert.equal(Boolean(animalView.threeWayWin), false, 'Animal Shogi hides the draw segment');
   assert.match(animalView.boardClass, /animal-board/);
-  assert.match(animalView.tray, /先手持有棋/);
+  assert.doesNotMatch(animalView.tray, />先手持有棋</, 'Animal Shogi hand areas have no visible labels');
+  assert.doesNotMatch(animalView.board, /<small>獅子|<small>長頸鹿|<small>大象|<small>小雞/, 'Animal Shogi pieces have no visible name text');
+  assert.equal((animalView.board.match(/animal-move-dot/g) || []).length, 34, 'Initial Animal Shogi pieces show one dot per legal movement direction');
+  const doubleHandView = animalGame.view(animalState(dropBoard, 'first', { first: [{ id: 80, owner: 'first', type: 'chick' }, { id: 81, owner: 'first', type: 'chick' }], second: [] }), {});
+  assert.match(doubleHandView.tray, /class="piece-count">2</, 'Duplicate hand pieces use a top-right count badge');
 
   const soulaweenPage = fs.readFileSync(path.join(root, 'games', 'soulaween', 'game.html'), 'utf8');
   assert.match(soulaweenPage, /data-game="soulaween"/, 'Soulaween uses the shared game page contract');
