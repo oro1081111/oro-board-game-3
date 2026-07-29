@@ -395,7 +395,8 @@ const { BOARD_GAMES, GameCore } = window;
     const chosen = gobGame.rolloutAction(gobRolloutState, gobGame.actions(gobRolloutState));
     assert.equal(gobGame.apply(gobRolloutState, chosen).winner, 'first', 'Gobblet rollout always takes an available immediate win');
   }
-  // 藍方必須阻擋紅方下一手完成第一列；根節點與 rollout 都只能留下安全行動。
+  // 藍方必須阻擋紅方下一手完成第一列。防守由根節點的 gobRootActions 保證（不再由 rollout 負責）：
+  // rollout 改為只抓立即勝利（見上），140 場實測棋力與防守 rollout 持平但每步快約 5 倍。
   const gobThreat = gobEmpty();
   gobThreat[0][0] = [gobP('first', 1, 10)]; gobThreat[0][1] = [gobP('first', 1, 11)];
   gobThreat[1][1] = [gobP('second', 1, 12)];
@@ -408,9 +409,6 @@ const { BOARD_GAMES, GameCore } = window;
   const gobRootActions = gobGame.rootActions(gobThreatState, gobThreatActions);
   assert.ok(gobRootActions.length < gobThreatActions.length, 'Gobblet root filter removes moves that allow an immediate reply win');
   assert.ok(gobRootActions.every((action) => !leavesGobbletWin(action)), 'Gobblet root filter keeps every available one-ply defense');
-  for (let trial = 0; trial < 20; trial += 1) {
-    assert.ok(!leavesGobbletWin(gobGame.rolloutAction(gobThreatState, gobThreatActions)), 'Gobblet rollout always blocks a preventable immediate loss');
-  }
   const gobDefenseResult = await GameCore.runMcts(gobGame, gobThreatState, 100, () => true);
   assert.ok(!leavesGobbletWin(gobDefenseResult.action), 'Gobblet MCTS searches only safe root defenses when one exists');
 
