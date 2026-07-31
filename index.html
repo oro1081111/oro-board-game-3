@@ -31,19 +31,14 @@
     const previewImages = { zombie: 'zombie-jump.png', 'four-color': 'four-color-chess.png', 'four-moves': 'four-moves-chess.png', 'gobblet-classic': 'gobblet-classic.svg', 'animal-shogi': 'animal-shogi.svg' };
     document.querySelectorAll('[data-preview]').forEach((board) => {
       const image = document.createElement('img');
-      const framed = board.dataset.preview !== 'animal-shogi';
-      image.className = framed ? 'game-preview-board' : 'game-preview-image';
-      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || `${board.dataset.preview}.png`}?v=20260731a`;
+      image.className = 'game-preview-board';
+      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || `${board.dataset.preview}.png`}?v=20260731b`;
       image.alt = `${board.dataset.preview} 實際遊戲中局棋盤`;
-      if (framed) {
-        const heading = board.closest('.game-card').querySelector('h3');
-        const titleZh = Object.assign(document.createElement('span'), { className: 'game-preview-title zh', textContent: heading.firstChild.textContent.trim() });
-        const titleEn = Object.assign(document.createElement('span'), { className: 'game-preview-title en', textContent: heading.querySelector('span').textContent.trim() });
-        board.className = 'game-preview-frame';
-        board.replaceChildren(titleZh, image, titleEn);
-      } else {
-        board.replaceWith(image);
-      }
+      const heading = board.closest('.game-card').querySelector('h3');
+      const titleZh = Object.assign(document.createElement('span'), { className: 'game-preview-title zh', textContent: heading.firstChild.textContent.trim() });
+      const titleEn = Object.assign(document.createElement('span'), { className: 'game-preview-title en', textContent: heading.querySelector('span').textContent.trim() });
+      board.className = 'game-preview-frame';
+      board.replaceChildren(titleZh, image, titleEn);
     });
   </script>
 </body>
