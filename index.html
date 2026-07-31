@@ -32,7 +32,7 @@
     document.querySelectorAll('[data-preview]').forEach((board) => {
       const image = document.createElement('img');
       image.className = 'game-preview-board';
-      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || `${board.dataset.preview}.png`}?v=20260731d`;
+      image.src = `assets/lobby-boards/${previewImages[board.dataset.preview] || `${board.dataset.preview}.png`}?v=20260731e`;
       image.alt = `${board.dataset.preview} 實際遊戲中局棋盤`;
       const heading = board.closest('.game-card').querySelector('h3');
       const titleZh = Object.assign(document.createElement('span'), { className: 'game-preview-title zh', textContent: heading.firstChild.textContent.trim() });

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="144 28 312 390" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="312" height="390" viewBox="144 28 312 390" role="img" aria-labelledby="title desc">
   <title id="title">動物將棋實際遊戲棋盤</title><desc id="desc">紅藍動物將棋實際棋盤中局畫面</desc>
   <defs>
     <clipPath id="board-crop"><rect x="144" y="28" width="312" height="390" rx="20"/></clipPath>
