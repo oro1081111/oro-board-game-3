@@ -672,7 +672,7 @@ const { BOARD_GAMES, GameCore } = window;
   assert.match(lobbyCss, /\.game-preview-title\.zh \{ top: 15px;/, 'All Chinese lobby titles share the same top edge');
   assert.match(lobbyCss, /\.game-preview-title\.en \{ top: calc\(100% - 15px\);/, 'All English lobby titles share the same bottom edge');
   assert.match(lobbyCss, /data-preview="zombie"\][^}]*--preview-bg: #20222d;[^}]*--preview-spot-a: #78b9b6/, 'Zombie JUMP uses a dark background with light circles');
-  assert.match(lobbyCss, /\.game-preview-board \{[^}]*max-height: calc\(100cqh - 36px\);[^}]*object-fit: contain/, 'Lobby board screenshots use container-relative sizing');
+  assert.match(lobbyCss, /\.game-preview-board \{[^}]*max-height: 84cqh;[^}]*object-fit: contain/, 'Lobby board screenshots use container-relative sizing');
   for (const image of ['soulaween', 'mijnlieff', 'santorini', 'zombie-jump', 'four-color-chess', 'four-moves-chess', 'torii', 'ice-stage', 'gobblet', 'chocolate-clash']) {
     assert.ok(fs.existsSync(path.join(root, 'assets', 'lobby-boards', `${image}.png`)), `Lobby board image exists: ${image}`);
   }
