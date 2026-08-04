@@ -1,6 +1,15 @@
 (function () {
   'use strict';
 
+  // Global play-count endpoint (Cloudflare Worker). Empty string = disabled (no-op).
+  const PLAYS_API = '';
+  function recordPlay(gameId) {
+    if (!PLAYS_API) return;
+    try {
+      fetch(`${PLAYS_API}/play?game=${encodeURIComponent(gameId)}`, { method: 'POST', keepalive: true }).catch(() => {});
+    } catch (e) { /* ignore network/availability errors */ }
+  }
+
   const PLAYER_TYPES = [
     { value: 'human', label: '人類玩家', icon: 'human' },
     { value: 'random', label: '隨機電腦', icon: 'random' },
@@ -400,6 +409,7 @@
       if (created.snapshot) this.openingSnapshot = clone(created.snapshot);
       this.ui = {};
       this.history = [];
+      this.played = false;
       this.plannedActions = [];
       this.plannedPlayer = null;
       this.logs = [`開始新對局：${this.game.openings.find((item) => item.value === this.settings.opening)?.label || '標準'}。`];
@@ -414,6 +424,8 @@
     commit(action, source = 'human') {
       if (this.busy || this.game.outcome(this.state) !== null) return;
       if (source === 'human' && !this.isHumanTurn()) return;
+      // Count one play the first time this match receives a human move.
+      if (source === 'human' && !this.played) { this.played = true; recordPlay(this.gameId); }
       this.token += 1;
       this.animationSequence += 1;
       const before = clone(this.state);

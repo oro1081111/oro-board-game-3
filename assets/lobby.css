@@ -33,6 +33,8 @@ a { color: inherit; }
 .game-card { min-width: 0; overflow: hidden; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 8px 24px rgba(45,45,38,.08); }
 .game-body { padding: 18px; }
 .game-card h3 { margin: 5px 0 9px; font-size: 21px; line-height: 1.2; }
+.plays { margin: 6px 0 0; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+.plays:empty { display: none; }
 .game-card h3 span { display: block; margin-top: 3px; color: var(--muted); font-family: Georgia, serif; font-size: 15px; font-weight: 600; }
 .description { min-height: 66px; margin: 0; color: #5f5f59; font-size: 14px; line-height: 1.6; }
 .status { display: none; width: fit-content; margin: 0 0 0 auto; padding: 3px 7px; border-radius: 4px; font-size: 11px; font-weight: 900; }
@@ -126,5 +128,6 @@ a { color: inherit; }
 .game-grid.compact .game-body { padding: 10px 11px 12px; }
 .game-grid.compact .game-card h3 { margin: 0; font-size: clamp(13px, 3.6vw, 18px); }
 .game-grid.compact .game-card h3 span { margin-top: 2px; font-size: clamp(10px, 2.6vw, 13px); }
+.game-grid.compact .plays { margin: 5px 0 0; font-size: clamp(9px, 2.4vw, 12px); }
 .game-grid.compact .game-card { position: relative; }
 .game-grid.compact .preview-link::after { content: ""; position: absolute; inset: 0; z-index: 3; }
