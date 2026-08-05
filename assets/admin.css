@@ -1,0 +1,239 @@
+:root {
+  color-scheme: light;
+  --ink: #26231f;
+  --muted: #6d665e;
+  --paper: #f4f1e8;
+  --card: rgba(255, 255, 255, .88);
+  --line: rgba(38, 35, 31, .14);
+  --green: #26704a;
+  --red: #9b3d35;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at top left, rgba(195, 164, 103, .18), transparent 34rem),
+    var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, input { font: inherit; }
+
+.admin-shell {
+  width: min(100% - 32px, 760px);
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+.admin-header { margin-bottom: 24px; }
+
+.admin-header a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.admin-header p {
+  margin: 18px 0 6px;
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.admin-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 8vw, 3.4rem);
+  letter-spacing: -.04em;
+}
+
+.admin-card {
+  padding: clamp(22px, 5vw, 34px);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--card);
+  box-shadow: 0 20px 56px rgba(38, 35, 31, .1);
+  backdrop-filter: blur(12px);
+}
+
+.admin-card h2 { margin: 0 0 10px; }
+
+.admin-card > p {
+  margin: 0 0 24px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form label { font-weight: 750; }
+
+.login-form input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.primary-button,
+.secondary-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button {
+  background: var(--ink);
+  color: #fff;
+}
+
+.secondary-button {
+  background: rgba(38, 35, 31, .08);
+  color: var(--ink);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.panel-head h2 { margin: 0; }
+
+.game-controls {
+  display: grid;
+  gap: 10px;
+}
+
+.game-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .66);
+}
+
+.game-names {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.game-names strong { font-size: 1.02rem; }
+
+.game-names small {
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.game-status {
+  color: var(--green);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.game-status.off { color: var(--red); }
+
+.toggle-wrap input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  opacity: 0;
+}
+
+.switch {
+  position: relative;
+  width: 50px;
+  height: 29px;
+  border-radius: 999px;
+  background: #aaa49c;
+  cursor: pointer;
+  transition: background .18s ease;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .22);
+  transition: transform .18s ease;
+}
+
+.toggle-wrap input:checked + .switch { background: var(--green); }
+.toggle-wrap input:checked + .switch::after { transform: translateX(21px); }
+
+.toggle-wrap input:focus-visible + .switch {
+  outline: 3px solid rgba(38, 112, 74, .28);
+  outline-offset: 3px;
+}
+
+.toggle-wrap input:disabled + .switch {
+  cursor: wait;
+  opacity: .58;
+}
+
+.admin-message {
+  min-height: 1.5em;
+  margin: 16px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.admin-message.success { color: var(--green); }
+.admin-message.error { color: var(--red); }
+
+.admin-footer {
+  margin-top: 28px;
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.7;
+  text-align: center;
+}
+
+[hidden] { display: none !important; }
+
+@media (max-width: 560px) {
+  .admin-shell {
+    width: min(100% - 20px, 760px);
+    padding-top: 24px;
+  }
+
+  .game-control { align-items: flex-start; }
+
+  .toggle-wrap {
+    display: grid;
+    justify-items: end;
+  }
+
+  .game-status { order: 2; }
+}
