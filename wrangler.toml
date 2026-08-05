@@ -4,7 +4,11 @@ name = "oro-board-game-3"
 main = "worker/oro-plays.js"
 compatibility_date = "2024-11-01"
 
-# KV binding — the Worker reads/writes counts via env.PLAYS.
+# Refuse deployment when the production admin secret is not configured.
+[secrets]
+required = ["ADMIN_TOKEN"]
+
+# KV binding — the Worker reads/writes counts and availability via env.PLAYS.
 [[kv_namespaces]]
 binding = "PLAYS"
 id = "eefb9501ac244746a99c08c3b8c8d360"
