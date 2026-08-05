@@ -76,6 +76,17 @@ async function fetchAvailability() {
   }
 }
 
+function loadClassicScript(relativeUrl) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = new URL(relativeUrl, import.meta.url).href;
+    script.async = false;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error(`Unable to load ${relativeUrl}`));
+    document.body.appendChild(script);
+  });
+}
+
 function filterDisabledGameLinks(availability) {
   document.querySelectorAll('#gameList a[href]').forEach((link) => {
     const match = link.getAttribute('href')?.match(/\.\.\/([^/]+)\/game\.html/);
@@ -102,12 +113,21 @@ if (availability[gameId] === false) {
   app.replaceChildren();
 
   try {
-    await import('./game-core.js?v=20260803b');
-    await import('./games.js?v=20260728d');
+    // These files were written as classic scripts. Loading them with import()
+    // changes their execution semantics, so preserve the original script order.
+    await loadClassicScript('./game-core.js?v=20260803b');
+    await loadClassicScript('./games.js?v=20260728d');
 
-    document.addEventListener('DOMContentLoaded', () => {
-      filterDisabledGameLinks(availability);
-    });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        filterDisabledGameLinks(availability);
+      }, { once: true });
+    } else {
+      // Some browsers may finish DOMContentLoaded while the availability request
+      // is pending. The shared controller starts from this window event.
+      window.dispatchEvent(new Event('DOMContentLoaded'));
+      setTimeout(() => filterDisabledGameLinks(availability), 0);
+    }
   } catch (error) {
     console.error(error);
     renderStatus('遊戲載入失敗', '程式檔案未能正確載入，請重新整理頁面後再試一次。', true);
