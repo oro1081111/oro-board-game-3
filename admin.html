@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#f4f1e8">
+  <title>遊戲開放管理｜棋類遊戲 3.0</title>
+  <link rel="stylesheet" href="assets/admin.css?v=20260805a">
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <a href="index.html">← 返回遊戲大廳</a>
+      <p>ORO BOARD GAMES</p>
+      <h1>遊戲開放管理</h1>
+    </header>
+
+    <section class="admin-card" id="loginPanel">
+      <h2>管理者登入</h2>
+      <p>輸入 Cloudflare Worker 的 ADMIN_TOKEN。密碼只會保留在目前分頁的工作階段。</p>
+      <form class="login-form" id="loginForm">
+        <label for="adminToken">管理者密碼</label>
+        <input id="adminToken" name="adminToken" type="password" autocomplete="current-password" required>
+        <button class="primary-button" type="submit">登入管理</button>
+      </form>
+      <p class="admin-message" id="loginMessage" aria-live="polite"></p>
+    </section>
+
+    <section class="admin-card" id="controlPanel" hidden>
+      <div class="panel-head">
+        <h2>遊戲開關</h2>
+        <button class="secondary-button" id="logoutButton" type="button">登出</button>
+      </div>
+      <p>關閉後，遊戲會從大廳消失；玩家直接開啟舊網址時，也會看到暫停開放頁面。</p>
+      <div class="game-controls" id="gameControls"></div>
+      <p class="admin-message" id="saveMessage" aria-live="polite"></p>
+    </section>
+
+    <footer class="admin-footer">© 奧羅桌遊設計工作室 ·AI棋類程式實作練習。僅供非商業分享，請勿私自商用。原創桌遊版權屬於各自作者與出版社。提供線上版本推廣給大家更多好玩遊戲，任何線上版都無法取代實體桌遊的樂趣。</footer>
+  </main>
+  <script src="assets/admin.js?v=20260805a"></script>
+</body>
+</html>
