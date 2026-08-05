@@ -145,8 +145,9 @@ async function main() {
   const gameLoader = fs.readFileSync(path.join(root, 'assets', 'game-loader.js'), 'utf8');
   assert.match(gameLoader, /\/availability/, 'Game loader checks the public availability endpoint');
   assert.match(gameLoader, /availability\[gameId\] === false/, 'Game loader blocks explicitly closed games');
-  assert.match(gameLoader, /await import\('\.\/game-core\.js/, 'Game loader loads the controller only after the check');
-  assert.match(gameLoader, /await import\('\.\/games\.js/, 'Game loader loads the rules registry only after the check');
+  assert.match(gameLoader, /await loadClassicScript\('\.\/game-core\.js/, 'Game loader loads the classic controller only after the check');
+  assert.match(gameLoader, /await loadClassicScript\('\.\/games\.js/, 'Game loader loads the classic rules registry only after the check');
+  assert.match(gameLoader, /window\.dispatchEvent\(new Event\('DOMContentLoaded'\)\)/, 'Game loader starts the controller when DOMContentLoaded already fired');
 
   const admin = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
   assert.match(admin, /meta name="robots" content="noindex, nofollow"/, 'Admin page asks search engines not to index it');
