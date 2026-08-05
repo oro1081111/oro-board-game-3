@@ -13,7 +13,7 @@ to the lobby. The site calls it from the browser:
 
 1. Sign in at https://dash.cloudflare.com.
 2. **Storage & Databases → KV → Create a namespace**, name it `oro-plays`.
-3. **Workers & Pages → Create → Worker**, name it `oro-plays`, **Deploy**, then
+3. (git-connected) The Worker config lives at the repo root (`wrangler.toml`, `main = worker/oro-plays.js`); in Cloudflare set **Root directory = /**. Or manually: **Workers & Pages → Create → Worker**, name it `oro-plays`, **Deploy**, then
    **Edit code**, paste `oro-plays.js`, **Deploy** again.
 4. Worker **Settings → Bindings → Add → KV namespace**:
    - Variable name: `PLAYS`

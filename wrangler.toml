@@ -1,11 +1,10 @@
 # Cloudflare Worker config for git-connected deploys (Workers Builds).
-# In Cloudflare: Root directory = worker, Deploy command = npx wrangler deploy.
+# In Cloudflare: Root directory = / (repo root), Deploy command = npx wrangler deploy.
 name = "oro-plays"
-main = "oro-plays.js"
+main = "worker/oro-plays.js"
 compatibility_date = "2024-11-01"
 
 # KV binding — the Worker reads/writes counts via env.PLAYS.
-# id = your KV namespace's ID (Storage & Databases -> KV -> Oro_Abstract_Game).
 [[kv_namespaces]]
 binding = "PLAYS"
 id = "eefb9501ac244746a99c08c3b8c8d360"
