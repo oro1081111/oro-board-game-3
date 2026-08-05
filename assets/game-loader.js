@@ -118,9 +118,16 @@ if (availability[gameId] === false) {
     await loadClassicScript('./game-core.js?v=20260803b');
     await loadClassicScript('./games.js?v=20260728d');
 
-    document.addEventListener('DOMContentLoaded', () => {
-      filterDisabledGameLinks(availability);
-    });
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        filterDisabledGameLinks(availability);
+      }, { once: true });
+    } else {
+      // Some browsers may finish DOMContentLoaded while the availability request
+      // is pending. The shared controller starts from this window event.
+      window.dispatchEvent(new Event('DOMContentLoaded'));
+      setTimeout(() => filterDisabledGameLinks(availability), 0);
+    }
   } catch (error) {
     console.error(error);
     renderStatus('遊戲載入失敗', '程式檔案未能正確載入，請重新整理頁面後再試一次。', true);
