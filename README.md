@@ -24,9 +24,30 @@
 - `assets/game-shell.css`：手機與桌面共用遊戲介面。
 - `assets/game-core.js`：設定、日誌、Undo、勝率、AI 排程與共用 MCTS。
 - `assets/games.js`：十二款遊戲的狀態、合法行動、狀態轉移與棋盤繪製。
+- `assets/game-loader.js`：查詢遊戲開放狀態，開放時才載入遊戲核心。
+- `assets/lobby-availability.js`：依開放狀態過濾首頁卡片並更新遊戲數量。
+- `admin.html`：管理者登入後可即時開放或關閉遊戲。
 - `interface.html`：舊網址相容轉址，實際遊戲頁為 `games/soulaween/game.html`。
 - `tests/game-rules.test.cjs`：十二款共用架構遊戲的規則與 MCTS smoke test。
+- `tests/static-site.test.cjs`：靜態連結、共用入口與管理 API smoke test。
 - `GAME_IMPLEMENTATION_SOP.md`：未來新增遊戲的固定流程與驗收條件。
+
+## 遊戲開放管理
+
+管理頁網址：
+
+```text
+https://oro1081111.github.io/oro-board-game-3/admin.html
+```
+
+管理者密碼由 Cloudflare Worker Secret `ADMIN_TOKEN` 提供，不會寫入 GitHub。設定完成後，在管理頁登入並切換遊戲開關即可：
+
+- 關閉的遊戲會從首頁消失。
+- 玩家直接開啟已關閉遊戲的網址時，會看到暫停開放頁面。
+- 遊戲內的其他遊戲清單也會隱藏已關閉項目。
+- Worker 暫時無法連線時採 fail-open，避免後端異常導致整站無法遊玩。
+
+Cloudflare 設定方式請見 `worker/README.md`。
 
 ## AI
 

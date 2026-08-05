@@ -1,32 +1,74 @@
-# oro-plays — global play-count backend
+# oro-plays — play counts and game availability backend
 
-A tiny Cloudflare Worker + KV that stores each game's play count and serves it
-to the lobby. The site calls it from the browser:
+這個 Cloudflare Worker + KV 同時處理：
 
-- The game page sends `POST /play?game=<id>` the first time a match receives a
-  human move (see `assets/game-core.js` → `recordPlay`).
-- The lobby fetches `GET /counts` on load and shows "已遊玩 N 次" per card.
+- 每款遊戲的全站遊玩次數。
+- 每款遊戲是否對玩家開放。
+- 使用 `ADMIN_TOKEN` 保護的管理者 API。
 
-`<id>` is the game folder name (e.g. `zombie-jump`, `four-color-chess`).
+## API
 
-## Deploy (one-time, free)
+### 公開 API
 
-1. Sign in at https://dash.cloudflare.com.
-2. **Storage & Databases → KV → Create a namespace**, name it `oro-plays`.
-3. (git-connected) The Worker config lives at the repo root (`wrangler.toml`, `main = worker/oro-plays.js`); in Cloudflare set **Root directory = /**. Or manually: **Workers & Pages → Create → Worker**, name it `oro-plays`, **Deploy**, then
-   **Edit code**, paste `oro-plays.js`, **Deploy** again.
-4. Worker **Settings → Bindings → Add → KV namespace**:
-   - Variable name: `PLAYS`
-   - KV namespace: the `oro-plays` namespace from step 2
-   Save and **Deploy**.
-5. Copy the Worker URL, e.g. `https://oro-plays.<your-subdomain>.workers.dev`.
+- `GET /counts`
+- `POST /play?game=<id>`
+- `GET /availability`
 
-Then set that URL as `PLAYS_API` in both `assets/game-core.js` and `index.html`.
+### 管理者 API
+
+以下 API 必須附帶：
+
+```http
+Authorization: Bearer <ADMIN_TOKEN>
+```
+
+- `GET /admin/availability`
+- `POST /admin/availability`
+
+修改範例：
+
+```json
+{
+  "game": "santorini",
+  "enabled": false
+}
+```
+
+## Cloudflare 設定
+
+專案根目錄的 `wrangler.toml` 已將 Worker 名稱設為 `oro-board-game-3`，並將 `PLAYS` 綁定到既有 KV namespace。
+
+合併程式碼後，只需要在 Cloudflare Worker 設定一次管理者 Secret：
+
+1. 進入 Cloudflare Dashboard。
+2. 開啟 Worker `oro-board-game-3`。
+3. 進入 **Settings → Variables and Secrets**。
+4. 新增加密 Secret：
+   - 名稱：`ADMIN_TOKEN`
+   - 值：自行產生的高強度密碼。
+5. 儲存並重新部署 Worker。
+
+建議使用至少 24 個隨機字元，不要使用 GitHub 密碼或其他服務的共用密碼。
+
+## 管理頁
+
+部署完成後開啟：
+
+```text
+https://oro1081111.github.io/oro-board-game-3/admin.html
+```
+
+輸入 `ADMIN_TOKEN` 後即可切換遊戲。密碼只儲存在目前分頁的 `sessionStorage`，關閉該分頁後即失效。
+
+## KV 資料
+
+- `counts`：各遊戲遊玩次數。
+- `availability`：各遊戲開放狀態。
+
+若 `availability` 尚不存在或內容損壞，Worker 會將所有遊戲視為開放，避免新部署時意外關閉整站。
 
 ## Notes
 
-- Free tier: 100k reads/day + 1k writes/day. One play = one write; the lobby's
-  `/counts` read is edge-cached for 30s.
-- The count is incremented client-side, so it is not tamper-proof (fine for a
-  hobby stat). For exact, race-free counts, swap KV for Durable Objects — the
-  site code does not need to change.
+- Free tier 的 KV 限額需依 Cloudflare 當期方案為準。
+- 遊玩次數仍是由前端觸發，並非防竄改的精確統計。
+- KV 寫入在全球節點間可能有短暫傳播延遲。

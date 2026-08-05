@@ -6,8 +6,12 @@
   <meta name="theme-color" content="#f3f2ec">
   <title>棋類遊戲 3.0｜遊戲大廳</title>
   <link rel="stylesheet" href="assets/lobby.css?v=20260803d">
+  <style>
+    .availability-pending .game-grid { visibility: hidden; }
+  </style>
+  <noscript><style>.availability-pending .game-grid { visibility: visible; }</style></noscript>
 </head>
-<body>
+<body class="availability-pending">
   <header class="site-head"><div class="head-inner"><p class="brand">ORO BOARD GAMES</p><h1>棋類遊戲 3.0</h1><p class="subtitle">選擇一款遊戲，直接開始對局吧！</p><p class="subtitle-note">網頁設計初衷為程式開發的自我練習，提供網頁版推廣給大家更多好玩遊戲，任何線上版都無法取代實體桌遊的樂趣。</p></div></header>
   <main class="lobby">
     <section class="section-head" aria-labelledby="available-title"><div><p class="eyebrow">PLAYABLE GAMES</p><h2 id="available-title">可遊玩遊戲</h2></div><div class="head-tools"><span class="count">12 款遊戲</span><div class="view-toggle" role="group" aria-label="切換瀏覽模式"><button type="button" data-view="detailed" aria-pressed="true">詳細</button><button type="button" data-view="compact" aria-pressed="false">簡覽</button></div></div></section>
@@ -85,5 +89,6 @@
       }).catch(() => {});
     }
   </script>
+  <script src="assets/lobby-availability.js?v=20260805a"></script>
 </body>
 </html>
