@@ -1,6 +1,6 @@
 # Cloudflare Worker config for git-connected deploys (Workers Builds).
 # In Cloudflare: Root directory = / (repo root), Deploy command = npx wrangler deploy.
-name = "oro-plays"
+name = "oro-board-game-3"
 main = "worker/oro-plays.js"
 compatibility_date = "2024-11-01"
 

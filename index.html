@@ -65,7 +65,7 @@
     setView(initialView === 'compact' ? 'compact' : 'detailed');
 
     // Play counts (global, via Cloudflare Worker). Empty string = disabled.
-    const PLAYS_API = '';
+    const PLAYS_API = 'https://oro-board-game-3.chubby0520.workers.dev';
     document.querySelectorAll('.game-card').forEach((card) => {
       const link = card.querySelector('.preview-link');
       const heading = card.querySelector('h3');

@@ -2,7 +2,7 @@
   'use strict';
 
   // Global play-count endpoint (Cloudflare Worker). Empty string = disabled (no-op).
-  const PLAYS_API = '';
+  const PLAYS_API = 'https://oro-board-game-3.chubby0520.workers.dev';
   function recordPlay(gameId) {
     if (!PLAYS_API) return;
     try {
